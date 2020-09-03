@@ -202,7 +202,7 @@ public class SharedObject {
             default:
                 // never go here
                 throw new IllegalArgumentException("Can't handle t" +
-                        "his block type : " + type);
+                        "this block type : " + type);
         }
 
         instance.getBlockList()[idx].setNewBlock(type, trajList,

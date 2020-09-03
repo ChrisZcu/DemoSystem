@@ -5,6 +5,7 @@ import model.Region;
 import model.RegionType;
 import app.SharedObject;
 
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 import static select.SelectAlg.*;
@@ -15,7 +16,7 @@ import static select.SelectAlg.*;
 public class SelectWorker implements Callable {
     private RegionType regionType;
     private BlockType blockType;
-    private Region regionW;
+    private ArrayList<Region> regionWList;
     private int begin;
     private int end;
 
@@ -32,10 +33,10 @@ public class SelectWorker implements Callable {
         SharedObject instance = SharedObject.getInstance();
         switch (regionType) {
             case O_D:
-                res = getODTraj(begin, end, instance.getTrajArray()[blockType.getValue()], instance.getRegionO(), instance.getRegionD());
+                res = getODTraj(begin, end, instance.getTrajArray()[blockType.getValue()]);
                 break;
             case WAY_POINT:
-                res = getWayPointTraj(begin, end, instance.getTrajArray()[blockType.getValue()], regionW);
+                res = getWayPointTraj(begin, end, instance.getTrajArray()[blockType.getValue()], regionWList);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + regionType);

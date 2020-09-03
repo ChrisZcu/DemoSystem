@@ -49,7 +49,7 @@ public class SelectAlg {
         for (int i = begin; i < end; i++) {
             Trajectory traj = trajectory[i];
             for (int j = 1, bound = traj.locations.length - 1; j < bound; j++) {
-                if (inCheck(regionW, traj.locations[j])) {
+                if (inCheck(regionWList, traj.locations[j])) {
                     res.add(j);
                     break;
                 }

@@ -66,7 +66,7 @@ public class TrajDrawWorker extends Thread {
             }
             pg.endShape();
 
-            trajCnt[index] ++;
+//            trajCnt[index] ++;
         }
 
         trajImages[index] = pg;

@@ -2,7 +2,9 @@ package draw;
 
 import app.DemoInterface;
 import de.fhpotsdam.unfolding.UnfoldingMap;
+import app.SharedObject;
 import model.TrajBlock;
+import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
 
@@ -21,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * @see app.DemoInterface
  */
 public class TrajDrawManager {
-    private final DemoInterface app;
+    private final PApplet app;
     private final UnfoldingMap map;
     private final PGraphics[][] trajImageMtx;
     private final int[] trajCnt;        // # of traj that already drawn.
@@ -40,12 +42,12 @@ public class TrajDrawManager {
     private Thread controlThread;
 
     public TrajDrawManager(DemoInterface app, UnfoldingMap map,
-                           PGraphics[][] trajImageMtx, int[] trajCnt, TrajBlock[] blockList) {
+                           PGraphics[][] trajImageMtx, int[] trajCnt) {
         this.app = app;
         this.map = map;
         this.trajImageMtx = trajImageMtx;
         this.trajCnt = trajCnt;
-        this.blockList = blockList;
+        this.blockList = SharedObject.getInstance().getBlockList();
 
         int len = Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM);
         this.trajDrawWorkerMtx = new TrajDrawWorker[4][len];
