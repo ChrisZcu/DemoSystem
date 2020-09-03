@@ -4,8 +4,8 @@ package model;
  *
  * */
 public class Region {
-    public Position left_top;
-    public Position right_btm;
+    public Position leftTop;
+    public Position rightBtm;
 
     public int id;
 
@@ -14,16 +14,16 @@ public class Region {
     }
 
     public Region(Position lt, Position rb) {
-        this.left_top = lt;
-        this.right_btm = rb;
+        this.leftTop = lt;
+        this.rightBtm = rb;
     }
 
     public boolean equal(Region r) {
-        return this.left_top.equals(r.left_top) && this.right_btm.equals(r.right_btm);
+        return this.leftTop.equals(r.leftTop) && this.rightBtm.equals(r.rightBtm);
     }
 
     public void clear() {
-        left_top = right_btm = null;
+        leftTop = rightBtm = null;
     }
 
 

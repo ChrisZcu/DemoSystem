@@ -4,7 +4,7 @@ import de.fhpotsdam.unfolding.UnfoldingMap;
 
 public class SharedObject {
 
-    private static SharedObject instance = new SharedObject();
+    private static final SharedObject instance = new SharedObject();
 
     private SharedObject() {
     }
@@ -13,13 +13,14 @@ public class SharedObject {
         return instance;
     }
 
-
-    // total trajList
-    private static Trajectory[] totalTraj;
-    private static Trajectory[] randomTraj;
-    private static Trajectory[] VFGSTraj;
+    // modified
+    private static Trajectory[] trajFull;                   // total trajList
+    private static Trajectory[][][] trajVfgsMtx = null;     // trajVfgs for delta X rate
+    private static Trajectory[][] trajRandList = null;      // trajRand for rate
 
     private static Trajectory[][] trajArray = new Trajectory[3][];
+
+    private static TrajBlock[] blockList;        // modified
 
     // regions
     private static Region regionO = null;
@@ -29,31 +30,36 @@ public class SharedObject {
     private static UnfoldingMap map;
 
     //trajectory
-    public Trajectory[] getTotalTraj() {
-        return totalTraj;
+    public Trajectory[] getTrajFull() {
+        return trajFull;
     }
 
-    public void setTotalTraj(Trajectory[] totalTraj) {
-        SharedObject.totalTraj = totalTraj;
-        SharedObject.trajArray[0] = totalTraj;
+    public void setTrajFull(Trajectory[] trajFull) {
+        SharedObject.trajFull = trajFull;
     }
 
-    public Trajectory[] getRandomTraj() {
-        return randomTraj;
+    public Trajectory[][] getTrajRandList() {
+        return trajRandList;
     }
 
-    public void setRandomTraj(Trajectory[] randomTraj) {
-        SharedObject.randomTraj = randomTraj;
-        SharedObject.trajArray[1] = randomTraj;
+    public void setTrajRandList(Trajectory[][] trajRandList) {
+        SharedObject.trajRandList = trajRandList;
     }
 
-    public Trajectory[] getVFGSTraj() {
-        return VFGSTraj;
+    public Trajectory[][][] getTrajVfgsMtx() {
+        return trajVfgsMtx;
     }
 
-    public void setVFGSTraj(Trajectory[] VFGSTraj) {
-        SharedObject.VFGSTraj = VFGSTraj;
-        SharedObject.trajArray[2] = VFGSTraj;
+    public void setTrajVfgsMtx(Trajectory[][][] trajVfgsMtx) {
+        SharedObject.trajVfgsMtx = trajVfgsMtx;
+    }
+
+    public TrajBlock[] getBlockList() {
+        return blockList;
+    }
+
+    public static void setBlockList(TrajBlock[] blockList) {
+        SharedObject.blockList = blockList;
     }
 
     public Trajectory[][] getTrajArray() {

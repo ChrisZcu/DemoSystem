@@ -1,7 +1,7 @@
 package select;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
-import model.Location;
+import de.fhpotsdam.unfolding.geo.Location;
 import model.Position;
 import model.Region;
 import model.SharedObject;

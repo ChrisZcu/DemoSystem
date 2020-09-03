@@ -6,13 +6,11 @@ import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import model.Trajectory;
 import processing.core.PGraphics;
 
-import java.awt.*;
-
 /**
  * Draw the trajectory to the buffer images.
- * Start and Manage by {@link DrawManager}.
+ * Start and Manage by {@link TrajDrawManager}.
  */
-public class DrawWorker extends Thread {
+public class TrajDrawWorker extends Thread {
     private final UnfoldingMap map;
     private final PGraphics pg;     // temp image that this thread paint on
     private final PGraphics[] trajImages;   // all traj image parts
@@ -21,9 +19,9 @@ public class DrawWorker extends Thread {
     private final int mapIdx, index;        // param to locate the pg this worker dealing with
     private final int begin, end;     // the param for select traj
 
-    public DrawWorker(UnfoldingMap map, PGraphics pg, PGraphics[] trajImages,
-                      Trajectory[] trajList, int[] trajCnt,
-                      int mapIdx, int index, int begin, int end) {
+    public TrajDrawWorker(UnfoldingMap map, PGraphics pg, PGraphics[] trajImages,
+                          Trajectory[] trajList, int[] trajCnt,
+                          int mapIdx, int index, int begin, int end) {
         this.map = map;
         this.pg = pg;
         this.trajImages = trajImages;

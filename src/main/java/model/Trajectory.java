@@ -2,11 +2,8 @@ package model;
 
 import de.fhpotsdam.unfolding.geo.Location;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Trajectory {
-    public List<Location> points = new ArrayList<>();
+    public Location[] locations;
     private double score;
     private int trajId;
     private double greedyScore;
@@ -37,8 +34,12 @@ public class Trajectory {
         return trajId;
     }
 
-    public List<Location> getPoints() {
-        return points;
+    public void setLocations(Location[] locations) {
+        this.locations = locations;
+    }
+
+    public Location[] getLocations() {
+        return locations;
     }
 
     public void setGreedyScore(double greedyScore) {
@@ -63,9 +64,9 @@ public class Trajectory {
 
     @Override
     public String toString() {
-        String res = "";
-        for (Location p : this.points) {
-            res = res + "," + p.y + "," + p.x;
+        StringBuilder res = new StringBuilder();
+        for (Location p : this.locations) {
+            res.append(",").append(p.y).append(",").append(p.x);
         }
         return res.substring(1);
     }
