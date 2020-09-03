@@ -24,7 +24,8 @@ public class SelectAlg {
      * @param end        the end index, not included.
      * @param trajectory the trajectory based, including Full, VFGS, Random
      **/
-    public static int[] getODTraj(int begin, int end, Trajectory[] trajectory, Region regionO, Region regionD) {
+    public static int[] getODTraj(int begin, int end, Trajectory[] trajectory) {
+        Region regionO = SharedObject.getInstance().getRegionO(), regionD = SharedObject.getInstance().getRegionD();
 
         ArrayList<Integer> res = new ArrayList<>();
 
@@ -39,20 +40,20 @@ public class SelectAlg {
 
 
     /**
-     * calculates the sub-array of trajectory based on way-point region.
+     * calculates the sub-array of trajectory based on way-point region, on the same layer.
      */
-    public static int[] getWayPointTraj(int begin, int end, Trajectory[] trajectory, Region regionW) {
+    public static int[] getWayPointTraj(int begin, int end, Trajectory[] trajectory, ArrayList<Region> regionWList) {
         ArrayList<Integer> res = new ArrayList<>();
 
         for (int i = begin; i < end; i++) {
             Trajectory traj = trajectory[i];
             for (int j = 1; j < traj.points.size() - 1; j++)
-                if (inCheck(regionW, traj.points.get(j))) {
+                if (inCheck(regionWList, traj.points.get(j))) {
                     res.add(j);
                     break;
                 }
         }
-        return res.size() > 0 ? res.stream().mapToInt(Integer::intValue).toArray() : null;
+        return res.stream().mapToInt(Integer::intValue).toArray();
     }
 
     /**
@@ -94,5 +95,21 @@ public class SelectAlg {
         Position left_top = r.left_top;
         Position right_btm = r.right_btm;
         return (px >= left_top.x && px <= right_btm.x) && (py >= left_top.y && py <= right_btm.y);
+    }
+
+    private static boolean inCheck(ArrayList<Region> rList, Location loc) {
+        if (rList == null)
+            return true;
+        UnfoldingMap map = SharedObject.getInstance().getMap();
+        double px = map.getScreenPosition(loc).x;
+        double py = map.getScreenPosition(loc).y;
+        for (Region r : rList) {
+            Position left_top = r.left_top;
+            Position right_btm = r.right_btm;
+            if ((px >= left_top.x && px <= right_btm.x) && (py >= left_top.y && py <= right_btm.y))
+                return true;
+        }
+
+        return false;
     }
 }
