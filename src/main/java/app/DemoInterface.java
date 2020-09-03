@@ -1,4 +1,6 @@
 package app;
 
-public class DemoInterface {
+import processing.core.PApplet;
+
+public class DemoInterface extends PApplet {
 }
