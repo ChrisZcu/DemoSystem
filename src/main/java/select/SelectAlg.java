@@ -1,7 +1,7 @@
 package select;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
-import de.fhpotsdam.unfolding.geo.Location;
+import model.Location;
 import model.Position;
 import model.Region;
 import model.SharedObject;
@@ -27,11 +27,11 @@ public class SelectAlg {
     public static int[] getODTraj(int begin, int end, Trajectory[] trajectory, Region regionO, Region regionD) {
 
         ArrayList<Integer> res = new ArrayList<>();
-
         for (int i = begin; i < end; i++) {
             Trajectory traj = trajectory[i];
-            if (inCheck(regionO, traj.points.get(0)) && inCheck(regionD, traj.points.get(traj.points.size() - 1)))
+            if (inCheck(regionO, traj.locations[0]) && inCheck(regionD, traj.locations[traj.locations.length - 1])) {
                 res.add(traj.getTrajId());
+            }
         }
 
         return res.stream().mapToInt(Integer::intValue).toArray();
@@ -46,11 +46,12 @@ public class SelectAlg {
 
         for (int i = begin; i < end; i++) {
             Trajectory traj = trajectory[i];
-            for (int j = 1; j < traj.points.size() - 1; j++)
-                if (inCheck(regionW, traj.points.get(j))) {
+            for (int j = 1, bound = traj.locations.length - 1; j < bound; j++) {
+                if (inCheck(regionW, traj.locations[j])) {
                     res.add(j);
                     break;
                 }
+            }
         }
         return res.size() > 0 ? res.stream().mapToInt(Integer::intValue).toArray() : null;
     }
@@ -64,14 +65,15 @@ public class SelectAlg {
         for (int i = begin; i < end; i++) {
             Trajectory traj = trajectory[i];
             boolean inFlag = true;
-            for (Location loc : traj.getPoints()) {
+            for (Location loc : traj.getLocations()) {
                 if (!inCheck(r, loc)) {
                     inFlag = false;
                     break;
                 }
             }
-            if (inFlag)
+            if (inFlag) {
                 res.add(traj.getTrajId());
+            }
         }
         return res.stream().mapToInt(Integer::intValue).toArray();
     }
@@ -85,14 +87,14 @@ public class SelectAlg {
      * checks whether the location is in the region
      */
     private static boolean inCheck(Region r, Location loc) {
-        if (r == null)
+        if (r == null) {
             return true;
+        }
         UnfoldingMap map = SharedObject.getInstance().getMap();
-        double px = map.getScreenPosition(loc).x;
-        double py = map.getScreenPosition(loc).y;
-
-        Position left_top = r.left_top;
-        Position right_btm = r.right_btm;
+        float[] sp = map.mapDisplay.getScreenFromInnerObjectPosition(loc.x, loc.y);     // FIXME
+        float px = sp[0], py = sp[1];
+        Position left_top = r.leftTop;
+        Position right_btm = r.rightBtm;
         return (px >= left_top.x && px <= right_btm.x) && (py >= left_top.y && py <= right_btm.y);
     }
 }
