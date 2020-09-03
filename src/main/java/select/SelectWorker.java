@@ -3,7 +3,7 @@ package select;
 import model.BlockType;
 import model.Region;
 import model.RegionType;
-import model.SharedObject;
+import app.SharedObject;
 
 import java.util.concurrent.Callable;
 

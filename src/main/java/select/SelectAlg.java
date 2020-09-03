@@ -4,7 +4,7 @@ import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
 import model.Position;
 import model.Region;
-import model.SharedObject;
+import app.SharedObject;
 import model.Trajectory;
 
 import java.util.ArrayList;
@@ -16,14 +16,15 @@ import java.util.List;
 public class SelectAlg {
 
     /**
-     * based on the begin and end index to calculate the sub-array trajectory with the particular origin and destination.
-     * <br></>
+     * Based on the begin and end index to calculate the sub-array trajectory
+     * with the particular origin and destination.
+     * <br>
      * regions are all in the SO, regionO, regionD are exclusive.
      *
-     * @param begin      the begin index, included. <br></>
+     * @param begin      the begin index, included.
      * @param end        the end index, not included.
      * @param trajectory the trajectory based, including Full, VFGS, Random
-     **/
+     */
     public static int[] getODTraj(int begin, int end, Trajectory[] trajectory) {
         Region regionO = SharedObject.getInstance().getRegionO(), regionD = SharedObject.getInstance().getRegionD();
 
@@ -60,7 +61,6 @@ public class SelectAlg {
     /**
      * calculates the sub-array of trajectory based on all-in region.
      */
-
     public static int[] getAllIn(int begin, int end, Trajectory[] trajectory, Region r) {
         List<Integer> res = new ArrayList<>();
         for (int i = begin; i < end; i++) {
@@ -80,7 +80,7 @@ public class SelectAlg {
     }
 
     public static int[] getWMutliLayer() {
-        //TODO add logic
+        // TODO add logic
         return null;
     }
 
@@ -109,8 +109,10 @@ public class SelectAlg {
         for (Region r : rList) {
             Position left_top = r.leftTop;
             Position right_btm = r.rightBtm;
-            if ((px >= left_top.x && px <= right_btm.x) && (py >= left_top.y && py <= right_btm.y))
+            if ((px >= left_top.x && px <= right_btm.x)
+                    && (py >= left_top.y && py <= right_btm.y)) {
                 return true;
+            }
         }
 
         return false;

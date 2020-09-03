@@ -1,36 +1,131 @@
 package app;
 
-import draw.TrajDrawManager;
+import de.fhpotsdam.unfolding.UnfoldingMap;
 import model.BlockType;
-import model.SharedObject;
+import model.Region;
+import model.TrajBlock;
 import model.Trajectory;
 import util.IOHandle;
 import util.PSC;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
 import static util.Util.translateRate;
 
-public class DataController {
-    public TrajDrawManager trajDrawManager;
-    private final SharedObject sharedObject;
+public class SharedObject {
 
-    public DataController() {
-        sharedObject = SharedObject.getInstance();
+    private static final SharedObject instance = new SharedObject();
+
+    private SharedObject() {
+    }
+
+    public static SharedObject getInstance() {
+        return instance;
+    }
+
+    private static Trajectory[] trajFull;                   // total trajList
+    private static Trajectory[][][] trajVfgsMtx = null;     // trajVfgs for delta X rate
+    private static Trajectory[][] trajRandList = null;      // trajRand for rate
+
+    private static Trajectory[][] trajArray = new Trajectory[3][];
+
+    private static TrajBlock[] blockList;
+
+    // regions
+    private static Region regionO = null;
+    private static Region regionD = null;
+    private static ArrayList<ArrayList<Region>> regionWLayerList;
+
+    // map & app
+    private static DemoInterface app;
+    private static UnfoldingMap map;
+
+    // trajectory
+    public Trajectory[] getTrajFull() {
+        return trajFull;
+    }
+
+    public void setTrajFull(Trajectory[] trajFull) {
+        SharedObject.trajFull = trajFull;
+    }
+
+    public Trajectory[][] getTrajRandList() {
+        return trajRandList;
+    }
+
+    public void setTrajRandList(Trajectory[][] trajRandList) {
+        SharedObject.trajRandList = trajRandList;
+    }
+
+    public Trajectory[][][] getTrajVfgsMtx() {
+        return trajVfgsMtx;
+    }
+
+    public void setTrajVfgsMtx(Trajectory[][][] trajVfgsMtx) {
+        SharedObject.trajVfgsMtx = trajVfgsMtx;
+    }
+
+    public TrajBlock[] getBlockList() {
+        return blockList;
+    }
+
+    public static void setBlockList(TrajBlock[] blockList) {
+        SharedObject.blockList = blockList;
+    }
+
+    public Trajectory[][] getTrajArray() {
+        return trajArray;
+    }
+
+    public void setTrajArray(Trajectory[][] trajArray) {
+        SharedObject.trajArray = trajArray;
+    }
+
+    // regions
+    public void setRegionO(Region r) {
+        regionO = r;
+    }
+
+    public Region getRegionO() {
+        return regionO;
+    }
+
+
+    public void setRegionD(Region r) {
+        regionD = r;
+    }
+
+    public Region getRegionD() {
+        return regionD;
+    }
+
+    // map & app
+
+    public void setApp(DemoInterface app) {
+        SharedObject.app = app;
+    }
+
+    public void setMap(UnfoldingMap map) {
+        SharedObject.map = map;
+    }
+
+    public UnfoldingMap getMap() {
+        return map;
     }
 
     /**
      * Load trajectory data from file (FULL)
      * Then generate VFGS and RAND
      */
-    public void load() {
+    public void loadTrajData() {
         Trajectory[] trajFull = IOHandle.loadRowData(PSC.ORIGIN_PATH, PSC.LIMIT);
-        sharedObject.setTrajFull(trajFull);
+        instance.setTrajFull(trajFull);
         int[] rateCntList = translateRate(trajFull.length, PSC.RATE_LIST);
-        sharedObject.setTrajVfgsMtx(getTrajVfgsMatrix(trajFull, rateCntList));     // modified
-        sharedObject.setTrajRandList(getTrajRandList(trajFull, rateCntList));
+        instance.setTrajVfgsMtx(getTrajVfgsMatrix(trajFull, rateCntList));     // modified
+        instance.setTrajRandList(getTrajRandList(trajFull, rateCntList));
     }
 
     /**
@@ -93,15 +188,15 @@ public class DataController {
         int threadNum;
         switch (type) {
             case FULL:
-                trajList = sharedObject.getTrajFull();
+                trajList = instance.getTrajFull();
                 threadNum = PSC.FULL_THREAD_NUM;
                 break;
             case VFGS:
-                trajList = sharedObject.getTrajVfgsMtx()[deltaIdx][rateIdx];
+                trajList = instance.getTrajVfgsMtx()[deltaIdx][rateIdx];
                 threadNum = PSC.SAMPLE_THREAD_NUM;
                 break;
             case RAND:
-                trajList = sharedObject.getTrajRandList()[rateIdx];
+                trajList = instance.getTrajRandList()[rateIdx];
                 threadNum = PSC.SAMPLE_THREAD_NUM;
                 break;
             default:
@@ -110,7 +205,7 @@ public class DataController {
                         "his block type : " + type);
         }
 
-        sharedObject.getBlockList()[idx].setNewBlock(type, trajList,
+        instance.getBlockList()[idx].setNewBlock(type, trajList,
                 threadNum, deltaIdx, rateIdx);
     }
 }

@@ -8,7 +8,7 @@ import processing.core.PGraphics;
 
 /**
  * Draw the trajectory to the buffer images.
- * Start and Manage by {@link TrajDrawManager}.
+ * Started and Managed by {@link TrajDrawManager}.
  */
 public class TrajDrawWorker extends Thread {
     private final UnfoldingMap map;

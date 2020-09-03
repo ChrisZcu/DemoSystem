@@ -14,7 +14,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Manage the draw workers and divide the draw task.
- * Then provide draw results (PGraph) to app interface.
+ * Then provide draw results (PGraph) to app interface. <br>
+ * It will ask {@link app.SharedObject} for the data.
  *
  * @see TrajDrawWorker
  * @see app.DemoInterface

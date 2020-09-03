@@ -13,6 +13,9 @@ import java.util.NoSuchElementException;
 
 import static util.Util.translateRate;
 
+/**
+ * IO util class
+ */
 public class IOHandle {
     /**
      * Load traj raw data or with score (version problem)

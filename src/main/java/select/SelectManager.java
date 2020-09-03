@@ -3,7 +3,7 @@ package select;
 
 import model.BlockType;
 import model.RegionType;
-import model.SharedObject;
+import app.SharedObject;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.concurrent.ExecutionException;
