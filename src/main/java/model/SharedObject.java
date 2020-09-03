@@ -2,6 +2,9 @@ package model;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 public class SharedObject {
 
     private static final SharedObject instance = new SharedObject();
@@ -25,7 +28,7 @@ public class SharedObject {
     // regions
     private static Region regionO = null;
     private static Region regionD = null;
-
+    private static ArrayList<ArrayList<Region>> regionWLayerList;
     //map
     private static UnfoldingMap map;
 

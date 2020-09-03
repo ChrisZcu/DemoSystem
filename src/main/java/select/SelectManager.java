@@ -36,13 +36,11 @@ public class SelectManager {
             for (int i = 0; i < threadNum - 1; i++) {
                 SelectWorker sw = new SelectWorker(regionType, blockType, i * threadSize, (i + 1) * threadSize);
                 int[] trajIndexAry = (int[]) threadPool.submit(sw).get();
-                if (trajIndexAry != null)
-                    resShowIndex = (int[]) ArrayUtils.addAll(resShowIndex, trajIndexAry);
+                resShowIndex = (int[]) ArrayUtils.addAll(resShowIndex, trajIndexAry);
             }
             SelectWorker sw = new SelectWorker(regionType, blockType, (threadNum - 1) * threadSize, totalLength);
             int[] trajIndexAry = (int[]) threadPool.submit(sw).get();
-            if (trajIndexAry != null)
-                resShowIndex = (int[]) ArrayUtils.addAll(resShowIndex, trajIndexAry);
+            resShowIndex = (int[]) ArrayUtils.addAll(resShowIndex, trajIndexAry);
 
             threadPool.shutdown();
             try {

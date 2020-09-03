@@ -26,15 +26,6 @@ public class SelectWorker implements Callable {
         this.end = end;
     }
 
-    public SelectWorker(RegionType regionType, BlockType methodType, int begin, int end, Region regionW) {
-        this.regionType = regionType;
-        this.blockType = methodType;
-        this.begin = begin;
-        this.end = end;
-
-        this.regionW = regionW;
-    }
-
     @Override
     public int[] call() throws Exception {
         int[] res;
