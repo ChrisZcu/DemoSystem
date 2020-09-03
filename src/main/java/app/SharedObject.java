@@ -158,7 +158,7 @@ public class SharedObject {
      * Compute {@code trajRandList}.
      */
     private Trajectory[][] getTrajRandList(Trajectory[] trajFull, int[] rateCntList) {
-        Random rand = new Random();
+        Random rand = new Random(1);
         int dLen = rateCntList.length;
         Trajectory[][] trajRandList = new Trajectory[dLen][];
 
