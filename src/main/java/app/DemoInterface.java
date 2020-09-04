@@ -10,6 +10,7 @@ import model.EleButton;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
+import util.Swing;
 
 import javax.swing.*;
 import java.awt.*;
@@ -62,6 +63,13 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void setup() {
+        try {
+            String lookAndFeel = UIManager.getSystemLookAndFeelClassName();
+            UIManager.setLookAndFeel(lookAndFeel);
+        } catch (Exception e) {
+            println("--well yeah something went wrong but i dont think we needa know that");
+        }
+
         initMapSurface();
 
         initDataButton();
@@ -84,12 +92,6 @@ public class DemoInterface extends PApplet {
 //        (new Thread(this::loadData)).start();
 
         createTopMenu(screenWidth, mapDownOff - 5, frame, this);
-        try {
-            String lookAndFeel = UIManager.getSystemLookAndFeelClassName();//设置外观风格，和os保持一致
-            UIManager.setLookAndFeel(lookAndFeel);
-        } catch (Exception e) {
-            println("--well yeah something went wrong but i dont think we needa know that");
-        }
     }
 
     private void loadData() {
@@ -108,8 +110,9 @@ public class DemoInterface extends PApplet {
             map.draw();
             mapChanged = checkLevel != map.getZoomLevel() || !checkCenter.equals(map.getCenter());
         }
-        for (EleButton dataButton : dataButtonList)
+        for (EleButton dataButton : dataButtonList) {
             dataButton.render(this);
+        }
 
         if (mapChanged) {
             //TODO update the map
@@ -135,6 +138,7 @@ public class DemoInterface extends PApplet {
         }
     }
 
+    @Override
     public void mousePressed() {
         int eleId = -1;
         for (EleButton dataButton : dataButtonList) {
@@ -144,18 +148,24 @@ public class DemoInterface extends PApplet {
             }
         }
         if (eleId != -1) {
-            //TODO set the dialog visible
-            System.out.println("hello data button");
-        } else System.out.println("1");
+            System.out.println("open dialog");
+            Swing.getSwingDialog(frame, eleId).setVisible(true);
+        } else {
+            System.out.println("eleId == -1");
+        }
     }
 
 
     private void initMapSurface() {
-
-
         mapList = new UnfoldingMap[4];
-        mapXList = new float[]{0, mapWidth + widthGapDis, 0, mapWidth + widthGapDis};
-        mapYList = new float[]{mapDownOff, mapDownOff, mapDownOff + mapHeight + heighGapDis, mapDownOff + mapHeight + heighGapDis};
+        mapXList = new float[]{
+                0, mapWidth + widthGapDis,
+                0, mapWidth + widthGapDis
+        };
+        mapYList = new float[]{
+                mapDownOff, mapDownOff,
+                mapDownOff + mapHeight + heighGapDis, mapDownOff + mapHeight + heighGapDis
+        };
 
         for (int i = 0; i < 4; i++) {
             mapList[i] = new UnfoldingMap(this, mapXList[i], mapYList[i], mapWidth, mapHeight,
