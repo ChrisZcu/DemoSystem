@@ -6,17 +6,21 @@ import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import draw.TrajDrawManager;
 import model.BlockType;
+import model.EleButton;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
 
+import javax.swing.*;
 import java.awt.*;
-import java.util.Arrays;
+
+import static util.Swing.createTopMenu;
 
 
 public class DemoInterface extends PApplet {
     private TrajDrawManager trajDrawManager;
     private PGraphics[][] trajImgMtx;
+    private EleButton[] dataButtonList;
 
     private static final Location PORTO_CENTER = new Location(41.14, -8.639);//维度经度
     private static final Location PRESENT = PORTO_CENTER;
@@ -30,9 +34,14 @@ public class DemoInterface extends PApplet {
     private int screenHeight;
 
     private int mapWidth;
+    private float[] mapXList;       // the x coordination of the all maps
+    private float[] mapYList;       // the y coordination of the all maps
     private int mapHeight;
-    private int[] mapXList;       // the x coordination of the all maps
-    private int[] mapYList;       // the y coordination of the all maps
+    private final int dataButtonXOff = 2;
+    private final int dataButtonYOff = 2;
+    private final int mapDownOff = 40;
+    private final int heighGapDis = 4;
+    private final int widthGapDis = 6;
 
     private boolean[] viewVisibleList;      // is the map view visible
     private boolean[] linkedList;       // is the map view linked to others
@@ -41,20 +50,23 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void settings() {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        Rectangle rect = ge.getMaximumWindowBounds();
-        screenWidth = rect.width;
-        screenHeight = rect.height - 30;
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        screenWidth = (int) screenSize.getWidth();
+        screenHeight = (int) screenSize.getHeight();
 
-        mapWidth = (screenWidth - 6) / 2;
-        mapHeight = (screenHeight - 4) / 2;
+        mapWidth = (screenWidth - widthGapDis) / 2;
+        mapHeight = (screenHeight - mapDownOff - heighGapDis) / 2;
 
-        size(screenWidth, screenHeight, P2D);
+        size(screenWidth, screenHeight - 1, P2D);
     }
 
     @Override
     public void setup() {
         initMapSurface();
+
+        initDataButton();
+        background(220, 220, 220);
+
         SharedObject.getInstance().setMap(mapList[0]);
         SharedObject.getInstance().initBlockList();
 
@@ -62,13 +74,22 @@ public class DemoInterface extends PApplet {
         trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, null, mapWidth, mapHeight);
 
         // move to correct position
-        Insets screenInsets = Toolkit.getDefaultToolkit()
-                .getScreenInsets(frame.getGraphicsConfiguration());
-        System.out.println("screenInsets.left = " + screenInsets.left);
-        System.out.println("screenInsets.top = " + screenInsets.top);
-        surface.setLocation(screenInsets.left - 4, screenInsets.top);
+//        Insets screenInsets = Toolkit.getDefaultToolkit()
+//                .getScreenInsets(frame.getGraphicsConfiguration());
+//        System.out.println("screenInsets.left = " + screenInsets.left);
+//        System.out.println("screenInsets.top = " + screenInsets.top);
+//        surface.setLocation(screenInsets.left - 4, screenInsets.top);
 
-        (new Thread(this::loadData)).start();
+
+//        (new Thread(this::loadData)).start();
+
+        createTopMenu(screenWidth, mapDownOff - 5, frame, this);
+        try {
+            String lookAndFeel = UIManager.getSystemLookAndFeelClassName();//设置外观风格，和os保持一致
+            UIManager.setLookAndFeel(lookAndFeel);
+        } catch (Exception e) {
+            println("--well yeah something went wrong but i dont think we needa know that");
+        }
     }
 
     private void loadData() {
@@ -87,17 +108,18 @@ public class DemoInterface extends PApplet {
             map.draw();
             mapChanged = checkLevel != map.getZoomLevel() || !checkCenter.equals(map.getCenter());
         }
+        for (EleButton dataButton : dataButtonList)
+            dataButton.render(this);
 
         if (mapChanged) {
-            for (PGraphics[] trajImgList : trajImgMtx) {
-                Arrays.fill(trajImgList, null);
-            }
-            System.out.println("changed");
-            trajDrawManager.startNewRenderTask(-1, viewVisibleList, linkedList); // update the graphics
-            UnfoldingMap map = SharedObject.getInstance().getMap();
-            checkCenter = map.getCenter();
-            checkLevel = map.getZoomLevel();
+            //TODO update the map
         }
+//        for (PGraphics[] pgList : trajImgMtx) {
+//            for (PGraphics pg : pgList)
+//                if (pg != null)
+//                    image(pg, 0, 0);
+//        }
+//    }
 
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
@@ -113,10 +135,27 @@ public class DemoInterface extends PApplet {
         }
     }
 
+    public void mousePressed() {
+        int eleId = -1;
+        for (EleButton dataButton : dataButtonList) {
+            if (dataButton.isMouseOver(this)) {
+                eleId = dataButton.getEleId();
+                break;
+            }
+        }
+        if (eleId != -1) {
+            //TODO set the dialog visible
+            System.out.println("hello data button");
+        } else System.out.println("1");
+    }
+
+
     private void initMapSurface() {
+
+
         mapList = new UnfoldingMap[4];
-        mapXList = new int[]{0, screenWidth - mapWidth, 0, screenWidth - mapWidth};
-        mapYList = new int[]{0, 0, screenHeight - mapHeight, screenHeight - mapHeight};
+        mapXList = new float[]{0, mapWidth + widthGapDis, 0, mapWidth + widthGapDis};
+        mapYList = new float[]{mapDownOff, mapDownOff, mapDownOff + mapHeight + heighGapDis, mapDownOff + mapHeight + heighGapDis};
 
         for (int i = 0; i < 4; i++) {
             mapList[i] = new UnfoldingMap(this, mapXList[i], mapYList[i], mapWidth, mapHeight,
@@ -130,5 +169,18 @@ public class DemoInterface extends PApplet {
             map.setTweening(false);
             MapUtils.createDefaultEventDispatcher(this, map);
         }
+
+    }
+
+    private void initDataButton() {
+        dataButtonList = new EleButton[4];
+        dataButtonList[0] = new EleButton(dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 0, "DataSelect");
+        dataButtonList[1] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 1, "DataSelect");
+        dataButtonList[2] = new EleButton(dataButtonXOff, mapHeight + mapDownOff + heighGapDis, 70, 20, 2, "DataSelect");
+        dataButtonList[3] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis, 70, 20, 3, "DataSelect");
+    }
+
+    public static void main(String[] args) {
+        PApplet.main(DemoInterface.class.getName());
     }
 }

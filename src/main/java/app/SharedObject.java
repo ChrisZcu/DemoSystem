@@ -8,6 +8,7 @@ import model.Trajectory;
 import util.IOHandle;
 import util.PSC;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -39,9 +40,14 @@ public class SharedObject {
     private static Region regionD = null;
     private static ArrayList<ArrayList<Region>> regionWLayerList;
 
+    private static boolean[] regionPresent = new boolean[3];// indicate the current region draw.
+
     // map & app
     private static DemoInterface app;
     private static UnfoldingMap map;
+
+    private boolean finishSelectRegion;
+    private boolean screenShot;
 
     // trajectory
     public Trajectory[] getTrajFull() {
@@ -111,6 +117,29 @@ public class SharedObject {
     public UnfoldingMap getMap() {
         return map;
     }
+
+    public void eraseRegionPren() {
+        Arrays.fill(regionPresent, false);
+    }
+
+    public void updateRegionPreList(int regionId) {
+        eraseRegionPren();
+        regionPresent[regionId] = true;
+    }
+
+    public void setFinishSelectRegion(boolean status) {
+        finishSelectRegion = status;
+    }
+
+    public void setScreenShot(boolean shot) {
+        screenShot = shot;
+    }
+
+    public void cleanRegions() {
+        regionO = regionD = null;
+        regionWLayerList.clear();
+    }
+
 
     /**
      * Load trajectory data from file (FULL)
