@@ -51,6 +51,8 @@ public class DemoInterface extends PApplet {
     private boolean[] linkedList;       // is the map view linked to others
 
     private boolean loadFinished = false;
+    private int regionId = 0;
+    private int dragRegionId = -1;
 
     @Override
     public void settings() {
@@ -115,7 +117,8 @@ public class DemoInterface extends PApplet {
             mapChanged = checkLevel != map.getZoomLevel() || !checkCenter.equals(map.getCenter());
         }
         for (EleButton dataButton : dataButtonList) {
-            dataButton.render(this);}
+            dataButton.render(this);
+        }
 
         if (mapChanged) {
             //TODO update the map
@@ -132,20 +135,28 @@ public class DemoInterface extends PApplet {
                 image(pg, mapXList[mapIdx], mapYList[mapIdx]);
             }
         }
-        if (regionDragged) {//drag the region
+        if (regionDragged) {//drag the region, not finished
             drawRegion(getSelectRegion(lastClick));
         }
         for (Region r : SharedObject.getInstance().getRegionWithoutWList()) {
             drawRegion(r);
+            strokeWeight(circleSize);
+            point(r.leftTop.x, r.leftTop.y);
         }
         for (ArrayList<Region> wList : SharedObject.getInstance().getRegionWLayerList()) {
-            for (Region r : wList)
+            for (Region r : wList) {
                 drawRegion(r);
+                strokeWeight(circleSize);
+                point(r.leftTop.x, r.leftTop.y);
+            }
         }
     }
 
     private boolean regionDragged = false;
     private Position lastClick;
+    private Region dragRegion;
+    private int circleSize = 15;
+    private boolean mouseMove = false;
 
     @Override
     public void mousePressed() {
@@ -159,7 +170,7 @@ public class DemoInterface extends PApplet {
         if (eleId != -1) {
             System.out.println("open dialog");
             Swing.getSwingDialog(frame, eleId).setVisible(true);
-        } else  {
+        } else {
             System.out.println("eleId == -1");
         }
 
@@ -167,6 +178,19 @@ public class DemoInterface extends PApplet {
             if (SharedObject.getInstance().checkSelectRegion()) {
                 regionDragged = true;
                 lastClick = new Position(mouseX, mouseY);
+            }
+        }
+        //drag
+        if (SharedObject.getInstance().isDragRegion()) {
+            for (Region r : SharedObject.getInstance().getAllRegions()) {
+                if (mouseX >= r.leftTop.x - circleSize / 2 && mouseX <= r.rightBtm.x + circleSize / 2
+                        && mouseY >= r.leftTop.y - circleSize / 2 && mouseY <= r.rightBtm.y + circleSize / 2) {
+                    dragRegionId = r.id;
+                    dragRegion = r;
+                    mouseMove = !mouseMove;
+                    System.out.println(dragRegionId);
+                    break;
+                }
             }
         }
     }
@@ -209,6 +233,8 @@ public class DemoInterface extends PApplet {
                 selectRegion = new Region(curClick, lastClick);
             }
         }
+        selectRegion.id = regionId++;
+
         if (SharedObject.getInstance().checkRegion(0)) // O
             selectRegion.color = PSC.COLORS[0];
         else if (SharedObject.getInstance().checkRegion(1)) //D
@@ -220,7 +246,6 @@ public class DemoInterface extends PApplet {
     }
 
     private void initMapSurface() {
-
 
         mapList = new UnfoldingMap[4];
         mapXList = new float[]{
@@ -258,12 +283,24 @@ public class DemoInterface extends PApplet {
     private void drawRegion(Region r) {
         if (r == null || r.leftTop == null || r.rightBtm == null)
             return;
+
         Position lT = r.leftTop;
         Position rB = r.rightBtm;
-        stroke(r.color.getRGB());
 
         int length = Math.abs(lT.x - rB.x);
         int high = Math.abs(lT.y - rB.y);
+
+        if (mouseMove && r.id == dragRegionId) {
+            r.leftTop = new Position(mouseX, mouseY);
+            r.rightBtm = new Position(mouseX + length, mouseY + high);
+        }
+
+        lT = r.leftTop;
+        rB = r.rightBtm;
+        stroke(r.color.getRGB());
+
+        length = Math.abs(lT.x - rB.x);
+        high = Math.abs(lT.y - rB.y);
 
         lT = r.leftTop;
         noFill();
