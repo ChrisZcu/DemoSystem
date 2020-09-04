@@ -26,10 +26,6 @@ public class Element extends PApplet {
         int mouseX = pApplet.mouseX;
         int mouseY = pApplet.mouseY;
 
-        System.out.println(mouseX + ", " + mouseY);
-        System.out.println(x + ", " + width);
-        System.out.println(y + ", " + height);
-        System.out.println("-------------------------------------");
         return (mouseX > x) && (mouseX < (x + width)) &&
                 (mouseY > y) && (mouseY < (y + height));
     }
