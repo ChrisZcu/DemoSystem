@@ -151,15 +151,4 @@ public class Swing {
         menuWindow.setAlwaysOnTop(true);
         menuWindow.setVisible(true);
     }
-
-    /**
-     * Call this to get the dialog that shown the traj block data of current map.
-     */
-    public static JDialog getSwingDialog(Frame frame, int mapIdx) {
-        if (selectDataDialog == null) {
-            selectDataDialog = new SelectDataDialog(frame);
-        }
-        selectDataDialog.setDataInfo(mapIdx);
-        return selectDataDialog;
-    }
 }

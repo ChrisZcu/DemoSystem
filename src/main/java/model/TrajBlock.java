@@ -1,7 +1,8 @@
 package model;
 
 /**
- * The traj structured block which used to s
+ * The traj structured block which used to show on one map view.
+ * All info about the trajectory is here.
  */
 public final class TrajBlock {
     private BlockType blockType; // full, random, VFGS

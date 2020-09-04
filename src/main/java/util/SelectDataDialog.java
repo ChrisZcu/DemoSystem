@@ -1,6 +1,7 @@
 package util;
 
 import app.SharedObject;
+import draw.TrajDrawManager;
 import model.BlockType;
 import model.TrajBlock;
 
@@ -11,7 +12,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * The dialog that popup to select the data for speci
+ * The dialog that popup to select the data for specific map view.
  */
 public class SelectDataDialog extends JDialog {
     private static final int WIDTH = 400;
@@ -118,6 +119,9 @@ public class SelectDataDialog extends JDialog {
         mainPanel.add(bottomBox, BorderLayout.SOUTH);
     }
 
+    /**
+     * Set the logic of the components.
+     */
     private void initLogic() {
         // change visible settings when type is changed.
         typeComboBox.addItemListener(e -> {
@@ -135,7 +139,17 @@ public class SelectDataDialog extends JDialog {
     }
 
     /**
+     * Call this to get the dialog that shown the traj block data of current map.
+     * But not to call {@link #setVisible(boolean)} directly.
+     */
+    public void showDialogFor(int mapIdx) {
+        setDataInfo(mapIdx);
+        setVisible(true);
+    }
+
+    /**
      * Set the current data to a specific {@link model.TrajBlock}.
+     * Will be called when open it.
      *
      * @param mapIdx the idx to get the trajBlock.
      */
@@ -191,5 +205,13 @@ public class SelectDataDialog extends JDialog {
             return;
         }
         SharedObject.getInstance().setBlockAt(optMapIdx, newType, newRIdx, newDIdx);
+
+        boolean[] viewVisibleList = SharedObject.getInstance().getViewVisibleList();
+        if (!viewVisibleList[optMapIdx]) {
+            // no need to draw it right now
+            return;
+        }
+        TrajDrawManager trajDrawManager = SharedObject.getInstance().getTrajDrawManager();
+        trajDrawManager.startNewRenderTaskFor(optMapIdx);
     }
 }

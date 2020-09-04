@@ -1,6 +1,7 @@
 package app;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
+import draw.TrajDrawManager;
 import model.BlockType;
 import model.Region;
 import model.TrajBlock;
@@ -33,7 +34,10 @@ public class SharedObject {
 
     private static Trajectory[][] trajArray = new Trajectory[3][];
 
+    private static TrajDrawManager trajDrawManager;
     private static TrajBlock[] blockList;
+
+    private static boolean[] viewVisibleList;
 
     // regions
     private static Region regionO = null;
@@ -80,8 +84,24 @@ public class SharedObject {
         SharedObject.trajVfgsMtx = trajVfgsMtx;
     }
 
+    public TrajDrawManager getTrajDrawManager() {
+        return trajDrawManager;
+    }
+
+    public void setTrajDrawManager(TrajDrawManager trajDrawManager) {
+        SharedObject.trajDrawManager = trajDrawManager;
+    }
+
     public TrajBlock[] getBlockList() {
         return blockList;
+    }
+
+    public boolean[] getViewVisibleList() {
+        return viewVisibleList;
+    }
+
+    public void setViewVisibleList(boolean[] visibleList) {
+        SharedObject.viewVisibleList = visibleList;
     }
 
     public Trajectory[][] getTrajArray() {

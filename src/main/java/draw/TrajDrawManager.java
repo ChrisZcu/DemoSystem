@@ -3,6 +3,7 @@ package draw;
 import app.DemoInterface;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import app.SharedObject;
+import model.BlockType;
 import model.TrajBlock;
 import processing.core.PApplet;
 import processing.core.PGraphics;
@@ -85,10 +86,12 @@ public class TrajDrawManager {
                     continue;       // this map view won't be refreshed
                 }
 
-                UnfoldingMap map = mapList[mapIdx];
-
                 // start painting tasks
+                UnfoldingMap map = mapList[mapIdx];
                 TrajBlock tb = blockList[mapIdx];
+                if (tb.getBlockType().equals(BlockType.NONE)) {
+                    continue;       // no need to draw
+                }
                 int totLen = tb.getTrajList().length;
                 int threadNum = tb.getThreadNum();
                 int segLen = totLen / threadNum;

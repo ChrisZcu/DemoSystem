@@ -12,18 +12,19 @@ import model.Region;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
-import util.Swing;
+import util.SelectDataDialog;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static util.Swing.createTopMenu;
 
 
 public class DemoInterface extends PApplet {
     private TrajDrawManager trajDrawManager;
-    private PGraphics[][] trajImgMtx;
+    private PGraphics[][] trajImgMtx;           // the 4 trajImg buffer layers list
     private EleButton[] dataButtonList;
 
     private static final Location PORTO_CENTER = new Location(41.14, -8.639);//维度经度
@@ -54,6 +55,16 @@ public class DemoInterface extends PApplet {
     private int regionId = 0;
     private int dragRegionId = -1;
 
+    private boolean regionDragged = false;
+    private Position lastClick;
+
+    private int circleSize = 15;
+    private boolean mouseMove = false;
+
+    /* Other interface component */
+
+    private SelectDataDialog selectDataDialog;
+
     @Override
     public void settings() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -72,32 +83,33 @@ public class DemoInterface extends PApplet {
             String lookAndFeel = UIManager.getSystemLookAndFeelClassName();
             UIManager.setLookAndFeel(lookAndFeel);
         } catch (Exception e) {
-            println("--well yeah something went wrong but i dont think we needa know that");
+            System.err.println("Set look and feel failed!");
         }
 
         initMapSurface();
         initDataButton();
         background(220, 220, 220);
 
-        trajImgMtx = new PGraphics[4][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
-        trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, null,
-                mapXList, mapYList, mapWidth, mapHeight);
-
         SharedObject.getInstance().setApp(this);
         SharedObject.getInstance().setMap(mapList[0]);
         SharedObject.getInstance().initBlockList();
 
-        // move to correct position
-//        Insets screenInsets = Toolkit.getDefaultToolkit()
-//                .getScreenInsets(frame.getGraphicsConfiguration());
-//        System.out.println("screenInsets.left = " + screenInsets.left);
-//        System.out.println("screenInsets.top = " + screenInsets.top);
-//        surface.setLocation(screenInsets.left - 4, screenInsets.top);
+        trajImgMtx = new PGraphics[4][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
+        // Warning: the constructor of the TrajDrawManager must be called AFTER initBlockList()
+        trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, null,
+                mapXList, mapYList, mapWidth, mapHeight);
+        SharedObject.getInstance().setTrajDrawManager(trajDrawManager);
 
+        viewVisibleList = new boolean[4];
+        Arrays.fill(viewVisibleList, true);     // temp
+        SharedObject.getInstance().setViewVisibleList(viewVisibleList);
 
-//        (new Thread(this::loadData)).start();
-
+        // init other interface component
         createTopMenu(screenWidth, mapDownOff - 5, frame, this);
+        this.selectDataDialog = new SelectDataDialog(frame);
+
+        (new Thread(this::loadData)).start();
+
     }
 
     private void loadData() {
@@ -154,11 +166,6 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    private boolean regionDragged = false;
-    private Position lastClick;
-    private int circleSize = 15;
-    private boolean mouseMove = false;
-
     @Override
     public void mousePressed() {
         int eleId = -1;
@@ -169,8 +176,12 @@ public class DemoInterface extends PApplet {
             }
         }
         if (eleId != -1) {
-            System.out.println("open dialog");
-            Swing.getSwingDialog(frame, eleId).setVisible(true);
+            if (loadFinished) {
+                System.out.println("open dialog");
+                selectDataDialog.showDialogFor(eleId);
+            } else {
+                System.out.println("not to open dialog");
+            }
         } else {
             System.out.println("eleId == -1");
         }
