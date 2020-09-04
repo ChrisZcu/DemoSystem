@@ -9,6 +9,11 @@ public final class TrajBlock {
     private int threadNum;
     private int dIdx, rIdx;           // the param for select color
 
+    public TrajBlock() {
+        blockType = BlockType.NONE;
+        trajList = null;
+    }
+
     public void setNewBlock(BlockType blockType, Trajectory[] trajList,
                             int threadNum, int dIdx, int rIdx) {
         this.blockType = blockType;

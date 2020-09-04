@@ -74,16 +74,16 @@ public class DemoInterface extends PApplet {
         }
 
         initMapSurface();
-
         initDataButton();
         background(220, 220, 220);
-
-        SharedObject.getInstance().setMap(mapList[0]);
-        SharedObject.getInstance().initBlockList();
 
         trajImgMtx = new PGraphics[4][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
         trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, null,
                 mapXList, mapYList, mapWidth, mapHeight);
+
+        SharedObject.getInstance().setApp(this);
+        SharedObject.getInstance().setMap(mapList[0]);
+        SharedObject.getInstance().initBlockList();
 
         // move to correct position
 //        Insets screenInsets = Toolkit.getDefaultToolkit()
@@ -114,12 +114,15 @@ public class DemoInterface extends PApplet {
             map.draw();
             mapChanged = checkLevel != map.getZoomLevel() || !checkCenter.equals(map.getCenter());
         }
+
         for (EleButton dataButton : dataButtonList) {
-            dataButton.render(this);}
+            dataButton.render(this);
+        }
 
         if (mapChanged) {
-            //TODO update the map
+            // TODO update the map
         }
+
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
             /*if (!viewVisibleList[mapIdx]) {
@@ -132,6 +135,7 @@ public class DemoInterface extends PApplet {
                 image(pg, mapXList[mapIdx], mapYList[mapIdx]);
             }
         }
+
         if (regionDragged) {//drag the region
             drawRegion(getSelectRegion(lastClick));
         }
@@ -139,8 +143,9 @@ public class DemoInterface extends PApplet {
             drawRegion(r);
         }
         for (ArrayList<Region> wList : SharedObject.getInstance().getRegionWLayerList()) {
-            for (Region r : wList)
+            for (Region r : wList) {
                 drawRegion(r);
+            }
         }
     }
 
@@ -171,20 +176,20 @@ public class DemoInterface extends PApplet {
         }
     }
 
+    @Override
     public void mouseReleased() {
         if (regionDragged) {
             regionDragged = false;
             Region selectRegion = getSelectRegion(lastClick);
-            if (SharedObject.getInstance().checkRegion(0)) // O
+            if (SharedObject.getInstance().checkRegion(0)) {        // O
                 SharedObject.getInstance().setRegionO(selectRegion);
-            else if (SharedObject.getInstance().checkRegion(1)) //D
+            } else if (SharedObject.getInstance().checkRegion(1)) {     // D
                 SharedObject.getInstance().setRegionD(selectRegion);
-            else {
+            } else {
                 SharedObject.getInstance().addWayPoint(selectRegion);
             }
 
             SharedObject.getInstance().eraseRegionPren();
-
         }
     }
 
@@ -209,19 +214,18 @@ public class DemoInterface extends PApplet {
                 selectRegion = new Region(curClick, lastClick);
             }
         }
-        if (SharedObject.getInstance().checkRegion(0)) // O
+        if (SharedObject.getInstance().checkRegion(0)) {    // O
             selectRegion.color = PSC.COLORS[0];
-        else if (SharedObject.getInstance().checkRegion(1)) //D
+        } else if (SharedObject.getInstance().checkRegion(1)) {     //D
             selectRegion.color = PSC.COLORS[1];
-        else
+        } else {
             selectRegion.color = PSC.COLORS[SharedObject.getInstance().getWayLayer() + 1];
+        }
 
         return selectRegion;
     }
 
     private void initMapSurface() {
-
-
         mapList = new UnfoldingMap[4];
         mapXList = new float[]{
                 0, mapWidth + widthGapDis,
@@ -256,8 +260,9 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawRegion(Region r) {
-        if (r == null || r.leftTop == null || r.rightBtm == null)
+        if (r == null || r.leftTop == null || r.rightBtm == null) {
             return;
+        }
         Position lT = r.leftTop;
         Position rB = r.rightBtm;
         stroke(r.color.getRGB());

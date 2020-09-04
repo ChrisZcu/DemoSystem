@@ -128,9 +128,11 @@ public class SharedObject {
     }
 
     public boolean checkSelectRegion() {
-        for (boolean f : regionPresent)
-            if (f)
+        for (boolean f : regionPresent) {
+            if (f) {
                 return true;
+            }
+        }
 
         return false;
     }
@@ -158,15 +160,17 @@ public class SharedObject {
     }
 
     public void addWayPoint(Region r) {
-        if (regionWLayerList.size() < wayPointLayer)
+        if (regionWLayerList.size() < wayPointLayer) {
             regionWLayerList.add(new ArrayList<Region>());
+        }
 
         regionWLayerList.get(wayPointLayer - 1).add(r);
     }
 
     public void updateWLayer() {
-        if (wayPointLayer == regionWLayerList.size())
+        if (wayPointLayer == regionWLayerList.size()) {
             wayPointLayer++;
+        }
     }
 
     public int getWayLayer() {
@@ -262,6 +266,10 @@ public class SharedObject {
         Trajectory[] trajList;
         int threadNum;
         switch (type) {
+            case NONE:
+                trajList = null;
+                threadNum = -1;
+                break;
             case FULL:
                 trajList = instance.getTrajFull();
                 threadNum = PSC.FULL_THREAD_NUM;
