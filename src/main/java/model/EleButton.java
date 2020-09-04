@@ -12,9 +12,9 @@ public class EleButton extends Element {
 
     @Override
     public void render(PApplet pApplet) {
-        pApplet.noFill();
+        pApplet.fill(112, 128, 144);
 
-        pApplet.stroke(83, 134, 139);
+        pApplet.stroke(112, 128, 144);
         pApplet.strokeWeight(2);
         pApplet.rect(x, y, width, height);
 
@@ -25,9 +25,9 @@ public class EleButton extends Element {
     }
 
     public void render(int x, int y, PApplet pApplet) {
-        pApplet.noFill();
+        pApplet.fill(112, 128, 144);
 
-        pApplet.stroke(83, 134 ,139);
+        pApplet.stroke(112, 128, 144);
         pApplet.strokeWeight(2);
         pApplet.rect(x, y, width, height);
 
