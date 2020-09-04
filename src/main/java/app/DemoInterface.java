@@ -5,28 +5,22 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import draw.TrajDrawManager;
-import app.SharedObject;
-import model.EleButton;
+import model.BlockType;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
 
-import javax.swing.*;
 import java.awt.*;
+import java.util.Arrays;
 
 
 public class DemoInterface extends PApplet {
     private TrajDrawManager trajDrawManager;
     private PGraphics[][] trajImgMtx;
-    private EleButton[] dataButtonList;
 
     private static final Location PORTO_CENTER = new Location(41.14, -8.639);//维度经度
     private static final Location PRESENT = PORTO_CENTER;
 
-    private UnfoldingMap map0;
-    private UnfoldingMap map1;
-    private UnfoldingMap map2;
-    private UnfoldingMap map3;
     private UnfoldingMap[] mapList;
 
     private int checkLevel = -1;
@@ -34,82 +28,100 @@ public class DemoInterface extends PApplet {
 
     private int screenWidth;
     private int screenHeight;
+
     private int mapWidth;
-    private int mapHeigh;
-    private final int dataButtonXOff = 2; //
-    private final int dataButtonYOff = 2;
-    private final int mapDownOff = 40;
-    private final int heighGapDis = 4;
-    private final int widthGapDis = 6;
+    private int mapHeight;
+    private int[] mapXList;       // the x coordination of the all maps
+    private int[] mapYList;       // the y coordination of the all maps
 
-    private boolean[] viewVisibleList; // 可视
-    private boolean[] linkedList; // 联动
+    private boolean[] viewVisibleList;      // is the map view visible
+    private boolean[] linkedList;       // is the map view linked to others
 
+    private boolean loadFinished = false;
 
+    @Override
     public void settings() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        screenWidth = (int) screenSize.getWidth();
-        screenHeight = (int) screenSize.getHeight();
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        Rectangle rect = ge.getMaximumWindowBounds();
+        screenWidth = rect.width;
+        screenHeight = rect.height - 30;
 
-        mapWidth = (screenWidth - widthGapDis) / 2;
-        mapHeigh = (screenHeight - mapDownOff - heighGapDis) / 2;
+        mapWidth = (screenWidth - 6) / 2;
+        mapHeight = (screenHeight - 4) / 2;
 
-//        size(screenWidth, screenHeight, P2D);
-        fullScreen(P2D);
+        size(screenWidth, screenHeight, P2D);
     }
 
+    @Override
     public void setup() {
-        background(220, 220, 220);
-        initMapSuface();
-        initDataButton();
-        trajImgMtx = new PGraphics[4][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
-        trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, null);
-
-
+        initMapSurface();
         SharedObject.getInstance().setMap(mapList[0]);
+        SharedObject.getInstance().initBlockList();
+
+        trajImgMtx = new PGraphics[4][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
+        trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, null, mapWidth, mapHeight);
+
+        // move to correct position
+        Insets screenInsets = Toolkit.getDefaultToolkit()
+                .getScreenInsets(frame.getGraphicsConfiguration());
+        System.out.println("screenInsets.left = " + screenInsets.left);
+        System.out.println("screenInsets.top = " + screenInsets.top);
+        surface.setLocation(screenInsets.left - 4, screenInsets.top);
+
+        (new Thread(this::loadData)).start();
     }
 
+    private void loadData() {
+        SharedObject.getInstance().loadTrajData();
+        SharedObject.getInstance().setBlockAt(0, BlockType.FULL, -1, -1);
+        SharedObject.getInstance().setBlockAt(1, BlockType.VFGS, 0, 0);
+        SharedObject.getInstance().setBlockAt(2, BlockType.RAND, 0, -1);
+        trajDrawManager.startNewRenderTask(-1, null, null);
+        loadFinished = true;
+    }
+
+    @Override
     public void draw() {
-        boolean mapChanged = false;
+        boolean mapChanged = true;
         for (UnfoldingMap map : mapList) {
             map.draw();
-            if (checkLevel != map.getZoomLevel() || !checkCenter.equals(map.getCenter()))
-                mapChanged = true;
+            mapChanged = checkLevel != map.getZoomLevel() || !checkCenter.equals(map.getCenter());
         }
-        for (EleButton dataButton : dataButtonList)
-            dataButton.render(this);
 
         if (mapChanged) {
-            //TODO update the map
+            for (PGraphics[] trajImgList : trajImgMtx) {
+                Arrays.fill(trajImgList, null);
+            }
+            System.out.println("changed");
+            trajDrawManager.startNewRenderTask(-1, viewVisibleList, linkedList); // update the graphics
+            UnfoldingMap map = SharedObject.getInstance().getMap();
+            checkCenter = map.getCenter();
+            checkLevel = map.getZoomLevel();
         }
-        for (PGraphics[] pgList : trajImgMtx) {
-            for (PGraphics pg : pgList)
-                if (pg != null)
-                    image(pg, 0, 0);
-        }
-    }
 
-    public void mousePressed() {
-        int eleId = -1;
-        for (EleButton dataButton : dataButtonList) {
-            if (dataButton.isMouseOver(this)) {
-                eleId = dataButton.getEleId();
-                break;
+        nextMap:
+        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
+            /*if (!viewVisibleList[mapIdx]) {
+                continue;
+            }*/
+            for (PGraphics pg : trajImgMtx[mapIdx]) {
+                if (pg == null) {
+                    continue nextMap;
+                }
+                image(pg, mapXList[mapIdx], mapYList[mapIdx]);
             }
         }
-        if (eleId != -1) {
-            //TODO set the dialog visible
-            System.out.println("hello data button");
-        } else System.out.println("1");
     }
 
-    private void initMapSuface() {
+    private void initMapSurface() {
         mapList = new UnfoldingMap[4];
+        mapXList = new int[]{0, screenWidth - mapWidth, 0, screenWidth - mapWidth};
+        mapYList = new int[]{0, 0, screenHeight - mapHeight, screenHeight - mapHeight};
 
-        mapList[0] = new UnfoldingMap(this, 0, mapDownOff, mapWidth, mapHeigh, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
-        mapList[1] = new UnfoldingMap(this, mapWidth + widthGapDis, mapDownOff, mapWidth, mapHeigh, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
-        mapList[2] = new UnfoldingMap(this, 0, mapDownOff + mapHeigh + heighGapDis, mapWidth, mapHeigh, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
-        mapList[3] = new UnfoldingMap(this, mapWidth + widthGapDis, mapDownOff + mapHeigh + heighGapDis, mapWidth, mapHeigh, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
+        for (int i = 0; i < 4; i++) {
+            mapList[i] = new UnfoldingMap(this, mapXList[i], mapYList[i], mapWidth, mapHeight,
+                    new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
+        }
 
         for (UnfoldingMap map : mapList) {
             map.setZoomRange(1, 20);
@@ -118,18 +130,5 @@ public class DemoInterface extends PApplet {
             map.setTweening(false);
             MapUtils.createDefaultEventDispatcher(this, map);
         }
-
-    }
-
-    private void initDataButton() {
-        dataButtonList = new EleButton[4];
-        dataButtonList[0] = new EleButton(dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 0, "DataSelect");
-        dataButtonList[1] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 1, "DataSelect");
-        dataButtonList[2] = new EleButton(dataButtonXOff, mapHeigh + mapDownOff+heighGapDis, 70, 20, 2, "DataSelect");
-        dataButtonList[3] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, mapHeigh + mapDownOff+heighGapDis, 70, 20, 3, "DataSelect");
-    }
-
-    public static void main(String[] args) {
-        PApplet.main(DemoInterface.class.getName());
     }
 }

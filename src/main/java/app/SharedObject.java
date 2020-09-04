@@ -32,7 +32,7 @@ public class SharedObject {
 
     private static Trajectory[][] trajArray = new Trajectory[3][];
 
-    private static TrajBlock[] blockList; //
+    private static TrajBlock[] blockList;
 
     // regions
     private static Region regionO = null;
@@ -70,10 +70,6 @@ public class SharedObject {
 
     public TrajBlock[] getBlockList() {
         return blockList;
-    }
-
-    public static void setBlockList(TrajBlock[] blockList) {
-        SharedObject.blockList = blockList;
     }
 
     public Trajectory[][] getTrajArray() {
@@ -183,7 +179,18 @@ public class SharedObject {
         return trajRandList;
     }
 
-    public void setBlockAt(int idx, BlockType type, int deltaIdx, int rateIdx) {
+
+    /**
+     * This must be called before use {@link #setBlockAt}
+     */
+    public void initBlockList() {
+        blockList = new TrajBlock[4];
+        for (int i = 0; i < 4; i++) {
+            blockList[i] = new TrajBlock();
+        }
+    }
+
+    public void setBlockAt(int idx, BlockType type, int rateIdx, int deltaIdx) {
         Trajectory[] trajList;
         int threadNum;
         switch (type) {

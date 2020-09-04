@@ -32,7 +32,7 @@ public class TrajDrawManager {
     private final TrajDrawWorker[][] trajDrawWorkerMtx;
     private final boolean[] refreshList;
 
-    private int width = 300, height = 300;      // size for one map view
+    private final int width, height;      // size for one map view
 
     // multi-thread for part image painting
     private final ExecutorService threadPool;
@@ -42,12 +42,15 @@ public class TrajDrawManager {
     private Thread controlThread;
 
     public TrajDrawManager(DemoInterface app, UnfoldingMap[] mapList,
-                           PGraphics[][] trajImageMtx, int[] trajCnt) {
+                           PGraphics[][] trajImageMtx, int[] trajCnt,
+                           int width, int height) {
         this.app = app;
         this.mapList = mapList;
         this.trajImageMtx = trajImageMtx;
         this.trajCnt = trajCnt;
         this.blockList = SharedObject.getInstance().getBlockList();
+        this.width = width;
+        this.height = height;
 
         int len = Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM);
         this.trajDrawWorkerMtx = new TrajDrawWorker[4][len];
@@ -63,7 +66,6 @@ public class TrajDrawManager {
             // drop last thread and begin next
             this.setRejectedExecutionHandler(new DiscardOldestPolicy());
         }};
-
 
         this.refreshList = new boolean[4];
         Arrays.fill(refreshList, true);
@@ -90,13 +92,13 @@ public class TrajDrawManager {
                 for (int idx = 0; idx < threadNum; idx++) {
                     int begin = segLen * idx;
                     int end = Math.min(begin + segLen, totLen);    // exclude
-                    // TODO width height are not assigned now.
-                    TrajDrawWorker worker = new TrajDrawWorker(mapList[mapIdx], app.createGraphics(width, height),
-                            trajImageMtx[mapIdx], tb.getTrajList(), trajCnt,
-                            mapIdx, idx, begin, end);
+                    TrajDrawWorker worker = new TrajDrawWorker(mapList[mapIdx],
+                            app.createGraphics(width, height), trajImageMtx[mapIdx],
+                            tb.getTrajList(), trajCnt, mapIdx, idx, begin, end);
 
                     trajDrawWorkerList[idx] = worker;
                     threadPool.submit(worker);
+                    System.out.printf("worker submit mapIdx=%d idx=%d%n", mapIdx, idx);
                 }
             }
         }
@@ -104,7 +106,7 @@ public class TrajDrawManager {
 
     /**
      * Update traj painting according to two param list.
-     * if optViewIdx == -1, update all forcibly
+     * if optViewIdx == -1, update all forcibly (in this case two list can be {@code null}).
      */
     public void startNewRenderTask(int optViewIdx, boolean[] viewVisibleList,
                                    boolean[] linkedList) {
@@ -127,7 +129,8 @@ public class TrajDrawManager {
     }
 
     /**
-     * Update the traj painting for specific map view
+     * Update the traj painting for specific map view.
+     * Other map view will not change.
      */
     public void startNewRenderTaskFor(int optViewIdx) {
         for (int i = 0; i < 4; i++) {

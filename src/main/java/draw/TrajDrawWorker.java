@@ -19,12 +19,12 @@ public class TrajDrawWorker extends Thread {
     private final int mapIdx, index;        // param to locate the pg this worker dealing with
     private final int begin, end;     // the param for select traj
 
-    public TrajDrawWorker(UnfoldingMap map, PGraphics pg, PGraphics[] trajImages,
+    public TrajDrawWorker(UnfoldingMap map, PGraphics pg, PGraphics[] trajImageList,
                           Trajectory[] trajList, int[] trajCnt,
                           int mapIdx, int index, int begin, int end) {
         this.map = map;
         this.pg = pg;
-        this.trajImages = trajImages;
+        this.trajImages = trajImageList;
         this.trajList = trajList;
         this.trajCnt = trajCnt;
         this.mapIdx = mapIdx;
@@ -47,15 +47,17 @@ public class TrajDrawWorker extends Thread {
         pg.strokeWeight(1);
         pg.stroke(255, 0, 0);
 
+        System.out.printf("worker start mapIdx=%d index=%d%n", mapIdx, index);
+
         for (int i = begin; i < end; i++) {
             pg.beginShape();
-
 
             // draw the traj
             for (Location loc : trajList[i].getLocations()) {
 
                 // stop the thread if it is interrupted
                 if (this.isInterrupted()) {
+                    System.out.printf("worker canceled mapIdx=%d index=%d%n", mapIdx, index);
                     pg.endShape();
                     pg.endDraw();
                     return;
