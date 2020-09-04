@@ -7,6 +7,8 @@ import de.fhpotsdam.unfolding.utils.MapUtils;
 import draw.TrajDrawManager;
 import model.BlockType;
 import model.EleButton;
+import model.Position;
+import model.Region;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
@@ -14,6 +16,7 @@ import util.Swing;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 import static util.Swing.createTopMenu;
 
@@ -44,7 +47,7 @@ public class DemoInterface extends PApplet {
     private final int heighGapDis = 4;
     private final int widthGapDis = 6;
 
-    private boolean[] viewVisibleList;  // is the map view visible
+    private boolean[] viewVisibleList;      // is the map view visible
     private boolean[] linkedList;       // is the map view linked to others
 
     private boolean loadFinished = false;
@@ -90,7 +93,7 @@ public class DemoInterface extends PApplet {
 //        surface.setLocation(screenInsets.left - 4, screenInsets.top);
 
 
-        (new Thread(this::loadData)).start();
+//        (new Thread(this::loadData)).start();
 
         createTopMenu(screenWidth, mapDownOff - 5, frame, this);
     }
@@ -112,13 +115,11 @@ public class DemoInterface extends PApplet {
             mapChanged = checkLevel != map.getZoomLevel() || !checkCenter.equals(map.getCenter());
         }
         for (EleButton dataButton : dataButtonList) {
-            dataButton.render(this);
-        }
+            dataButton.render(this);}
 
         if (mapChanged) {
             //TODO update the map
         }
-
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
             /*if (!viewVisibleList[mapIdx]) {
@@ -131,7 +132,20 @@ public class DemoInterface extends PApplet {
                 image(pg, mapXList[mapIdx], mapYList[mapIdx]);
             }
         }
+        if (regionDragged) {//drag the region
+            drawRegion(getSelectRegion(lastClick));
+        }
+        for (Region r : SharedObject.getInstance().getRegionWithoutWList()) {
+            drawRegion(r);
+        }
+        for (ArrayList<Region> wList : SharedObject.getInstance().getRegionWLayerList()) {
+            for (Region r : wList)
+                drawRegion(r);
+        }
     }
+
+    private boolean regionDragged = false;
+    private Position lastClick;
 
     @Override
     public void mousePressed() {
@@ -145,13 +159,69 @@ public class DemoInterface extends PApplet {
         if (eleId != -1) {
             System.out.println("open dialog");
             Swing.getSwingDialog(frame, eleId).setVisible(true);
-        } else {
+        } else  {
             System.out.println("eleId == -1");
+        }
+
+        if (mouseButton == RIGHT) {
+            if (SharedObject.getInstance().checkSelectRegion()) {
+                regionDragged = true;
+                lastClick = new Position(mouseX, mouseY);
+            }
         }
     }
 
+    public void mouseReleased() {
+        if (regionDragged) {
+            regionDragged = false;
+            Region selectRegion = getSelectRegion(lastClick);
+            if (SharedObject.getInstance().checkRegion(0)) // O
+                SharedObject.getInstance().setRegionO(selectRegion);
+            else if (SharedObject.getInstance().checkRegion(1)) //D
+                SharedObject.getInstance().setRegionD(selectRegion);
+            else {
+                SharedObject.getInstance().addWayPoint(selectRegion);
+            }
+
+            SharedObject.getInstance().eraseRegionPren();
+
+        }
+    }
+
+    private Region getSelectRegion(Position lastClick) {
+        Position curClick = new Position(mouseX, mouseY);
+        Region selectRegion = new Region();
+        if (lastClick.x < curClick.x) {//left
+            if (lastClick.y < curClick.y) {//up
+                selectRegion.leftTop = lastClick;
+                selectRegion.rightBtm = curClick;
+            } else {//left_down
+                Position left_top = new Position(lastClick.x, curClick.y);
+                Position right_btm = new Position(curClick.x, lastClick.y);
+                selectRegion = new Region(left_top, right_btm);
+            }
+        } else {//right
+            if (lastClick.y < curClick.y) {//up
+                Position left_top = new Position(curClick.x, lastClick.y);
+                Position right_btm = new Position(lastClick.x, curClick.y);
+                selectRegion = new Region(left_top, right_btm);
+            } else {
+                selectRegion = new Region(curClick, lastClick);
+            }
+        }
+        if (SharedObject.getInstance().checkRegion(0)) // O
+            selectRegion.color = PSC.COLORS[0];
+        else if (SharedObject.getInstance().checkRegion(1)) //D
+            selectRegion.color = PSC.COLORS[1];
+        else
+            selectRegion.color = PSC.COLORS[SharedObject.getInstance().getWayLayer() + 1];
+
+        return selectRegion;
+    }
 
     private void initMapSurface() {
+
+
         mapList = new UnfoldingMap[4];
         mapXList = new float[]{
                 0, mapWidth + widthGapDis,
@@ -183,6 +253,22 @@ public class DemoInterface extends PApplet {
         dataButtonList[1] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 1, "DataSelect");
         dataButtonList[2] = new EleButton(dataButtonXOff, mapHeight + mapDownOff + heighGapDis, 70, 20, 2, "DataSelect");
         dataButtonList[3] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis, 70, 20, 3, "DataSelect");
+    }
+
+    private void drawRegion(Region r) {
+        if (r == null || r.leftTop == null || r.rightBtm == null)
+            return;
+        Position lT = r.leftTop;
+        Position rB = r.rightBtm;
+        stroke(r.color.getRGB());
+
+        int length = Math.abs(lT.x - rB.x);
+        int high = Math.abs(lT.y - rB.y);
+
+        lT = r.leftTop;
+        noFill();
+        strokeWeight(3);
+        rect(lT.x, lT.y, length, high);
     }
 
     public static void main(String[] args) {

@@ -37,7 +37,8 @@ public class SharedObject {
     // regions
     private static Region regionO = null;
     private static Region regionD = null;
-    private static ArrayList<ArrayList<Region>> regionWLayerList;
+    private static ArrayList<ArrayList<Region>> regionWLayerList = new ArrayList<>();
+    private int wayPointLayer = 1;
 
     private static boolean[] regionPresent = new boolean[3];// indicate the current region draw.
 
@@ -126,6 +127,14 @@ public class SharedObject {
         regionPresent[regionId] = true;
     }
 
+    public boolean checkSelectRegion() {
+        for (boolean f : regionPresent)
+            if (f)
+                return true;
+
+        return false;
+    }
+
     public void setFinishSelectRegion(boolean status) {
         finishSelectRegion = status;
     }
@@ -137,8 +146,32 @@ public class SharedObject {
     public void cleanRegions() {
         regionO = regionD = null;
         regionWLayerList.clear();
+        wayPointLayer = 0;
     }
 
+    public Region[] getRegionWithoutWList() {
+        return new Region[]{regionO, regionD};
+    }
+
+    public ArrayList<ArrayList<Region>> getRegionWLayerList() {
+        return regionWLayerList;
+    }
+
+    public void addWayPoint(Region r) {
+        if (regionWLayerList.size() < wayPointLayer)
+            regionWLayerList.add(new ArrayList<Region>());
+
+        regionWLayerList.get(wayPointLayer - 1).add(r);
+    }
+
+    public void updateWLayer() {
+        if (wayPointLayer == regionWLayerList.size())
+            wayPointLayer++;
+    }
+
+    public int getWayLayer() {
+        return wayPointLayer;
+    }
 
     /**
      * Load trajectory data from file (FULL)
@@ -150,6 +183,10 @@ public class SharedObject {
         int[] rateCntList = translateRate(trajFull.length, PSC.RATE_LIST);
         instance.setTrajVfgsMtx(getTrajVfgsMatrix(trajFull, rateCntList));     // modified
         instance.setTrajRandList(getTrajRandList(trajFull, rateCntList));
+    }
+
+    public boolean checkRegion(int index) {
+        return regionPresent[index];
     }
 
     /**

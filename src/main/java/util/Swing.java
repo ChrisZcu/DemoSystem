@@ -53,6 +53,15 @@ public class Swing {
         wButton.addActionListener(wButtonActionListen);
         wButton.setSize(buttonWidth,height);
 
+        JButton wLayerButton = new JButton("NextWayPointLayer");
+        ActionListener wLayerButtonActionListen = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SharedObject.getInstance().updateWLayer();
+            }
+        };
+        wLayerButton.addActionListener(wLayerButtonActionListen);
+        wLayerButton.setSize(buttonWidth,height);
 
         JButton finishSelectButton = new JButton("FinishSelect");
         ActionListener finishSelectButtonActionListen = new ActionListener() {
@@ -102,6 +111,7 @@ public class Swing {
         panel.add(oButton);
         panel.add(dButton);
         panel.add(wButton);
+        panel.add(wLayerButton);
         panel.add(finishSelectButton);
         panel.add(screenShotButton);
         panel.add(clearRegionButton);

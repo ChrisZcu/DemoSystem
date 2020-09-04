@@ -1,4 +1,7 @@
 package model;
+
+import java.awt.*;
+
 /**
  * Indicates the left-top position and right-bottom position of selected region.
  *
@@ -6,7 +9,7 @@ package model;
 public class Region {
     public Position leftTop;
     public Position rightBtm;
-
+    public Color color;
     public int id;
 
     public Region() {
