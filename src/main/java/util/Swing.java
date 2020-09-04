@@ -16,7 +16,7 @@ public class Swing {
         menuWindow.setSize(width, height);
         menuWindow.setLocation(0, 0);
 
-        int buttonWidth = width/7;
+        int buttonWidth = width / 7;
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(1, 0));
 
@@ -29,7 +29,8 @@ public class Swing {
             }
         };
         oButton.addActionListener(oButtonActionListen);
-        oButton.setSize(buttonWidth,height);
+        oButton.setSize(buttonWidth, height);
+
 
         JButton dButton = new JButton("Destination");
         ActionListener dButtonActionListen = new ActionListener() {
@@ -39,7 +40,7 @@ public class Swing {
             }
         };
         dButton.addActionListener(dButtonActionListen);
-        dButton.setSize(buttonWidth,height);
+        dButton.setSize(buttonWidth, height);
 
         JButton wButton = new JButton("WayPoint");
         ActionListener wButtonActionListen = new ActionListener() {
@@ -49,7 +50,7 @@ public class Swing {
             }
         };
         wButton.addActionListener(wButtonActionListen);
-        wButton.setSize(buttonWidth,height);
+        wButton.setSize(buttonWidth, height);
 
         JButton wLayerButton = new JButton("NextWayPointLayer");
         ActionListener wLayerButtonActionListen = new ActionListener() {
@@ -59,7 +60,26 @@ public class Swing {
             }
         };
         wLayerButton.addActionListener(wLayerButtonActionListen);
-        wLayerButton.setSize(buttonWidth,height);
+        wLayerButton.setSize(buttonWidth, height);
+
+        JButton dragButton = new JButton("DragRegionOff");
+        ActionListener dragButtonActionListen = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SharedObject.getInstance().setDragRegion();
+                if (SharedObject.getInstance().isDragRegion()) {
+                    dragButton.setText("DragRegionOn");
+                    dragButton.setBackground(Color.DARK_GRAY);
+
+                } else {
+                    dragButton.setText("DragRegionOff");
+                    dragButton.setBackground(Color.GRAY);
+
+                }
+            }
+        };
+        dragButton.addActionListener(dragButtonActionListen);
+        dragButton.setSize(buttonWidth, height);
 
         JButton finishSelectButton = new JButton("FinishSelect");
         ActionListener finishSelectButtonActionListen = new ActionListener() {
@@ -69,7 +89,7 @@ public class Swing {
             }
         };
         finishSelectButton.addActionListener(finishSelectButtonActionListen);
-        finishSelectButton.setSize(buttonWidth,height);
+        finishSelectButton.setSize(buttonWidth, height);
 
         JButton screenShotButton = new JButton("ScreenShot");
         ActionListener screenShotButtonActionListen = new ActionListener() {
@@ -79,7 +99,7 @@ public class Swing {
             }
         };
         screenShotButton.addActionListener(screenShotButtonActionListen);
-        screenShotButton.setSize(buttonWidth,height);
+        screenShotButton.setSize(buttonWidth, height);
 
         JButton clearRegionButton = new JButton("ClearAllRegions");
         ActionListener clearRegionActionListen = new ActionListener() {
@@ -90,7 +110,7 @@ public class Swing {
             }
         };
         clearRegionButton.addActionListener(clearRegionActionListen);
-        clearRegionButton.setSize(buttonWidth,height);
+        clearRegionButton.setSize(buttonWidth, height);
 
         JButton exitButton = new JButton("Exit");
         ActionListener exitButtonActionListen = new ActionListener() {
@@ -99,17 +119,30 @@ public class Swing {
                 pApplet.exit();
             }
         };
+
+        oButton.setBackground(Color.GRAY);
+        dButton.setBackground(Color.GRAY);
+        wButton.setBackground(Color.GRAY);
+        wLayerButton.setBackground(Color.GRAY);
+        dragButton.setBackground(Color.GRAY);
+        finishSelectButton.setBackground(Color.GRAY);
+        screenShotButton.setBackground(Color.GRAY);
+        clearRegionButton.setBackground(Color.GRAY);
+        exitButton.setBackground(Color.GRAY);
+
         exitButton.addActionListener(exitButtonActionListen);
-        exitButton.setSize(buttonWidth,height);
+        exitButton.setSize(buttonWidth, height);
+
 
         Container panel2 = menuWindow.getContentPane();
         panel2.add(new JLabel("[--]menu function"), BorderLayout.PAGE_START);
-        panel2.add(panel,BorderLayout.CENTER);
+        panel2.add(panel, BorderLayout.CENTER);
 
         panel.add(oButton);
         panel.add(dButton);
         panel.add(wButton);
         panel.add(wLayerButton);
+        panel.add(dragButton);
         panel.add(finishSelectButton);
         panel.add(screenShotButton);
         panel.add(clearRegionButton);

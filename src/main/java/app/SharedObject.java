@@ -8,6 +8,7 @@ import model.Trajectory;
 import util.IOHandle;
 import util.PSC;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -48,6 +49,11 @@ public class SharedObject {
 
     private boolean finishSelectRegion;
     private boolean screenShot;
+    private boolean dragRegion = false;
+
+    public boolean isDragRegion() {
+        return dragRegion;
+    }
 
     // trajectory
     public Trajectory[] getTrajFull() {
@@ -141,6 +147,10 @@ public class SharedObject {
         finishSelectRegion = status;
     }
 
+    public void setDragRegion() {
+        dragRegion = !dragRegion;
+    }
+
     public void setScreenShot(boolean shot) {
         screenShot = shot;
     }
@@ -148,11 +158,16 @@ public class SharedObject {
     public void cleanRegions() {
         regionO = regionD = null;
         regionWLayerList.clear();
-        wayPointLayer = 0;
+        wayPointLayer = 1;
     }
 
-    public Region[] getRegionWithoutWList() {
-        return new Region[]{regionO, regionD};
+    public ArrayList<Region> getRegionWithoutWList() {
+        ArrayList<Region> res = new ArrayList<>();
+        if (regionO != null)
+            res.add(regionO);
+        if (regionD != null)
+            res.add(regionD);
+        return res;
     }
 
     public ArrayList<ArrayList<Region>> getRegionWLayerList() {
@@ -175,6 +190,18 @@ public class SharedObject {
 
     public int getWayLayer() {
         return wayPointLayer;
+    }
+
+    public ArrayList<Region> getAllRegions() {
+        ArrayList<Region> allRegion = new ArrayList<>();
+        if (regionO != null)
+            allRegion.add(regionO);
+        if (regionD != null)
+            allRegion.add(regionD);
+        for (ArrayList<Region> wList : regionWLayerList) {
+            allRegion.addAll(wList);
+        }
+        return allRegion;
     }
 
     /**
