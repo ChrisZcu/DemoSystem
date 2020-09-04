@@ -1,46 +1,48 @@
 package select;
 
 
+import de.fhpotsdam.unfolding.UnfoldingMap;
 import model.BlockType;
 import model.RegionType;
 import app.SharedObject;
+import model.TrajBlock;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
- * select thread pool manager.
+ * select thread pool manager, return the traj index array.
  */
 public class SelectManager {
-    private ExecutorService threadPool;
-    private int threadNum;
-    private BlockType blockType; // Full, VFGS
     private RegionType regionType; // ODW
+    private UnfoldingMap[] mapList;
+    private TrajBlock[] blockList;
 
-    public SelectManager(ExecutorService threadPool, int threadNum, BlockType blockType, RegionType regionType) {
-        this.threadPool = threadPool;
-        this.threadNum = threadNum;
-        this.blockType = blockType;
+    public SelectManager(RegionType regionType, UnfoldingMap[] mapList, TrajBlock[] blockList) {
         this.regionType = regionType;
+        this.mapList = mapList;
+        this.blockList = blockList;
     }
 
-    public int[] start() {
-        threadPool.shutdownNow();
 
+    private int[] startMapCal(TrajBlock trajBlock, int opIndex) {
+        int threadNum = trajBlock.getThreadNum();
+        ExecutorService threadPool = new ThreadPoolExecutor(threadNum, threadNum, 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>());
+
+        UnfoldingMap map = mapList[opIndex];
         long start_time = System.currentTimeMillis();
 
-        int totalLength = SharedObject.getInstance().getTrajArray()[blockType.getValue()].length;
-        int threadSize = totalLength / threadNum;
+        int totalLength = trajBlock.getTrajList().length;
+        int threadSize = totalLength / trajBlock.getThreadNum();
         int[] resShowIndex = {};
         try {
             for (int i = 0; i < threadNum - 1; i++) {
-                SelectWorker sw = new SelectWorker(regionType, blockType, i * threadSize, (i + 1) * threadSize);
+                SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), i * threadSize, (i + 1) * threadSize, map);
                 int[] trajIndexAry = (int[]) threadPool.submit(sw).get();
                 resShowIndex = (int[]) ArrayUtils.addAll(resShowIndex, trajIndexAry);
             }
-            SelectWorker sw = new SelectWorker(regionType, blockType, (threadNum - 1) * threadSize, totalLength);
+            SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), (threadNum - 1) * threadSize, totalLength, map);
             int[] trajIndexAry = (int[]) threadPool.submit(sw).get();
             resShowIndex = (int[]) ArrayUtils.addAll(resShowIndex, trajIndexAry);
 
@@ -54,8 +56,14 @@ public class SelectManager {
         } catch (ExecutionException | InterruptedException e) {
             System.err.println(e);
         }
-        System.out.println("time: " + (System.currentTimeMillis() - start_time));
+        System.out.println(trajBlock.getBlockType() + "time: " + (System.currentTimeMillis() - start_time));
         System.out.println("ALL Done");
         return resShowIndex;
+    }
+
+    public void startRun() {
+        for (int i = 0; i < blockList.length; i++) {
+            SharedObject.getInstance().getTrajSelectResList()[i] = startMapCal(blockList[i], i);
+        }
     }
 }

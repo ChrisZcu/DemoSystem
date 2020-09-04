@@ -85,7 +85,7 @@ public class Swing {
         ActionListener finishSelectButtonActionListen = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SharedObject.getInstance().setFinishSelectRegion(true);
+                SharedObject.getInstance().calTrajSelectResList();
             }
         };
         finishSelectButton.addActionListener(finishSelectButtonActionListen);

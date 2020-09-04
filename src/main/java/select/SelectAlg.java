@@ -25,17 +25,16 @@ public class SelectAlg {
      * @param end        the end index, not included.
      * @param trajectory the trajectory based, including Full, VFGS, Random
      */
-    public static int[] getODTraj(int begin, int end, Trajectory[] trajectory) {
+    public static int[] getODTraj(int begin, int end, Trajectory[] trajectory, UnfoldingMap map) {
         Region regionO = SharedObject.getInstance().getRegionO(), regionD = SharedObject.getInstance().getRegionD();
 
         ArrayList<Integer> res = new ArrayList<>();
         for (int i = begin; i < end; i++) {
             Trajectory traj = trajectory[i];
-            if (inCheck(regionO, traj.locations[0]) && inCheck(regionD, traj.locations[traj.locations.length - 1])) {
+            if (inCheck(regionO, traj.locations[0], map) && inCheck(regionD, traj.locations[traj.locations.length - 1], map)) {
                 res.add(traj.getTrajId());
             }
         }
-
         return res.stream().mapToInt(Integer::intValue).toArray();
     }
 
@@ -43,17 +42,27 @@ public class SelectAlg {
     /**
      * calculates the sub-array of trajectory based on way-point region, on the same layer.
      */
-    public static int[] getWayPointTraj(int begin, int end, Trajectory[] trajectory, ArrayList<Region> regionWList) {
+    public static ArrayList<Integer> getWayPointTraj(int begin, int end, Trajectory[] trajectory, ArrayList<Region> regionWList, UnfoldingMap map) {
         ArrayList<Integer> res = new ArrayList<>();
 
         for (int i = begin; i < end; i++) {
             Trajectory traj = trajectory[i];
             for (int j = 1, bound = traj.locations.length - 1; j < bound; j++) {
-                if (inCheck(regionWList, traj.locations[j])) {
+                if (inCheck(regionWList, traj.locations[j], map)) {
                     res.add(j);
                     break;
                 }
             }
+        }
+        return res;
+    }
+
+    public static int[] getWayPointTraj(int begin, int end, Trajectory[] trajectory, UnfoldingMap map) {
+        ArrayList<ArrayList<Region>> regionWList = SharedObject.getInstance().getRegionWLayerList();
+        ArrayList<Integer> res = getWayPointTraj(begin, end, trajectory, regionWList.get(0), map);
+        for (int i = 0; i < regionWList.size(); i++) {
+            ArrayList<Integer> resTmp = getWayPointTraj(begin, end, trajectory, regionWList.get(i), map);
+            res.retainAll(resTmp);
         }
         return res.stream().mapToInt(Integer::intValue).toArray();
     }
@@ -61,13 +70,13 @@ public class SelectAlg {
     /**
      * calculates the sub-array of trajectory based on all-in region.
      */
-    public static int[] getAllIn(int begin, int end, Trajectory[] trajectory, Region r) {
+    public static int[] getAllIn(int begin, int end, Trajectory[] trajectory, Region r, UnfoldingMap map) {
         List<Integer> res = new ArrayList<>();
         for (int i = begin; i < end; i++) {
             Trajectory traj = trajectory[i];
             boolean inFlag = true;
             for (Location loc : traj.getLocations()) {
-                if (!inCheck(r, loc)) {
+                if (!inCheck(r, loc, map)) {
                     inFlag = false;
                     break;
                 }
@@ -79,19 +88,22 @@ public class SelectAlg {
         return res.stream().mapToInt(Integer::intValue).toArray();
     }
 
-    public static int[] getWMutliLayer() {
-        // TODO add logic
-        return null;
+    public static int[] getODWTraj(int begin, int end, Trajectory[] trajectory, UnfoldingMap map) {
+        int[] ODTraj = getODTraj(begin, end, trajectory, map);
+        Trajectory[] trajOD = new Trajectory[ODTraj.length];
+        for (int i = 0; i < ODTraj.length; i++) {
+            trajOD[i] = SharedObject.getInstance().getTrajFull()[ODTraj[i]];
+        }
+        return getWayPointTraj(0, ODTraj.length, trajOD, map);
     }
 
     /**
      * checks whether the location is in the region
      */
-    private static boolean inCheck(Region r, Location loc) {
+    private static boolean inCheck(Region r, Location loc, UnfoldingMap map) {
         if (r == null) {
             return true;
         }
-        UnfoldingMap map = SharedObject.getInstance().getMap();
         float[] sp = map.mapDisplay.getScreenFromInnerObjectPosition(loc.x, loc.y);     // FIXME
         float px = sp[0], py = sp[1];
         Position left_top = r.leftTop;
@@ -99,11 +111,10 @@ public class SelectAlg {
         return (px >= left_top.x && px <= right_btm.x) && (py >= left_top.y && py <= right_btm.y);
     }
 
-    private static boolean inCheck(ArrayList<Region> rList, Location loc) {
+    private static boolean inCheck(ArrayList<Region> rList, Location loc, UnfoldingMap map) {
         if (rList == null) {
             return true;
         }
-        UnfoldingMap map = SharedObject.getInstance().getMap();
         double px = map.getScreenPosition(loc).x;
         double py = map.getScreenPosition(loc).y;
         for (Region r : rList) {

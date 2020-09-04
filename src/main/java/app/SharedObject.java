@@ -1,6 +1,8 @@
 package app;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
+import model.*;
+import select.SelectManager;
 import draw.TrajDrawManager;
 import model.BlockType;
 import model.Region;
@@ -48,12 +50,21 @@ public class SharedObject {
     private static boolean[] regionPresent = new boolean[3];// indicate the current region draw.
 
     // map & app
-    private static DemoInterface app;
-    private static UnfoldingMap map;
+    private static UnfoldingMap[] mapList;
 
     private boolean finishSelectRegion;
     private boolean screenShot;
     private boolean dragRegion = false;
+
+    public int[][] getTrajSelectResList() {
+        return trajSelectResList;
+    }
+
+    public void setTrajSelectResList(int[][] trajSelectResList) {
+        this.trajSelectResList = trajSelectResList;
+    }
+
+    private int[][] trajSelectResList = new int[4][];//region select res
 
     public boolean isDragRegion() {
         return dragRegion;
@@ -132,16 +143,13 @@ public class SharedObject {
 
     // map & app
 
-    public void setApp(DemoInterface app) {
-        SharedObject.app = app;
+
+    public void setMapList(UnfoldingMap[] mapList) {
+        SharedObject.mapList = mapList;
     }
 
-    public void setMap(UnfoldingMap map) {
-        SharedObject.map = map;
-    }
-
-    public UnfoldingMap getMap() {
-        return map;
+    public UnfoldingMap[] getMapList() {
+        return mapList;
     }
 
     public void eraseRegionPren() {
@@ -154,17 +162,19 @@ public class SharedObject {
     }
 
     public boolean checkSelectRegion() {
-        for (boolean f : regionPresent) {
-            if (f) {
+        for (boolean f : regionPresent)
+            if (f)
                 return true;
-            }
-        }
 
         return false;
     }
 
     public void setFinishSelectRegion(boolean status) {
         finishSelectRegion = status;
+    }
+
+    public boolean isFinishSelectRegion() {
+        return finishSelectRegion;
     }
 
     public void setDragRegion() {
@@ -195,17 +205,15 @@ public class SharedObject {
     }
 
     public void addWayPoint(Region r) {
-        if (regionWLayerList.size() < wayPointLayer) {
+        if (regionWLayerList.size() < wayPointLayer)
             regionWLayerList.add(new ArrayList<Region>());
-        }
 
         regionWLayerList.get(wayPointLayer - 1).add(r);
     }
 
     public void updateWLayer() {
-        if (wayPointLayer == regionWLayerList.size()) {
+        if (wayPointLayer == regionWLayerList.size())
             wayPointLayer++;
-        }
     }
 
     public int getWayLayer() {
@@ -337,5 +345,20 @@ public class SharedObject {
 
         instance.getBlockList()[idx].setNewBlock(type, trajList,
                 threadNum, deltaIdx, rateIdx);
+    }
+
+    public void calTrajSelectResList() {
+        SelectManager slm = new SelectManager(getRegionType(), mapList, blockList);
+        slm.startRun();
+        setFinishSelectRegion(true); // finish select
+    }
+
+    private RegionType getRegionType() {
+        if (regionWLayerList.size() > 0) {
+            if (regionO != null)
+                return RegionType.O_D_W;
+            else return RegionType.O_D;
+
+        } else return RegionType.O_D;
     }
 }

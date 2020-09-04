@@ -5,13 +5,11 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import draw.TrajDrawManager;
-import model.BlockType;
-import model.EleButton;
-import model.Position;
-import model.Region;
+import model.*;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
+import util.Swing;
 import util.SelectDataDialog;
 
 import javax.swing.*;
@@ -90,11 +88,11 @@ public class DemoInterface extends PApplet {
         initDataButton();
         background(220, 220, 220);
 
-        SharedObject.getInstance().setApp(this);
-        SharedObject.getInstance().setMap(mapList[0]);
+        SharedObject.getInstance().setMapList(mapList);
         SharedObject.getInstance().initBlockList();
 
         trajImgMtx = new PGraphics[4][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
+
         // Warning: the constructor of the TrajDrawManager must be called AFTER initBlockList()
         trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, null,
                 mapXList, mapYList, mapWidth, mapHeight);
@@ -134,9 +132,8 @@ public class DemoInterface extends PApplet {
         }
 
         if (mapChanged) {
-            // TODO update the map
+            //TODO update the map
         }
-
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
             /*if (!viewVisibleList[mapIdx]) {
@@ -152,6 +149,17 @@ public class DemoInterface extends PApplet {
         if (regionDragged) {//drag the region, not finished
             drawRegion(getSelectRegion(lastClick));
         }
+
+        if (SharedObject.getInstance().isFinishSelectRegion()) {//finish select
+            SharedObject instance = SharedObject.getInstance();
+            for (int i = 0; i < instance.getTrajSelectResList().length; i++) {
+                for (Integer trajId : instance.getTrajSelectResList()[i]) {
+                    drawTraj(instance.getTrajFull()[trajId], mapXList[i], mapYList[i]);
+                }
+            }
+        }
+
+
         for (Region r : SharedObject.getInstance().getRegionWithoutWList()) {
             drawRegion(r);
             strokeWeight(circleSize);
@@ -165,6 +173,11 @@ public class DemoInterface extends PApplet {
             }
         }
     }
+
+//    private boolean regionDragged = false;
+//    private Position lastClick;
+//    private int circleSize = 15;
+//    private boolean mouseMove = false;
 
     @Override
     public void mousePressed() {
@@ -212,11 +225,11 @@ public class DemoInterface extends PApplet {
             regionDragged = false;
             Region selectRegion = getSelectRegion(lastClick);
             selectRegion.id = regionId++;
-            if (SharedObject.getInstance().checkRegion(0)) {        // O
+            if (SharedObject.getInstance().checkRegion(0)) // O
                 SharedObject.getInstance().setRegionO(selectRegion);
-            } else if (SharedObject.getInstance().checkRegion(1)) {     // D
+            else if (SharedObject.getInstance().checkRegion(1)) //D
                 SharedObject.getInstance().setRegionD(selectRegion);
-            } else {
+            else {
                 SharedObject.getInstance().addWayPoint(selectRegion);
             }
             SharedObject.getInstance().eraseRegionPren();
@@ -244,18 +257,19 @@ public class DemoInterface extends PApplet {
                 selectRegion = new Region(curClick, lastClick);
             }
         }
-        if (SharedObject.getInstance().checkRegion(0)) {    // O
+
+        if (SharedObject.getInstance().checkRegion(0)) // O
             selectRegion.color = PSC.COLORS[0];
-        } else if (SharedObject.getInstance().checkRegion(1)) {     //D
+        else if (SharedObject.getInstance().checkRegion(1)) //D
             selectRegion.color = PSC.COLORS[1];
-        } else {
+        else
             selectRegion.color = PSC.COLORS[SharedObject.getInstance().getWayLayer() + 1];
-        }
 
         return selectRegion;
     }
 
     private void initMapSurface() {
+
         mapList = new UnfoldingMap[4];
         mapXList = new float[]{
                 0, mapWidth + widthGapDis,
@@ -290,9 +304,8 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawRegion(Region r) {
-        if (r == null || r.leftTop == null || r.rightBtm == null) {
+        if (r == null || r.leftTop == null || r.rightBtm == null)
             return;
-        }
 
         Position lT = r.leftTop;
         Position rB = r.rightBtm;
@@ -316,6 +329,10 @@ public class DemoInterface extends PApplet {
         noFill();
         strokeWeight(3);
         rect(lT.x, lT.y, length, high);
+    }
+
+    private void drawTraj(Trajectory traj, float xOff, float yOff) {
+
     }
 
     public static void main(String[] args) {
