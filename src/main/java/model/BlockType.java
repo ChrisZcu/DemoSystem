@@ -1,7 +1,7 @@
 package model;
 
 public enum BlockType {
-    FULL(0), RAND(1), VFGS(2);
+    NONE(0), FULL(1), RAND(2), VFGS(3);
     int value;
 
     BlockType(int value) {

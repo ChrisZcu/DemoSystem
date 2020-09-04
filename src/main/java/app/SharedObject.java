@@ -8,7 +8,6 @@ import model.Trajectory;
 import util.IOHandle;
 import util.PSC;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -220,6 +219,9 @@ public class SharedObject {
     }
 
     public void setBlockAt(int idx, BlockType type, int rateIdx, int deltaIdx) {
+        System.out.println("Set block at : idx = " + idx + ", type = " + type
+                + ", rateIdx = " + rateIdx + ", deltaIdx = " + deltaIdx);
+
         Trajectory[] trajList;
         int threadNum;
         switch (type) {

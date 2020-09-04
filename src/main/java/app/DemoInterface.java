@@ -79,7 +79,8 @@ public class DemoInterface extends PApplet {
         SharedObject.getInstance().initBlockList();
 
         trajImgMtx = new PGraphics[4][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
-        trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, null, mapWidth, mapHeight);
+        trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, null,
+                mapXList, mapYList, mapWidth, mapHeight);
 
         // move to correct position
 //        Insets screenInsets = Toolkit.getDefaultToolkit()
@@ -89,7 +90,7 @@ public class DemoInterface extends PApplet {
 //        surface.setLocation(screenInsets.left - 4, screenInsets.top);
 
 
-//        (new Thread(this::loadData)).start();
+        (new Thread(this::loadData)).start();
 
         createTopMenu(screenWidth, mapDownOff - 5, frame, this);
     }
@@ -117,12 +118,6 @@ public class DemoInterface extends PApplet {
         if (mapChanged) {
             //TODO update the map
         }
-//        for (PGraphics[] pgList : trajImgMtx) {
-//            for (PGraphics pg : pgList)
-//                if (pg != null)
-//                    image(pg, 0, 0);
-//        }
-//    }
 
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {

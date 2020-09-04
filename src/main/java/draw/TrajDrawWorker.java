@@ -12,16 +12,21 @@ import processing.core.PGraphics;
  */
 public class TrajDrawWorker extends Thread {
     private final UnfoldingMap map;
-    private final PGraphics pg;     // temp image that this thread paint on
+    // temp image that this thread paint on
+    // the pg has already be translated.
+    private final PGraphics pg;
     private final PGraphics[] trajImages;   // all traj image parts
     private final Trajectory[] trajList;    // all traj
     private final int[] trajCnt;    // record the # of painted traj
     private final int mapIdx, index;        // param to locate the pg this worker dealing with
+    private final float offsetX, offsetY;     // offset of the map
     private final int begin, end;     // the param for select traj
 
     public TrajDrawWorker(UnfoldingMap map, PGraphics pg, PGraphics[] trajImageList,
                           Trajectory[] trajList, int[] trajCnt,
-                          int mapIdx, int index, int begin, int end) {
+                          int mapIdx, int index,
+                          float offsetX, float offsetY,
+                          int begin, int end) {
         this.map = map;
         this.pg = pg;
         this.trajImages = trajImageList;
@@ -29,6 +34,8 @@ public class TrajDrawWorker extends Thread {
         this.trajCnt = trajCnt;
         this.mapIdx = mapIdx;
         this.index = index;
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
         this.begin = begin;
         this.end = end;
 
@@ -43,6 +50,7 @@ public class TrajDrawWorker extends Thread {
     @Override
     public void run() {
         pg.beginDraw();
+        pg.translate(-1 * offsetX, -1 * offsetY);
         pg.noFill();
         pg.strokeWeight(1);
         pg.stroke(255, 0, 0);
@@ -71,6 +79,7 @@ public class TrajDrawWorker extends Thread {
 //            trajCnt[index] ++;
         }
 
+        System.out.printf("worker finished mapIdx=%d index=%d%n", mapIdx, index);
         trajImages[index] = pg;
     }
 }

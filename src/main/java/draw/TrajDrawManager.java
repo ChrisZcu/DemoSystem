@@ -32,6 +32,7 @@ public class TrajDrawManager {
     private final TrajDrawWorker[][] trajDrawWorkerMtx;
     private final boolean[] refreshList;
 
+    private final float[] mapXList, mapYList;
     private final int width, height;      // size for one map view
 
     // multi-thread for part image painting
@@ -43,11 +44,13 @@ public class TrajDrawManager {
 
     public TrajDrawManager(DemoInterface app, UnfoldingMap[] mapList,
                            PGraphics[][] trajImageMtx, int[] trajCnt,
-                           int width, int height) {
+                           float[] mapXList, float[] mapYList, int width, int height) {
         this.app = app;
         this.mapList = mapList;
         this.trajImageMtx = trajImageMtx;
         this.trajCnt = trajCnt;
+        this.mapXList = mapXList;
+        this.mapYList = mapYList;
         this.blockList = SharedObject.getInstance().getBlockList();
         this.width = width;
         this.height = height;
@@ -82,19 +85,25 @@ public class TrajDrawManager {
                     continue;       // this map view won't be refreshed
                 }
 
+                UnfoldingMap map = mapList[mapIdx];
+
                 // start painting tasks
                 TrajBlock tb = blockList[mapIdx];
                 int totLen = tb.getTrajList().length;
                 int threadNum = tb.getThreadNum();
                 int segLen = totLen / threadNum;
+                float offsetX = mapXList[mapIdx];
+                float offsetY = mapYList[mapIdx];
                 TrajDrawWorker[] trajDrawWorkerList = trajDrawWorkerMtx[mapIdx];
 
                 for (int idx = 0; idx < threadNum; idx++) {
                     int begin = segLen * idx;
                     int end = Math.min(begin + segLen, totLen);    // exclude
-                    TrajDrawWorker worker = new TrajDrawWorker(mapList[mapIdx],
-                            app.createGraphics(width, height), trajImageMtx[mapIdx],
-                            tb.getTrajList(), trajCnt, mapIdx, idx, begin, end);
+                    PGraphics pg = app.createGraphics(width, height);
+
+                    TrajDrawWorker worker = new TrajDrawWorker(map, pg,
+                            trajImageMtx[mapIdx], tb.getTrajList(),
+                            trajCnt, mapIdx, idx, offsetX, offsetY, begin, end);
 
                     trajDrawWorkerList[idx] = worker;
                     threadPool.submit(worker);
