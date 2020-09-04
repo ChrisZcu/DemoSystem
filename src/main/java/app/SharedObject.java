@@ -146,7 +146,7 @@ public class SharedObject {
     public void cleanRegions() {
         regionO = regionD = null;
         regionWLayerList.clear();
-        wayPointLayer = 0;
+        wayPointLayer = 1;
     }
 
     public Region[] getRegionWithoutWList() {
