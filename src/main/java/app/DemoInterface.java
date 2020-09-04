@@ -50,7 +50,8 @@ public class DemoInterface extends PApplet {
         mapWidth = (screenWidth - 6) / 2;
         mapHeigh = (screenHeight - 4) / 2;
 
-        size(screenWidth, screenHeight, P2D);
+//        size(screenWidth, screenHeight, P2D);
+        fullScreen(P2D);
 
         dataButtonList = new EleButton[4];
         dataButtonList[0] = new EleButton(2, 2, 70, 20, 0, "DataSelect");

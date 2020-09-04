@@ -14,7 +14,7 @@ public class EleButton extends Element {
     public void render(PApplet pApplet) {
         pApplet.noFill();
 
-        pApplet.stroke(32, 34, 36);
+        pApplet.stroke(83, 134, 139);
         pApplet.strokeWeight(2);
         pApplet.rect(x, y, width, height);
 
@@ -27,7 +27,7 @@ public class EleButton extends Element {
     public void render(int x, int y, PApplet pApplet) {
         pApplet.noFill();
 
-        pApplet.stroke(32, 34, 36);
+        pApplet.stroke(83, 134 ,139);
         pApplet.strokeWeight(2);
         pApplet.rect(x, y, width, height);
 
