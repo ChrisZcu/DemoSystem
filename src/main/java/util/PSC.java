@@ -23,8 +23,8 @@ public class PSC {
     public static final int LIMIT = 5_0000;
 
     // recommend: core # * 2 or little higher
-    public static final int FULL_THREAD_NUM = 1;
-    public static final int SAMPLE_THREAD_NUM = 1;
+    public static final int FULL_THREAD_NUM = 5;
+    public static final int SAMPLE_THREAD_NUM = 5;
 
     /**
      * VFGS result set (i.e. R / R+ in paper).

@@ -44,7 +44,7 @@ public class DemoInterface extends PApplet {
     private final int heighGapDis = 4;
     private final int widthGapDis = 6;
 
-    private boolean[] viewVisibleList;      // is the map view visible
+    private boolean[] viewVisibleList;  // is the map view visible
     private boolean[] linkedList;       // is the map view linked to others
 
     private boolean loadFinished = false;

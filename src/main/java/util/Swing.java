@@ -122,7 +122,7 @@ public class Swing {
 
         JPanel mainPanel = new JPanel(new BorderLayout());
 
-        // main part
+        /* main part interface */
 
         GridBagLayout gbLayout = new GridBagLayout();
         JPanel centerPanel = new JPanel(gbLayout);
@@ -150,13 +150,11 @@ public class Swing {
 
         mainPanel.add(centerPanel, BorderLayout.CENTER);
 
-        // bottom part
+        /* bottom part interface */
 
         Box bottomBox = Box.createHorizontalBox();
         JButton cancelBtn = new JButton("Cancel");
-        cancelBtn.addActionListener(e -> dialog.dispose());
         JButton okBtn = new JButton("OK");
-        okBtn.addActionListener(e -> dialog.dispose());
         bottomBox.add(Box.createHorizontalGlue());
         bottomBox.add(cancelBtn);
         bottomBox.add(Box.createHorizontalStrut(20));
@@ -168,7 +166,20 @@ public class Swing {
         dialog.setContentPane(mainPanel);
         dialog.setAlwaysOnTop(true);
         dialog.pack();
+
+        /* logic */
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+        okBtn.addActionListener(e -> {
+
+            dialog.dispose();
+        });
+
         dialogList[mapIdx] = dialog;
         return dialog;
     }
+
+//    private void refreshVisible(BlockType type, ) {
+//
+//    }
 }
