@@ -27,6 +27,8 @@ public class SelectManager {
     }
 
     public int[] start() {
+        threadPool.shutdownNow();
+
         long start_time = System.currentTimeMillis();
 
         int totalLength = SharedObject.getInstance().getTrajArray()[blockType.getValue()].length;

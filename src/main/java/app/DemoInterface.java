@@ -154,7 +154,6 @@ public class DemoInterface extends PApplet {
 
     private boolean regionDragged = false;
     private Position lastClick;
-    private Region dragRegion;
     private int circleSize = 15;
     private boolean mouseMove = false;
 
@@ -186,7 +185,6 @@ public class DemoInterface extends PApplet {
                 if (mouseX >= r.leftTop.x - circleSize / 2 && mouseX <= r.rightBtm.x + circleSize / 2
                         && mouseY >= r.leftTop.y - circleSize / 2 && mouseY <= r.rightBtm.y + circleSize / 2) {
                     dragRegionId = r.id;
-                    dragRegion = r;
                     mouseMove = !mouseMove;
                     System.out.println(dragRegionId);
                     break;
@@ -199,6 +197,7 @@ public class DemoInterface extends PApplet {
         if (regionDragged) {
             regionDragged = false;
             Region selectRegion = getSelectRegion(lastClick);
+            selectRegion.id = regionId++;
             if (SharedObject.getInstance().checkRegion(0)) // O
                 SharedObject.getInstance().setRegionO(selectRegion);
             else if (SharedObject.getInstance().checkRegion(1)) //D
@@ -206,9 +205,7 @@ public class DemoInterface extends PApplet {
             else {
                 SharedObject.getInstance().addWayPoint(selectRegion);
             }
-
             SharedObject.getInstance().eraseRegionPren();
-
         }
     }
 
@@ -233,7 +230,6 @@ public class DemoInterface extends PApplet {
                 selectRegion = new Region(curClick, lastClick);
             }
         }
-        selectRegion.id = regionId++;
 
         if (SharedObject.getInstance().checkRegion(0)) // O
             selectRegion.color = PSC.COLORS[0];
