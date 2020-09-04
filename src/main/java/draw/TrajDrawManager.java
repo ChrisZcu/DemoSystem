@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TrajDrawManager {
     private final PApplet app;
-    private final UnfoldingMap map;
+    private final UnfoldingMap[] mapList;
     private final PGraphics[][] trajImageMtx;
     private final int[] trajCnt;        // # of traj that already drawn.
 
@@ -32,7 +32,7 @@ public class TrajDrawManager {
     private final TrajDrawWorker[][] trajDrawWorkerMtx;
     private final boolean[] refreshList;
 
-    private int width, height;      // size for one map view
+    private int width = 300, height = 300;      // size for one map view
 
     // multi-thread for part image painting
     private final ExecutorService threadPool;
@@ -41,10 +41,10 @@ public class TrajDrawManager {
     private final ExecutorService controlPool;
     private Thread controlThread;
 
-    public TrajDrawManager(DemoInterface app, UnfoldingMap map,
+    public TrajDrawManager(DemoInterface app, UnfoldingMap[] mapList,
                            PGraphics[][] trajImageMtx, int[] trajCnt) {
         this.app = app;
-        this.map = map;
+        this.mapList = mapList;
         this.trajImageMtx = trajImageMtx;
         this.trajCnt = trajCnt;
         this.blockList = SharedObject.getInstance().getBlockList();
@@ -91,7 +91,7 @@ public class TrajDrawManager {
                     int begin = segLen * idx;
                     int end = Math.min(begin + segLen, totLen);    // exclude
                     // TODO width height are not assigned now.
-                    TrajDrawWorker worker = new TrajDrawWorker(map, app.createGraphics(width, height),
+                    TrajDrawWorker worker = new TrajDrawWorker(mapList[mapIdx], app.createGraphics(width, height),
                             trajImageMtx[mapIdx], tb.getTrajList(), trajCnt,
                             mapIdx, idx, begin, end);
 
@@ -153,7 +153,7 @@ public class TrajDrawManager {
      * Start multi-thread (by start a control thread)
      * and paint traj to flash images separately.
      */
-    public void updateTrajImages() {
+    private void updateTrajImages() {
         if (controlThread != null) {
             controlThread.interrupt();
         }

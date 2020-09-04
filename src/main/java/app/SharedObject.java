@@ -32,7 +32,7 @@ public class SharedObject {
 
     private static Trajectory[][] trajArray = new Trajectory[3][];
 
-    private static TrajBlock[] blockList;
+    private static TrajBlock[] blockList; //
 
     // regions
     private static Region regionO = null;

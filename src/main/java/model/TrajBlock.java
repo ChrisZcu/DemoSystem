@@ -4,7 +4,7 @@ package model;
  * The traj structured block which used to s
  */
 public final class TrajBlock {
-    private BlockType blockType;
+    private BlockType blockType; // full, random, VFGS
     private Trajectory[] trajList;    // all traj given to this block
     private int threadNum;
     private int dIdx, rIdx;           // the param for select color
