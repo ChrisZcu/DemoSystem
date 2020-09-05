@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class DemoInterface extends PApplet {
@@ -33,11 +34,10 @@ public class DemoInterface extends PApplet {
     private static final int ZOOMLEVEL = 12;
 
     private UnfoldingMap[] mapList;
-    private UnfoldingMap extraMap;      // the only one map shown one app when oneMapIdx in [0, 3]
     // 4 -> not show extraMap
     // [-1, -4] -> ready to show the map[0, 3]
     // [0, 3] now it is zoom and pan to mapList[oneMapIdx]
-    private int oneMapIdx = -1;
+    private int oneMapIdx = 4;
 
     private int[] checkLevel = {-1, -1, -1, -1};
     private Location[] checkCenter = {new Location(-1, -1), new Location(-1, -1),
@@ -57,7 +57,7 @@ public class DemoInterface extends PApplet {
     private final int heighGapDis = 4;
     private final int widthGapDis = 6;
 
-    private boolean[] viewVisibleList = {false, true, true, true};  // is the map view visible
+    private boolean[] viewVisibleList = {true, true, true, true};  // is the map view visible
     private boolean[] linkedList = {true, true, true, true};       // is the map view linked to others
     //private boolean[] linkedList = {true, true, false, false};
     private int mapController = 0;
@@ -197,7 +197,8 @@ public class DemoInterface extends PApplet {
 
         // add visible logic
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
-            if (!viewVisibleList[mapIdx]) {
+            boolean visible = viewVisibleList[mapIdx] || mapIdx == 0;
+            if (!visible) {
                 continue;
             }
             for (int eleIdx = mapIdx; eleIdx < dataButtonList.length; eleIdx += 4) {
@@ -250,8 +251,10 @@ public class DemoInterface extends PApplet {
         int eleId = -1;
         for (EleButton dataButton : dataButtonList) {
             // FIXME add mapIdx to button field
+            // brute force
             int mapIdx = dataButton.getEleId() % 4;
-            if (dataButton.isMouseOver(this, viewVisibleList[mapIdx])) {
+            boolean visible = viewVisibleList[mapIdx] || mapIdx == 0;
+            if (dataButton.isMouseOver(this, visible)) {
                 eleId = dataButton.getEleId();
                 break;
             }
@@ -266,7 +269,8 @@ public class DemoInterface extends PApplet {
                 dataButtonList[eleId].colorExg();
             } else if (eleId > 7) {
                 //TODO max the map
-                System.out.println("max Map");
+                System.out.println("switch one map : " + oneMapIdx);
+                switchOneMapMode(eleId % 4);
             } else if (eleId > 3) {
                 int optMapIdx = eleId % 4;
                 TrajBlock tb = SharedObject.getInstance().getBlockList()[optMapIdx];
@@ -310,6 +314,19 @@ public class DemoInterface extends PApplet {
             }
         }
     }
+
+    private void switchOneMapMode(int mapIdx) {
+        if (oneMapIdx != 4) {
+            oneMapIdx = 4;
+            Arrays.fill(viewVisibleList, true);
+        } else {
+            oneMapIdx = -mapIdx - 1;
+            Arrays.fill(viewVisibleList, false);
+        }
+        background(220, 220, 220);
+        System.out.println(oneMapIdx);
+    }
+
     //TODO add zoom level and center listener to control map update
 
     @Override
@@ -318,7 +335,7 @@ public class DemoInterface extends PApplet {
             updateMap();
             dragged = false;
         }
-        for (int i = 0; i < mapList.length; ++i) {
+        for (int i = 0; i < 4; ++i) {
             if (viewVisibleList[i] && imgCleaned[i]) {
                 trajDrawManager.startNewRenderTaskFor(i);
                 imgCleaned[i] = false;
@@ -345,7 +362,7 @@ public class DemoInterface extends PApplet {
     public void mouseWheel() {
         boolean mapControllerZoomed = false;
 
-        for (int i = 0; i < mapList.length; ++i) {
+        for (int i = 0; i < 4; ++i) {
             if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
                     && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
                 trajDrawManager.cleanImgFor(i);
@@ -359,7 +376,7 @@ public class DemoInterface extends PApplet {
         }
 
         if (mapControllerZoomed) {
-            for (int i = 0; i < mapList.length; ++i) {
+            for (int i = 0; i < 4; ++i) {
                 if (viewVisibleList[i] && linkedList[i]) {
                     trajDrawManager.cleanImgFor(i);
                     imgCleaned[i] = true;
@@ -373,7 +390,7 @@ public class DemoInterface extends PApplet {
     @Override
     public void mouseDragged() {
         if (!regionDragged) {
-            for (int i = 0; i < mapList.length; i++) {
+            for (int i = 0; i < 4; i++) {
                 trajDrawManager.cleanImgFor(i);
                 imgCleaned[i] = true;
             }
@@ -384,7 +401,7 @@ public class DemoInterface extends PApplet {
     private void updateMap() {
         boolean mapControllerPressed = false;
 
-        for (int i = 0; i < mapList.length; ++i) {
+        for (int i = 0; i < 4; ++i) {
             if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
                     && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
 
@@ -395,7 +412,7 @@ public class DemoInterface extends PApplet {
         }
 
         if (mapControllerPressed) {
-            for (int i = 0; i < mapList.length; ++i) {
+            for (int i = 0; i < 4; ++i) {
                 if (viewVisibleList[i] && linkedList[i]) {
                     trajDrawManager.cleanImgFor(i);
                     imgCleaned[i] = true;
@@ -456,7 +473,7 @@ public class DemoInterface extends PApplet {
     }
 
     private void initMapSurface() {
-        mapList = new UnfoldingMap[4];
+        mapList = new UnfoldingMap[5];
         mapXList = new float[]{
                 0, mapWidth + widthGapDis,
                 0, mapWidth + widthGapDis
@@ -470,7 +487,7 @@ public class DemoInterface extends PApplet {
             mapList[i] = new UnfoldingMap(this, mapXList[i], mapYList[i], mapWidth, mapHeight,
                     new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
         }
-        extraMap = new UnfoldingMap(this, mapXList[0], mapYList[0], screenWidth, screenHeight,
+        mapList[4] = new UnfoldingMap(this, mapXList[0], mapYList[0], screenWidth, screenHeight,
                 new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
 
         for (UnfoldingMap map : mapList) {
@@ -547,11 +564,15 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawInfoTextBox(int i, int x, int y, int width, int height) {
-        if (!viewVisibleList[i]) {
+        boolean visible = viewVisibleList[i] || (oneMapIdx >= 0 && i == 2);
+        if (!visible) {
             return;
         }
-        TrajBlock tb = SharedObject.getInstance().getBlockList()[i];
-        String info = tb.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST);
+        String info;
+        TrajBlock tb = SharedObject.getInstance()
+                .getBlockList()[(oneMapIdx == 4) ? i : oneMapIdx];        // FIXME need to change
+
+        info = tb.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST);
 
         fill(240, 240, 240, 160);
 
@@ -571,18 +592,19 @@ public class DemoInterface extends PApplet {
 
         if (oneMapIdx < 0) {
             // switch to extraMap mode
-            oneMapIdx = -oneMapIdx + 1;
+            oneMapIdx = -oneMapIdx - 1;
+            System.out.println("target : " + oneMapIdx);
             UnfoldingMap targetMap = mapList[oneMapIdx];
-            extraMap.zoomAndPanTo(targetMap.getZoomLevel(), targetMap.getCenter());
+            mapList[4].zoomAndPanTo(targetMap.getZoomLevel(), targetMap.getCenter());
         }
 
         if (oneMapIdx != 4) {
             // show extraMap
-//            extraMap.draw();
-//            return;
+            mapList[4].draw();
+            return;
         }
 
-        for (int i = 0; i < mapList.length; ++i) {
+        for (int i = 0; i < 4; ++i) {
             if (viewVisibleList[i]) {
                 mapList[i].draw();
             }
@@ -591,7 +613,7 @@ public class DemoInterface extends PApplet {
         }
 
         if (mapControllerChanged) {
-            for (int i = 0; i < mapList.length; ++i) {
+            for (int i = 0; i < 4; ++i) {
                 int zoomLevel = mapList[currentMapController].getZoomLevel();
                 Location center = mapList[currentMapController].getCenter();
 
@@ -609,7 +631,7 @@ public class DemoInterface extends PApplet {
                 int zoomLevel = mapList[mapController].getZoomLevel();
                 Location center = mapList[mapController].getCenter();
 
-                for (int i = 0; i < mapList.length; ++i) {
+                for (int i = 0; i < 4; ++i) {
                     if (linkedList[i] && viewVisibleList[i]) {
                         mapList[i].zoomToLevel(zoomLevel);
                         mapList[i].panTo(center);
