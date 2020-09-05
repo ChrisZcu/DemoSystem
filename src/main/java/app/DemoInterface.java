@@ -4,7 +4,6 @@ import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
-import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManager;
 import model.*;
 import processing.core.PApplet;
@@ -31,6 +30,7 @@ public class DemoInterface extends PApplet {
     private float[][] mapLocInfo;
     private static final Location PORTO_CENTER = new Location(41.14, -8.639);//维度经度
     private static final Location PRESENT = PORTO_CENTER;
+    private static final int ZOOMLEVEL = 12;
 
     private UnfoldingMap[] mapList;
     private UnfoldingMap extraMap;      // the only one map shown one app when oneMapIdx in [0, 3]
@@ -45,6 +45,7 @@ public class DemoInterface extends PApplet {
 
     private int screenWidth;
     private int screenHeight;
+    private int optIndex;
 
     private int mapWidth;
     private float[] mapXList;       // the x coordination of the all maps
@@ -71,6 +72,7 @@ public class DemoInterface extends PApplet {
 
     private int circleSize = 15;
     private boolean mouseMove = false;
+    private boolean dragged = false;
 
     private boolean mainLayerIsGray = false;
 
@@ -168,6 +170,7 @@ public class DemoInterface extends PApplet {
             strokeWeight(circleSize);
             point(r.leftTop.x, r.leftTop.y);
         }
+
         for (ArrayList<Region> wList : SharedObject.getInstance().getRegionWLayerList()) {
             for (Region r : wList) {
                 drawRegion(r);
@@ -175,6 +178,7 @@ public class DemoInterface extends PApplet {
                 point(r.leftTop.x, r.leftTop.y);
             }
         }
+
         if (SharedObject.getInstance().isScreenShot()) {
             int totalFileNum = Objects.requireNonNull(new File(PSC.OUTPUT_PATH1).list()).length;
 
@@ -239,8 +243,6 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    private int optIndex;
-
     @Override
     public void mousePressed() {
         optIndex = getOptIndex(mouseX, mouseY);
@@ -256,12 +258,15 @@ public class DemoInterface extends PApplet {
         }
         if (eleId != -1) {
             // mentioned the init state
-            if (eleId > 11) {// for linked
+            if (eleId > 15) {// for linked
                 //TODO @Shangxuan add link logic
                 dataButtonList[eleId].colorExg();
-            } else if (eleId > 7) {//for control
+            } else if (eleId > 12) {//for control
                 //TODO @Shangxuan add control logic, mention the unique only one control
                 dataButtonList[eleId].colorExg();
+            } else if (eleId > 7) {
+                //TODO max the map
+                System.out.println("max Map");
             } else if (eleId > 3) {
                 int optMapIdx = eleId % 4;
                 TrajBlock tb = SharedObject.getInstance().getBlockList()[optMapIdx];
@@ -286,33 +291,7 @@ public class DemoInterface extends PApplet {
             System.out.println("eleId == -1");
         }
 
-        if (mouseButton == LEFT) {
-            boolean mapControllerPressed = false;
-
-            for (int i = 0; i < mapList.length; ++i) {
-                if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
-                        && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
-                    System.out.println("map " + i + " pressed");
-                    trajDrawManager.cleanImgFor(i);
-                    imgCleaned[i] = true;
-                    System.out.println("map " + i + " cleaned");
-
-                    if (i == mapController) {
-                        mapControllerPressed = true;
-                    }
-                }
-            }
-
-            if (mapControllerPressed) {
-                for (int i = 0; i < mapList.length; ++i) {
-                    if (viewVisibleList[i] && linkedList[i]) {
-                        trajDrawManager.cleanImgFor(i);
-                        imgCleaned[i] = true;
-                        System.out.println("map " + i + " cleaned");
-                    }
-                }
-            }
-        } else if (mouseButton == RIGHT) {
+        if (mouseButton == RIGHT) {
             if (SharedObject.getInstance().checkSelectRegion()) {
                 regionDragged = true;
                 lastClick = new Position(mouseX, mouseY);
@@ -331,11 +310,14 @@ public class DemoInterface extends PApplet {
             }
         }
     }
-
     //TODO add zoom level and center listener to control map update
 
     @Override
     public void mouseReleased() {
+        if (dragged && !regionDragged) { //only pan the map
+            updateMap();
+            dragged = false;
+        }
         for (int i = 0; i < mapList.length; ++i) {
             if (viewVisibleList[i] && imgCleaned[i]) {
                 trajDrawManager.startNewRenderTaskFor(i);
@@ -360,7 +342,7 @@ public class DemoInterface extends PApplet {
     }
 
     @Override
-    public void mouseWheel(){
+    public void mouseWheel() {
         boolean mapControllerZoomed = false;
 
         for (int i = 0; i < mapList.length; ++i) {
@@ -368,7 +350,7 @@ public class DemoInterface extends PApplet {
                     && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
                 trajDrawManager.cleanImgFor(i);
                 trajDrawManager.startNewRenderTaskFor(i);
-                System.out.println("map " + i + "zoomed and redrawn");
+                System.out.println("map " + i + "zoomed and redrawed");
 
                 if (i == mapController) {
                     mapControllerZoomed = true;
@@ -383,6 +365,41 @@ public class DemoInterface extends PApplet {
                     imgCleaned[i] = true;
                     trajDrawManager.startNewRenderTaskFor(i);
                     System.out.println("map " + i + "zoomed and redrawn");
+                }
+            }
+        }
+    }
+
+    @Override
+    public void mouseDragged() {
+        if (!regionDragged) {
+            for (int i = 0; i < mapList.length; i++) {
+                trajDrawManager.cleanImgFor(i);
+                imgCleaned[i] = true;
+            }
+            dragged = true;
+        }
+    }
+
+    private void updateMap() {
+        boolean mapControllerPressed = false;
+
+        for (int i = 0; i < mapList.length; ++i) {
+            if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
+                    && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
+
+                if (i == mapController) {
+                    mapControllerPressed = true;
+                }
+            }
+        }
+
+        if (mapControllerPressed) {
+            for (int i = 0; i < mapList.length; ++i) {
+                if (viewVisibleList[i] && linkedList[i]) {
+                    trajDrawManager.cleanImgFor(i);
+                    imgCleaned[i] = true;
+                    System.out.println("map " + i + " cleaned");
                 }
             }
         }
@@ -458,7 +475,7 @@ public class DemoInterface extends PApplet {
 
         for (UnfoldingMap map : mapList) {
             map.setZoomRange(1, 20);
-            map.zoomAndPanTo(12, PRESENT);
+            map.zoomAndPanTo(ZOOMLEVEL, PRESENT);
             map.setBackgroundColor(255);
             map.setTweening(false);
             MapUtils.createDefaultEventDispatcher(this, map);
@@ -467,7 +484,7 @@ public class DemoInterface extends PApplet {
     }
 
     private void initDataButton() {
-        dataButtonList = new EleButton[16];
+        dataButtonList = new EleButton[20];
         int dataButtonXOff = 4;
         int dataButtonYOff = 4;
         dataButtonList[0] = new EleButton(dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 0, "DataSelect");
@@ -475,23 +492,33 @@ public class DemoInterface extends PApplet {
         dataButtonList[2] = new EleButton(dataButtonXOff, mapHeight + mapDownOff + heighGapDis, 70, 20, 2, "DataSelect");
         dataButtonList[3] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis, 70, 20, 3, "DataSelect");
 
-        dataButtonList[4] = new EleButton(dataButtonXOff, dataButtonYOff + mapDownOff + 35, 70, 20, 4, "ColorExg");
-        dataButtonList[5] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff + 35, 70, 20, 5, "ColorExg");
-        dataButtonList[6] = new EleButton(dataButtonXOff, mapHeight + mapDownOff + heighGapDis + 35, 70, 20, 6, "ColorExg");
-        dataButtonList[7] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis + 35, 70, 20, 7, "ColorExg");
+//        dataButtonList[4] = new EleButton(dataButtonXOff, dataButtonYOff + mapDownOff + 35, 70, 20, 4, "ColorExg");
+//        dataButtonList[5] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff + 35, 70, 20, 5, "ColorExg");
+//        dataButtonList[6] = new EleButton(dataButtonXOff, mapHeight + mapDownOff + heighGapDis + 35, 70, 20, 6, "ColorExg");
+//        dataButtonList[7] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis + 35, 70, 20, 7, "ColorExg");
 
-        for (int i = 8; i < 16; i++) {
-            String buttonInfo = (i < 12) ? "Control" : "Linked";
+        for (int i = 4; i < 8; i++) {
+            dataButtonList[i] = new EleButton(dataButtonList[i - 4].getX(), dataButtonList[i - 4].getY() + 35, 70, 20, i, "ColorExg");
 
-            int yOff = i < 12 ? 35 : 28;
+        }
+        for (int i = 8; i < 12; i++) {
+            dataButtonList[i] = new EleButton(dataButtonList[i - 4].getX(), dataButtonList[i - 4].getY() + 28, 70, 20, i, "MaxMap");
+        }
+        for (int i = 12; i < 20; i++) {
+            String buttonInfo = (i < 16) ? "Control" : "Linked";
+
+            int yOff = i < 16 ? 35 : 28;
             dataButtonList[i] = new MapControlButton(dataButtonList[i - 4].getX(), dataButtonList[i - 4].getY() + yOff, 70, 20, i, buttonInfo);
         }
+
+
     }
 
     private void drawRegion(Region r) {
         if (r == null || r.leftTop == null || r.rightBtm == null) {
             return;
         }
+        noFill();
 
         Position lT = r.leftTop;
         Position rB = r.rightBtm;
@@ -515,7 +542,6 @@ public class DemoInterface extends PApplet {
         high = Math.abs(lT.y - rB.y);
 
         lT = r.leftTop;
-        noFill();
         strokeWeight(3);
         rect(lT.x, lT.y, length, high);
     }
@@ -537,38 +563,6 @@ public class DemoInterface extends PApplet {
         textAlign(CENTER, CENTER);
         text(info, x + (width / 2), y + (height / 2));
         textAlign(LEFT, TOP);
-    }
-
-//    private void drawTraj(Trajectory traj, float xOff, float yOff, int minX, int maxX, int minY, int maxY, UnfoldingMap map) {
-//        noFill();
-//        stroke(PSC.COLORS[3].getRGB());
-//        strokeWeight(1);
-//        int i = 0;
-//        while (i < traj.locations.length) {
-//            Location loc = traj.locations[i];
-//            ScreenPosition pos = map.getScreenPosition(loc);
-//            while (i < traj.locations.length && !intoMap(pos, minX, maxX, minY, maxY)) {//找到第一个在内的
-//                loc = traj.locations[i];
-//                pos = map.getScreenPosition(loc);
-//                i += 1;
-//            }
-//            if (i == traj.locations.length) {
-//                break;
-//            }
-//            beginShape();
-//            while (i < traj.locations.length && intoMap(pos, minX, maxX, minY, maxY)) {//找到最后一个在内的
-//                loc = traj.locations[i];
-//                pos = map.getScreenPosition(loc);
-//                vertex(pos.x + xOff, pos.y + yOff);
-//                i += 1;
-//            }
-//            endShape();
-//        }
-//
-//    }
-
-    private boolean intoMap(ScreenPosition pos, int minX, int maxX, int minY, int maxY) {
-        return (pos.x > minX && pos.x < maxX && pos.y > minY && pos.y < maxY);
     }
 
     private void updateMap(int currentMapController) {
