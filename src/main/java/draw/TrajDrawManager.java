@@ -77,6 +77,7 @@ public class TrajDrawManager {
 
     /**
      * Inner class for the task that starts all painting workers.
+     * Before run it, the workers for modified map views should have been interrupt.
      */
     private class DrawWorkerStarter extends Thread {
         @Override
@@ -86,12 +87,17 @@ public class TrajDrawManager {
                     continue;       // this map view won't be refreshed
                 }
 
+                // clean old image
+                cleanImgFor(mapIdx);
+
                 // start painting tasks
                 UnfoldingMap map = mapList[mapIdx];
                 TrajBlock tb = blockList[mapIdx];
+
                 if (tb.getBlockType().equals(BlockType.NONE)) {
                     continue;       // no need to draw
                 }
+
                 int totLen = tb.getTrajList().length;
                 int threadNum = tb.getThreadNum();
                 int segLen = totLen / threadNum;
@@ -153,14 +159,24 @@ public class TrajDrawManager {
     }
 
     /**
+     * Clean the traj buffer image for one map view
+     */
+    public void cleanImgFor(int optViewIdx) {
+        Arrays.fill(trajImageMtx[optViewIdx], null);
+    }
+
+    /**
      * Clean the unfinished thread of this map
      */
     private void interruptUnfinished(int mapIdx) {
         TrajDrawWorker[] trajDrawWorkerList = trajDrawWorkerMtx[mapIdx];
-        int threadNum = blockList[mapIdx].getThreadNum();
-        for (int idx = 0; idx < threadNum; idx++) {
-            trajDrawWorkerList[idx].interrupt();
+        for (TrajDrawWorker worker : trajDrawWorkerList) {
+            if (worker == null) {
+                return;
+            }
+            worker.interrupt();
         }
+        Arrays.fill(trajDrawWorkerList, null);
     }
 
 

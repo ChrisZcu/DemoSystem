@@ -1,17 +1,12 @@
 package app;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
+import draw.TrajDrawManager;
 import model.*;
 import select.SelectManager;
-import draw.TrajDrawManager;
-import model.BlockType;
-import model.Region;
-import model.TrajBlock;
-import model.Trajectory;
 import util.IOHandle;
 import util.PSC;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -49,7 +44,7 @@ public class SharedObject {
 
     private static boolean[] regionPresent = new boolean[3];// indicate the current region draw.
 
-    // map & app
+    // map
     private static UnfoldingMap[] mapList;
 
     private boolean finishSelectRegion;
@@ -162,9 +157,11 @@ public class SharedObject {
     }
 
     public boolean checkSelectRegion() {
-        for (boolean f : regionPresent)
-            if (f)
+        for (boolean f : regionPresent) {
+            if (f) {
                 return true;
+            }
+        }
 
         return false;
     }
@@ -193,10 +190,12 @@ public class SharedObject {
 
     public ArrayList<Region> getRegionWithoutWList() {
         ArrayList<Region> res = new ArrayList<>();
-        if (regionO != null)
+        if (regionO != null) {
             res.add(regionO);
-        if (regionD != null)
+        }
+        if (regionD != null) {
             res.add(regionD);
+        }
         return res;
     }
 
@@ -205,15 +204,17 @@ public class SharedObject {
     }
 
     public void addWayPoint(Region r) {
-        if (regionWLayerList.size() < wayPointLayer)
-            regionWLayerList.add(new ArrayList<Region>());
+        if (regionWLayerList.size() < wayPointLayer) {
+            regionWLayerList.add(new ArrayList<>());
+        }
 
         regionWLayerList.get(wayPointLayer - 1).add(r);
     }
 
     public void updateWLayer() {
-        if (wayPointLayer == regionWLayerList.size())
+        if (wayPointLayer == regionWLayerList.size()) {
             wayPointLayer++;
+        }
     }
 
     public int getWayLayer() {
@@ -222,10 +223,12 @@ public class SharedObject {
 
     public ArrayList<Region> getAllRegions() {
         ArrayList<Region> allRegion = new ArrayList<>();
-        if (regionO != null)
+        if (regionO != null) {
             allRegion.add(regionO);
-        if (regionD != null)
+        }
+        if (regionD != null) {
             allRegion.add(regionD);
+        }
         for (ArrayList<Region> wList : regionWLayerList) {
             allRegion.addAll(wList);
         }
@@ -326,15 +329,15 @@ public class SharedObject {
                 threadNum = -1;
                 break;
             case FULL:
-                trajList = instance.getTrajFull();
+                trajList = this.getTrajFull();
                 threadNum = PSC.FULL_THREAD_NUM;
                 break;
             case VFGS:
-                trajList = instance.getTrajVfgsMtx()[deltaIdx][rateIdx];
+                trajList = this.getTrajVfgsMtx()[deltaIdx][rateIdx];
                 threadNum = PSC.SAMPLE_THREAD_NUM;
                 break;
             case RAND:
-                trajList = instance.getTrajRandList()[rateIdx];
+                trajList = this.getTrajRandList()[rateIdx];
                 threadNum = PSC.SAMPLE_THREAD_NUM;
                 break;
             default:
@@ -343,7 +346,7 @@ public class SharedObject {
                         "this block type : " + type);
         }
 
-        instance.getBlockList()[idx].setNewBlock(type, trajList,
+        this.getBlockList()[idx].setNewBlock(type, trajList,
                 threadNum, deltaIdx, rateIdx);
     }
 
@@ -355,10 +358,14 @@ public class SharedObject {
 
     private RegionType getRegionType() {
         if (regionWLayerList.size() > 0) {
-            if (regionO != null)
+            if (regionO != null) {
                 return RegionType.O_D_W;
-            else return RegionType.O_D;
+            } else {
+                return RegionType.O_D;
+            }
 
-        } else return RegionType.O_D;
+        } else {
+            return RegionType.O_D;
+        }
     }
 }

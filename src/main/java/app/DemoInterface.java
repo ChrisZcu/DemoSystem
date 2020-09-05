@@ -9,7 +9,6 @@ import model.*;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
-import util.Swing;
 import util.SelectDataDialog;
 
 import javax.swing.*;
@@ -109,7 +108,7 @@ public class DemoInterface extends PApplet {
         createTopMenu(screenWidth, mapDownOff - 5, frame, this);
         this.selectDataDialog = new SelectDataDialog(frame);
 
-//        (new Thread(this::loadData)).start();
+        (new Thread(this::loadData)).start();
 
     }
 
@@ -271,11 +270,11 @@ public class DemoInterface extends PApplet {
             regionDragged = false;
             Region selectRegion = getSelectRegion(lastClick);
             selectRegion.id = regionId++;
-            if (SharedObject.getInstance().checkRegion(0)) // O
+            if (SharedObject.getInstance().checkRegion(0)) {        // O
                 SharedObject.getInstance().setRegionO(selectRegion);
-            else if (SharedObject.getInstance().checkRegion(1)) //D
+            } else if (SharedObject.getInstance().checkRegion(1)) { // D
                 SharedObject.getInstance().setRegionD(selectRegion);
-            else {
+            } else {
                 SharedObject.getInstance().addWayPoint(selectRegion);
             }
             SharedObject.getInstance().eraseRegionPren();
@@ -305,11 +304,14 @@ public class DemoInterface extends PApplet {
         }
 
         if (SharedObject.getInstance().checkRegion(0)) // O
+        {
             selectRegion.color = PSC.COLORS[0];
-        else if (SharedObject.getInstance().checkRegion(1)) //D
+        } else if (SharedObject.getInstance().checkRegion(1)) //D
+        {
             selectRegion.color = PSC.COLORS[1];
-        else
+        } else {
             selectRegion.color = PSC.COLORS[SharedObject.getInstance().getWayLayer() + 1];
+        }
 
         return selectRegion;
     }
@@ -350,8 +352,9 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawRegion(Region r) {
-        if (r == null || r.leftTop == null || r.rightBtm == null)
+        if (r == null || r.leftTop == null || r.rightBtm == null) {
             return;
+        }
 
         Position lT = r.leftTop;
         Position rB = r.rightBtm;
