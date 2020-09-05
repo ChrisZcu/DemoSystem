@@ -7,6 +7,7 @@ import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManager;
 import model.*;
+import model.Color;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
@@ -22,13 +23,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static model.Color.*;
 import static util.Swing.createTopMenu;
 
 
 public class DemoInterface extends PApplet {
     private TrajDrawManager trajDrawManager;
-    private PGraphics[][] trajImgMtx;       // the 4 trajImg buffer list for main layer
-    private PGraphics[][] trajImgSltMtx;    // the 4 trajImg buffer list for double select result
+    private PGraphics[][] trajImgMtx;           // the 4 trajImg buffer layers list
     private EleButton[] dataButtonList;
 
     private float[][] mapLocInfo;
@@ -77,7 +78,7 @@ public class DemoInterface extends PApplet {
     public void settings() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         screenWidth = (int) screenSize.getWidth();
-        screenHeight = (int) screenSize.getHeight();
+        int screenHeight = (int) screenSize.getHeight();
 
         mapWidth = (screenWidth - widthGapDis) / 2;
         mapHeight = (screenHeight - mapDownOff - heighGapDis) / 2;
@@ -136,60 +137,10 @@ public class DemoInterface extends PApplet {
         loadFinished = true;
     }
 
-    private void updateMap(int currentMapController) {
-        boolean[] mapChanged = {false, false, false, false};
-        boolean mapControllerChanged = !(currentMapController == mapController);
-
-        for (int i = 0; i < mapList.length; ++i) {
-            mapList[i].draw();
-            mapChanged[i] = checkLevel[i] != mapList[i].getZoomLevel() || !checkCenter[i].equals(mapList[i].getCenter());
-        }
-
-        if (mapControllerChanged) {
-            for (int i = 0; i < mapList.length; ++i) {
-                int zoomLevel = mapList[currentMapController].getZoomLevel();
-                Location center = mapList[currentMapController].getCenter();
-
-                if (linkedList[i] && viewVisibleList[i] && mapChanged[i]) {
-                    mapList[i].zoomToLevel(zoomLevel);
-                    mapList[i].panTo(center);
-
-                    checkLevel[i] = zoomLevel;
-                    checkCenter[i] = center;
-                }
-            }
-            mapController = currentMapController;
-        } else {
-            if (mapChanged[mapController]) {
-                //System.out.println(mapControllerChanged+" "+mapChanged[mapController]);
-                int zoomLevel = mapList[mapController].getZoomLevel();
-                Location center = mapList[mapController].getCenter();
-
-                for (int i = 0; i < mapList.length; ++i) {
-                    if (linkedList[i] && viewVisibleList[i]) {
-                        mapList[i].zoomToLevel(zoomLevel);
-                        mapList[i].panTo(center);
-
-                        checkLevel[i] = zoomLevel;
-                        checkCenter[i] = center;
-                    }
-                }
-            }
-        }
-
-    }
-
-
-
     @Override
     public void draw() {
         updateMap(mapController);
 
-//        boolean mapChanged = true;
-//        for (UnfoldingMap map : mapList) {
-//            map.draw();
-//            mapChanged = checkLevel != map.getZoomLevel() || !checkCenter.equals(map.getCenter());
-//        }
         if (SharedObject.getInstance().isScreenShot()) {
             int totalFileNum = Objects.requireNonNull(new File(PSC.OUTPUT_PATH).list()).length;
 
@@ -214,9 +165,6 @@ public class DemoInterface extends PApplet {
 
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
-            /*if (!viewVisibleList[mapIdx]) {
-                continue;
-            }*/
             for (PGraphics pg : trajImgMtx[mapIdx]) {
                 if (pg == null) {
                     continue nextMap;
@@ -224,8 +172,9 @@ public class DemoInterface extends PApplet {
                 image(pg, mapXList[mapIdx], mapYList[mapIdx]);
             }
         }
+
         if (regionDragged) {//drag the region, not finished
-            drawRegion(getSelectRegion(lastClick));
+            drawRegion(getSelectRegion(lastClick, optIndex));
         }
 
         if (SharedObject.getInstance().isFinishSelectRegion()) {//finish select
@@ -253,13 +202,12 @@ public class DemoInterface extends PApplet {
         }
     }
 
-//    private boolean regionDragged = false;
-//    private Position lastClick;
-//    private int circleSize = 15;
-//    private boolean mouseMove = false;
+    private int optIndex;
 
     @Override
     public void mousePressed() {
+        optIndex = getOptIndex();
+
         int eleId = -1;
         for (EleButton dataButton : dataButtonList) {
             if (dataButton.isMouseOver(this)) {
@@ -302,7 +250,7 @@ public class DemoInterface extends PApplet {
     public void mouseReleased() {
         if (regionDragged) {
             regionDragged = false;
-            Region selectRegion = getSelectRegion(lastClick);
+            Region selectRegion = getSelectRegion(lastClick, optIndex);
             selectRegion.id = regionId++;
             if (SharedObject.getInstance().checkRegion(0)) {        // O
                 SharedObject.getInstance().setRegionO(selectRegion);
@@ -315,8 +263,20 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    private Region getSelectRegion(Position lastClick) {
-        Position curClick = new Position(mouseX, mouseY);
+    private int getOptIndex() {
+        for (int i = 0; i < 4; i++) {
+            if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
+                    && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight)
+                return i;
+        }
+        return 0;
+    }
+
+    private Region getSelectRegion(Position lastClick, int optIndex) {
+        float mx = constrain(mouseX, mapXList[optIndex] + 3, mapXList[optIndex] + mapWidth - 3);
+        float my = constrain(mouseY, mapYList[optIndex] + 3, mapYList[optIndex] + mapHeight - 3);
+
+        Position curClick = new Position(mx, my);
         Region selectRegion = new Region();
         if (lastClick.x < curClick.x) {//left
             if (lastClick.y < curClick.y) {//up
@@ -339,12 +299,12 @@ public class DemoInterface extends PApplet {
 
         if (SharedObject.getInstance().checkRegion(0)) // O
         {
-            selectRegion.color = PSC.COLORS[0];
+            selectRegion.color = DEEP_BLUE;
         } else if (SharedObject.getInstance().checkRegion(1)) //D
         {
-            selectRegion.color = PSC.COLORS[1];
+            selectRegion.color = SKY_BLUE;
         } else {
-            selectRegion.color = PSC.COLORS[SharedObject.getInstance().getWayLayer() + 1];
+            selectRegion.color = Color.getColor()[SharedObject.getInstance().getWayLayer() + 1];
         }
 
         return selectRegion;
@@ -379,6 +339,8 @@ public class DemoInterface extends PApplet {
 
     private void initDataButton() {
         dataButtonList = new EleButton[4];
+        int dataButtonXOff = 2;
+        int dataButtonYOff = 2;
         dataButtonList[0] = new EleButton(dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 0, "DataSelect");
         dataButtonList[1] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 1, "DataSelect");
         dataButtonList[2] = new EleButton(dataButtonXOff, mapHeight + mapDownOff + heighGapDis, 70, 20, 2, "DataSelect");
@@ -397,13 +359,16 @@ public class DemoInterface extends PApplet {
         int high = Math.abs(lT.y - rB.y);
 
         if (mouseMove && r.id == dragRegionId) {
-            r.leftTop = new Position(mouseX, mouseY);
-            r.rightBtm = new Position(mouseX + length, mouseY + high);
+            float mx = constrain(mouseX, mapXList[optIndex] + 3, mapXList[optIndex] + mapWidth - 3 - length);
+            float my = constrain(mouseY, mapYList[optIndex] + 3, mapYList[optIndex] + mapHeight - 3 - high);
+
+            r.leftTop = new Position(mx, my);
+            r.rightBtm = new Position(mx + length, my + high);
         }
 
         lT = r.leftTop;
         rB = r.rightBtm;
-        stroke(r.color.getRGB());
+        stroke(PSC.COLORS[r.color.value].getRGB());
 
         length = Math.abs(lT.x - rB.x);
         high = Math.abs(lT.y - rB.y);
@@ -444,6 +409,48 @@ public class DemoInterface extends PApplet {
 
     private boolean intoMap(ScreenPosition pos, int minX, int maxX, int minY, int maxY) {
         return (pos.x > minX && pos.x < maxX && pos.y > minY && pos.y < maxY);
+    }
+
+    private void updateMap(int currentMapController) {
+        boolean[] mapChanged = {false, false, false, false};
+        boolean mapControllerChanged = !(currentMapController == mapController);
+
+        for (int i = 0; i < mapList.length; ++i) {
+            mapList[i].draw();
+            mapChanged[i] = checkLevel[i] != mapList[i].getZoomLevel() || !checkCenter[i].equals(mapList[i].getCenter());
+        }
+
+        if (mapControllerChanged) {
+            for (int i = 0; i < mapList.length; ++i) {
+                int zoomLevel = mapList[currentMapController].getZoomLevel();
+                Location center = mapList[currentMapController].getCenter();
+
+                if (linkedList[i] && viewVisibleList[i] && mapChanged[i]) {
+                    mapList[i].zoomToLevel(zoomLevel);
+                    mapList[i].panTo(center);
+
+                    checkLevel[i] = zoomLevel;
+                    checkCenter[i] = center;
+                }
+            }
+            mapController = currentMapController;
+        } else {
+            if (mapChanged[mapController]) {
+                int zoomLevel = mapList[mapController].getZoomLevel();
+                Location center = mapList[mapController].getCenter();
+
+                for (int i = 0; i < mapList.length; ++i) {
+                    if (linkedList[i] && viewVisibleList[i]) {
+                        mapList[i].zoomToLevel(zoomLevel);
+                        mapList[i].panTo(center);
+
+                        checkLevel[i] = zoomLevel;
+                        checkCenter[i] = center;
+                    }
+                }
+            }
+        }
+
     }
 
     public static void main(String[] args) {
