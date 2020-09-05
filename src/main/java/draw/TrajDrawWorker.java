@@ -25,6 +25,8 @@ public class TrajDrawWorker extends Thread {
     private final int begin, end;       // the param for select traj
     private final Color color;      // the color for the traj
 
+    public volatile boolean stop = false;
+
     public TrajDrawWorker(String name, UnfoldingMap map, PGraphics pg,
                           PGraphics[] trajImageList, Trajectory[] trajList, int[] trajCnt,
                           int index, float offsetX, float offsetY,
@@ -44,7 +46,7 @@ public class TrajDrawWorker extends Thread {
         this.color = color;
 
         // init priority
-        this.setPriority(index % 9 + 1);
+        this.setPriority(9);
     }
 
     @Deprecated
@@ -69,7 +71,7 @@ public class TrajDrawWorker extends Thread {
             for (Location loc : trajList[i].getLocations()) {
 
                 // stop the thread if it is interrupted
-                if (this.isInterrupted()) {
+                if (this.stop) {
                     System.out.println(this.getName() + " cancel");
                     pg.endShape();
                     pg.endDraw();

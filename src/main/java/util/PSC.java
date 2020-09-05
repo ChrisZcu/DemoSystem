@@ -32,9 +32,8 @@ public class PSC {
 
     /**
      * The pool size of control pool in {@link draw.TrajDrawManager}.
-     * When start redraw traj too fast, the pool will overflow and throw an exception
      */
-    public static final int CONTROL_POOL_SIZE = 10;
+    public static final int CONTROL_POOL_SIZE = 8;
 
     /**
      * VFGS result set (i.e. R / R+ in paper).
@@ -59,4 +58,5 @@ public class PSC {
 
     public static final Color RED = new Color(255, 0, 0);
     public static final Color BLUE = new Color(2, 124, 255);
+    public static final Color GRAY = new Color(150, 150, 150);
 }

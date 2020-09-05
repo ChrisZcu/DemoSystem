@@ -78,7 +78,7 @@ public class TrajDrawManager {
         // single thread pool in sure the control orders run one by one
         this.controlPool = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<>(PSC.CONTROL_POOL_SIZE),
-                new ThreadPoolExecutor.AbortPolicy());
+                new ThreadPoolExecutor.DiscardOldestPolicy());
     }
 
     /**
@@ -98,7 +98,7 @@ public class TrajDrawManager {
 
         @Override
         public void run() {
-            long startTime = System.currentTimeMillis();
+            long time = System.currentTimeMillis();
 
             // start painting tasks
             UnfoldingMap map = mapList[mapIdx];
@@ -146,7 +146,7 @@ public class TrajDrawManager {
                 threadPool.submit(worker);
             }
             System.out.println(getName() + " finished work partition in "
-                    + (startTime - System.currentTimeMillis()));
+                    + (System.currentTimeMillis() - time));
         }
     }
 
@@ -239,11 +239,16 @@ public class TrajDrawManager {
     private void interruptUnfinished(int mapIdx, int layerType) {
         TrajDrawWorker[] trajDrawWorkerList = (layerType == MAIN) ?
                 trajDrawWorkerMtx[mapIdx] : trajDrawSltWorkerMtx[mapIdx];
-        for (TrajDrawWorker worker : trajDrawWorkerList) {
-            if (worker == null) {
-                return;
+        try {
+            for (TrajDrawWorker worker : trajDrawWorkerList) {
+                if (worker == null) {
+                    return;
+                }
+                worker.stop = true;
+                worker.join();
             }
-            worker.interrupt();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         Arrays.fill(trajDrawWorkerList, null);
     }

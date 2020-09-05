@@ -139,22 +139,22 @@ public class DemoInterface extends PApplet {
 
         SharedObject.getInstance().setBlockAt(0, BlockType.FULL, -1, -1);
         tb = SharedObject.getInstance().getBlockList()[0];
-        tb.setMainColor(PSC.RED);
-        tb.setSltColor(PSC.BLUE);
+        tb.setMainColor(PSC.GRAY);
+        tb.setSltColor(PSC.RED);
 
         SharedObject.getInstance().setBlockAt(1, BlockType.VFGS, 0, 0);
         tb = SharedObject.getInstance().getBlockList()[1];
-        tb.setMainColor(PSC.RED);
-        tb.setSltColor(PSC.BLUE);
+        tb.setMainColor(PSC.GRAY);
+        tb.setSltColor(PSC.RED);
 
         SharedObject.getInstance().setBlockAt(2, BlockType.RAND, 0, -1);
         tb = SharedObject.getInstance().getBlockList()[2];
-        tb.setMainColor(PSC.RED);
-        tb.setSltColor(PSC.BLUE);
+        tb.setMainColor(PSC.GRAY);
+        tb.setSltColor(PSC.RED);
 
         tb = SharedObject.getInstance().getBlockList()[3];
-        tb.setMainColor(PSC.RED);
-        tb.setSltColor(PSC.BLUE);
+        tb.setMainColor(PSC.GRAY);
+        tb.setSltColor(PSC.RED);
 
         trajDrawManager.startAllNewRenderTask(TrajDrawManager.MAIN);
         loadFinished = true;
@@ -232,7 +232,6 @@ public class DemoInterface extends PApplet {
         for (EleButton dataButton : dataButtonList) {
             dataButton.render(this);
         }
-
     }
 
     private int optIndex;
@@ -265,10 +264,10 @@ public class DemoInterface extends PApplet {
             for (int i = 0; i < mapList.length; ++i) {
                 if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
                         && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
-                    System.out.println("map " + i + "pressed");
+                    System.out.println("map " + i + " pressed");
                     trajDrawManager.cleanImgFor(i);
                     imgCleaned[i] = true;
-                    System.out.println("map " + i + "cleaned");
+                    System.out.println("map " + i + " cleaned");
 
                     if (i == mapController) {
                         mapControllerPressed = true;
@@ -281,7 +280,7 @@ public class DemoInterface extends PApplet {
                     if (viewVisibleList[i] && linkedList[i]) {
                         trajDrawManager.cleanImgFor(i);
                         imgCleaned[i] = true;
-                        System.out.println("map " + i + "cleaned");
+                        System.out.println("map " + i + " cleaned");
                     }
                 }
             }
@@ -311,7 +310,7 @@ public class DemoInterface extends PApplet {
             if (viewVisibleList[i] && imgCleaned[i]) {
                 trajDrawManager.startNewRenderTaskFor(i);
                 imgCleaned[i] = false;
-                System.out.println("map " + i + "redrawed");
+                System.out.println("map " + i + "redrawn");
             }
         }
 
@@ -341,7 +340,9 @@ public class DemoInterface extends PApplet {
                 trajDrawManager.startNewRenderTaskFor(i);
                 System.out.println("map " + i + "zoomed and redrawed");
 
-                if (i == mapController) mapControllerZoomed = true;
+                if (i == mapController) {
+                    mapControllerZoomed = true;
+                }
             }
         }
 

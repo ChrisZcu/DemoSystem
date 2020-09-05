@@ -1,6 +1,7 @@
 package util;
 
 import app.SharedObject;
+import draw.TrajDrawManager;
 import processing.core.PApplet;
 
 import javax.swing.*;
@@ -106,6 +107,8 @@ public class Swing {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println("clear all!");
+                TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
+                tdm.cleanAllImg(TrajDrawManager.SLT);
                 SharedObject.getInstance().cleanRegions();
             }
         };
