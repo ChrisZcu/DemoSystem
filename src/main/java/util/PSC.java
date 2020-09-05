@@ -27,7 +27,7 @@ public class PSC {
 
     // recommend: core # * 2 or little higher
     public static final int FULL_THREAD_NUM = 5;
-    public static final int SAMPLE_THREAD_NUM = 5;
+    public static final int SAMPLE_THREAD_NUM = 2;
 
     /**
      * VFGS result set (i.e. R / R+ in paper).
