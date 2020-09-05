@@ -177,6 +177,20 @@ public class TrajDrawManager {
     }
 
     /**
+     * Update the traj painting for specific map view (main or double select),
+     * both layer.
+     * Other map view will not change.
+     * <p>
+     * Before call it, the pg should be cleaned.
+     */
+    public void startNewRenderTaskFor(int optViewIdx) {
+        interruptUnfinished(optViewIdx, MAIN);
+        interruptUnfinished(optViewIdx, SLT);
+        updateTrajImageFor(optViewIdx, MAIN);
+        updateTrajImageFor(optViewIdx, SLT);
+    }
+
+    /**
      * Clean the traj buffer image for ALL map view
      *
      * @param layerType {@link #MAIN} or {@link #SLT}
@@ -204,6 +218,16 @@ public class TrajDrawManager {
         } else {
             Arrays.fill(trajImageSltMtx[optViewIdx], null);
         }
+    }
+
+    /**
+     * Clean the traj buffer images for one map view, both layer
+     *
+     * @param optViewIdx
+     */
+    public void cleanImgFor(int optViewIdx) {
+        Arrays.fill(trajImageMtx[optViewIdx], null);
+        Arrays.fill(trajImageSltMtx[optViewIdx], null);
     }
 
     /**

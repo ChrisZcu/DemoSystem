@@ -7,7 +7,6 @@ import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManager;
 import model.*;
-import model.Color;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
@@ -23,13 +22,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static model.Color.*;
+import static model.Colour.*;
 import static util.Swing.createTopMenu;
 
 
 public class DemoInterface extends PApplet {
     private TrajDrawManager trajDrawManager;
     private PGraphics[][] trajImgMtx;           // the 4 trajImg buffer layers list
+    private PGraphics[][] trajImgSltMtx;    // the 4 trajImg buffer list for double select result
     private EleButton[] dataButtonList;
 
     private float[][] mapLocInfo;
@@ -128,8 +128,7 @@ public class DemoInterface extends PApplet {
         createTopMenu(screenWidth, mapDownOff - 5, frame, this);
         this.selectDataDialog = new SelectDataDialog(frame);
 
-//        (new Thread(this::loadData)).start();
-
+        (new Thread(this::loadData)).start();
     }
 
     private void loadData() {
