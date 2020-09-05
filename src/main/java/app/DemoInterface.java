@@ -27,7 +27,8 @@ import static util.Swing.createTopMenu;
 
 public class DemoInterface extends PApplet {
     private TrajDrawManager trajDrawManager;
-    private PGraphics[][] trajImgMtx;           // the 4 trajImg buffer layers list
+    private PGraphics[][] trajImgMtx;       // the 4 trajImg buffer list for main layer
+    private PGraphics[][] trajImgSltMtx;    // the 4 trajImg buffer list for double select result
     private EleButton[] dataButtonList;
 
     private float[][] mapLocInfo;
@@ -53,7 +54,7 @@ public class DemoInterface extends PApplet {
     private final int heighGapDis = 4;
     private final int widthGapDis = 6;
 
-    private boolean[] viewVisibleList = {true, true, true, true};      // is the map view visible
+    private boolean[] viewVisibleList = {true, true, true, true};  // is the map view visible
     private boolean[] linkedList = {true, true, true, true};       // is the map view linked to others
     //private boolean[] linkedList = {true, true, false, false};
     private int mapController = 0;
@@ -107,10 +108,11 @@ public class DemoInterface extends PApplet {
         SharedObject.getInstance().initBlockList();
 
         trajImgMtx = new PGraphics[4][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
+        trajImgMtx = new PGraphics[4][PSC.SELECT_THREAD_NUM];
 
         // Warning: the constructor of the TrajDrawManager must be called AFTER initBlockList()
-        trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, null,
-                mapXList, mapYList, mapWidth, mapHeight);
+        trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, trajImgSltMtx,
+                null, mapXList, mapYList, mapWidth, mapHeight);
         SharedObject.getInstance().setTrajDrawManager(trajDrawManager);
 
         viewVisibleList = new boolean[4];
@@ -130,7 +132,7 @@ public class DemoInterface extends PApplet {
         SharedObject.getInstance().setBlockAt(0, BlockType.FULL, -1, -1);
         SharedObject.getInstance().setBlockAt(1, BlockType.VFGS, 0, 0);
         SharedObject.getInstance().setBlockAt(2, BlockType.RAND, 0, -1);
-        trajDrawManager.startNewRenderTask(-1, null, null);
+        trajDrawManager.startAllNewRenderTask(false);
         loadFinished = true;
     }
 

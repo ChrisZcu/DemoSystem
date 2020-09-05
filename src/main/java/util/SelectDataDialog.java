@@ -212,6 +212,7 @@ public class SelectDataDialog extends JDialog {
             return;
         }
         TrajDrawManager trajDrawManager = SharedObject.getInstance().getTrajDrawManager();
-        trajDrawManager.startNewRenderTaskFor(optMapIdx);
+        trajDrawManager.cleanImgFor(optMapIdx, false);
+        trajDrawManager.startNewRenderTaskFor(optMapIdx, false);
     }
 }

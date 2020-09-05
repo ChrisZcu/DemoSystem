@@ -2,19 +2,25 @@ package model;
 
 /**
  * The traj structured block which used to show on one map view.
+ * <p>
+ * Each map view will have 2 traj blocks,
+ * one for background, one for double selected result.
  * All info about the trajectory is here.
  */
 public final class TrajBlock {
-    private int mapIdx;         // the idx of the map that this block assigned to.
+    private final int mapIdx;         // the idx of the map that this block assigned to.
+
     private BlockType blockType;
-    private Trajectory[] trajList;    // all traj given to this block
+    private Trajectory[] trajList;  // main traj list given to this block (layer main)
+    private Trajectory[] trajSltList;       // double select traj list
     private int threadNum;
-    private int dIdx, rIdx;           // the param for select color
+    private int dIdx, rIdx;         // the param for select color
 
     public TrajBlock(int mapIdx) {
         this.mapIdx = mapIdx;
         this.blockType = BlockType.NONE;
         this.trajList = null;
+        this.trajSltList = null;
     }
 
     public void setNewBlock(BlockType blockType, Trajectory[] trajList,
@@ -51,6 +57,14 @@ public final class TrajBlock {
 
     public Trajectory[] getTrajList() {
         return trajList;
+    }
+
+    public Trajectory[] getTrajSltList() {
+        return trajSltList;
+    }
+
+    public void setTrajSltList(Trajectory[] trajSltList) {
+        this.trajSltList = trajSltList;
     }
 
     public int getThreadNum() {

@@ -365,6 +365,11 @@ public class SharedObject {
                 threadNum, deltaIdx, rateIdx);
     }
 
+    public void setBlockSltAt(int idx, Trajectory[] trajSltList) {
+        System.out.println("Set block double select info at : idx = " + idx);
+        this.getBlockList()[idx].setTrajSltList(trajSltList);
+    }
+
     public void calTrajSelectResList() {
         SelectManager slm = new SelectManager(getRegionType(), mapList, blockList);
         slm.startRun();
@@ -387,14 +392,16 @@ public class SharedObject {
     public String getBlockInfo() {
         //TODO add map logic
         StringBuilder info = new StringBuilder();
-        if (regionO == null)
+        if (regionO == null) {
             info.append("\norigin: NONE");
-        else
+        } else {
             info.append("\n").append(regionO.toString());
-        if (regionD == null)
+        }
+        if (regionD == null) {
             info.append("\ndestination: NONE");
-        else
+        } else {
             info.append("\n").append(regionD.toString());
+        }
         for (ArrayList<Region> wList : regionWLayerList) {
             for (Region r : wList) {
                 info.append("\n").append(r.toString());
