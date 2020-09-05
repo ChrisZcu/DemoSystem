@@ -20,10 +20,10 @@ public class PSC {
             = "data/GPS/porto_full.txt";
 
     public static String PATH_PREFIX
-            = "data/GPS/";
+            = "data/GPS/Porto5w/";
 
     // traj limit for full set. -1 for no limit
-    public static final int LIMIT = -1;
+    public static final int LIMIT = 5_0000;
 
     // recommend: core # * 2 or little higher
     public static final int FULL_THREAD_NUM = 5;

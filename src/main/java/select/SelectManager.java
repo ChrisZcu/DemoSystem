@@ -29,10 +29,9 @@ public class SelectManager {
     }
 
 
-    private int[] startMapCal(TrajBlock trajBlock, int opIndex) {
-        if (trajBlock.getBlockType() == BlockType.NONE) {
-            return new int[0];
-        }
+    private Trajectory[] startMapCal(TrajBlock trajBlock, int opIndex) {
+        if (trajBlock.getBlockType() == BlockType.NONE)
+            return new Trajectory[0];
 
         int threadNum = trajBlock.getThreadNum();
 
@@ -44,16 +43,16 @@ public class SelectManager {
 
         int totalLength = trajBlock.getTrajList().length;
         int threadSize = totalLength / trajBlock.getThreadNum();
-        int[] resShowIndex = {};
+        Trajectory[] resShowIndex = {};
         try {
             for (int i = 0; i < threadNum - 1; i++) {
                 SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), i * threadSize, (i + 1) * threadSize, opIndex);
-                int[] trajIndexAry = (int[]) threadPool.submit(sw).get();
-                resShowIndex = (int[]) ArrayUtils.addAll(resShowIndex, trajIndexAry);
+                Trajectory[] trajIndexAry = (Trajectory[]) threadPool.submit(sw).get();
+                resShowIndex = ArrayUtils.addAll(resShowIndex, trajIndexAry);
             }
             SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), (threadNum - 1) * threadSize, totalLength, opIndex);
-            int[] trajIndexAry = (int[]) threadPool.submit(sw).get();
-            resShowIndex = (int[]) ArrayUtils.addAll(resShowIndex, trajIndexAry);
+            Trajectory[] trajIndexAry = (Trajectory[]) threadPool.submit(sw).get();
+            resShowIndex = ArrayUtils.addAll(resShowIndex, trajIndexAry);
 
             threadPool.shutdown();
             try {
@@ -72,18 +71,14 @@ public class SelectManager {
 
     public void startRun() {
         for (int i = 0; i < blockList.length; i++) {
-            int[] trajIndexAry = startMapCal(blockList[i], i);
+            Trajectory[] trajAry = startMapCal(blockList[i], i);
             TrajBlock trajBlock = blockList[i];
-            Trajectory[] trajTmp = new Trajectory[trajIndexAry.length];
-            Trajectory[] trajFull = SharedObject.getInstance().getTrajFull();   // take it to make it faster
-            for (int j = 0; j < trajTmp.length; j++) {
-                trajTmp[j] = trajFull[trajIndexAry[j]];
-            }
-            SharedObject.getInstance().setBlockSltAt(i, trajTmp);
-            trajBlock.setTrajSltList(trajTmp);
+            trajBlock.setTrajSltList(trajAry);
+
             TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
             tdm.cleanImgFor(i, TrajDrawManager.SLT);
             tdm.startNewRenderTaskFor(i, TrajDrawManager.SLT);
+
         }
     }
 }

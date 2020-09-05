@@ -268,8 +268,8 @@ public class DemoInterface extends PApplet {
         //drag
         if (SharedObject.getInstance().isDragRegion()) {
             for (Region r : SharedObject.getInstance().getAllRegions()) {
-                if (mouseX >= r.leftTop.x - circleSize / 2 && mouseX <= r.rightBtm.x + circleSize / 2
-                        && mouseY >= r.leftTop.y - circleSize / 2 && mouseY <= r.rightBtm.y + circleSize / 2) {
+                if (mouseX >= r.leftTop.x - circleSize / 2 && mouseX <= r.leftTop.x + circleSize / 2
+                        && mouseY >= r.leftTop.y - circleSize / 2 && mouseY <= r.leftTop.y + circleSize / 2) {
                     dragRegionId = r.id;
                     mouseMove = !mouseMove;
                     System.out.println(dragRegionId);
@@ -411,33 +411,33 @@ public class DemoInterface extends PApplet {
         rect(lT.x, lT.y, length, high);
     }
 
-    private void drawTraj(Trajectory traj, float xOff, float yOff, int minX, int maxX, int minY, int maxY, UnfoldingMap map) {
-        noFill();
-        stroke(PSC.COLORS[3].getRGB());
-        strokeWeight(1);
-        int i = 0;
-        while (i < traj.locations.length) {
-            Location loc = traj.locations[i];
-            ScreenPosition pos = map.getScreenPosition(loc);
-            while (i < traj.locations.length && !intoMap(pos, minX, maxX, minY, maxY)) {//找到第一个在内的
-                loc = traj.locations[i];
-                pos = map.getScreenPosition(loc);
-                i += 1;
-            }
-            if (i == traj.locations.length) {
-                break;
-            }
-            beginShape();
-            while (i < traj.locations.length && intoMap(pos, minX, maxX, minY, maxY)) {//找到最后一个在内的
-                loc = traj.locations[i];
-                pos = map.getScreenPosition(loc);
-                vertex(pos.x + xOff, pos.y + yOff);
-                i += 1;
-            }
-            endShape();
-        }
-
-    }
+//    private void drawTraj(Trajectory traj, float xOff, float yOff, int minX, int maxX, int minY, int maxY, UnfoldingMap map) {
+//        noFill();
+//        stroke(PSC.COLORS[3].getRGB());
+//        strokeWeight(1);
+//        int i = 0;
+//        while (i < traj.locations.length) {
+//            Location loc = traj.locations[i];
+//            ScreenPosition pos = map.getScreenPosition(loc);
+//            while (i < traj.locations.length && !intoMap(pos, minX, maxX, minY, maxY)) {//找到第一个在内的
+//                loc = traj.locations[i];
+//                pos = map.getScreenPosition(loc);
+//                i += 1;
+//            }
+//            if (i == traj.locations.length) {
+//                break;
+//            }
+//            beginShape();
+//            while (i < traj.locations.length && intoMap(pos, minX, maxX, minY, maxY)) {//找到最后一个在内的
+//                loc = traj.locations[i];
+//                pos = map.getScreenPosition(loc);
+//                vertex(pos.x + xOff, pos.y + yOff);
+//                i += 1;
+//            }
+//            endShape();
+//        }
+//
+//    }
 
     private boolean intoMap(ScreenPosition pos, int minX, int maxX, int minY, int maxY) {
         return (pos.x > minX && pos.x < maxX && pos.y > minY && pos.y < maxY);
