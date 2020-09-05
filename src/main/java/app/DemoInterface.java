@@ -4,6 +4,7 @@ import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
+import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManager;
 import model.*;
 import processing.core.PApplet;
@@ -13,8 +14,13 @@ import util.SelectDataDialog;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 import static util.Swing.createTopMenu;
 
@@ -24,6 +30,7 @@ public class DemoInterface extends PApplet {
     private PGraphics[][] trajImgMtx;           // the 4 trajImg buffer layers list
     private EleButton[] dataButtonList;
 
+    private float[][] mapLocInfo;
     private static final Location PORTO_CENTER = new Location(41.14, -8.639);//维度经度
     private static final Location PRESENT = PORTO_CENTER;
 
@@ -88,6 +95,12 @@ public class DemoInterface extends PApplet {
 
         initMapSurface();
         initDataButton();
+        mapLocInfo = new float[2][];
+        mapLocInfo[0] = mapXList;
+        mapLocInfo[1] = mapYList;
+
+        SharedObject.getInstance().setMapLocInfo(mapLocInfo);
+
         background(220, 220, 220);
 
         SharedObject.getInstance().setMapList(mapList);
@@ -170,6 +183,24 @@ public class DemoInterface extends PApplet {
     public void draw() {
         updateMap(mapController);
 
+//        boolean mapChanged = true;
+//        for (UnfoldingMap map : mapList) {
+//            map.draw();
+//            mapChanged = checkLevel != map.getZoomLevel() || !checkCenter.equals(map.getCenter());
+//        }
+        if (SharedObject.getInstance().isScreenShot()) {
+            int totalFileNum = Objects.requireNonNull(new File(PSC.OUTPUT_PATH).list()).length;
+
+            String path = PSC.OUTPUT_PATH1 + "screenShot_" + (totalFileNum / 2) + ".png";
+            saveFrame(path);
+
+            String infilePath = PSC.OUTPUT_PATH1 + "screenShotInfo_" + (totalFileNum / 2) + ".txt";
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(infilePath));
+                writer.write(SharedObject.getInstance().getBlockInfo());
+            } catch (IOException ignored) {
+            }
+        }
 
         for (EleButton dataButton : dataButtonList) {
             dataButton.render(this);
@@ -199,7 +230,8 @@ public class DemoInterface extends PApplet {
             SharedObject instance = SharedObject.getInstance();
             for (int i = 0; i < instance.getTrajSelectResList().length; i++) {
                 for (Integer trajId : instance.getTrajSelectResList()[i]) {
-                    drawTraj(instance.getTrajFull()[trajId], mapXList[i], mapYList[i]);
+                    drawTraj(instance.getTrajFull()[trajId], mapXList[i], mapYList[i],
+                            0, mapWidth - widthGapDis, 0, mapHeight - heighGapDis, mapList[i]);
                 }
             }
         }
@@ -380,11 +412,39 @@ public class DemoInterface extends PApplet {
         rect(lT.x, lT.y, length, high);
     }
 
-    private void drawTraj(Trajectory traj, float xOff, float yOff) {
+    private void drawTraj(Trajectory traj, float xOff, float yOff, int minX, int maxX, int minY, int maxY, UnfoldingMap map) {
+        noFill();
+        stroke(PSC.COLORS[3].getRGB());
+        strokeWeight(1);
+        int i = 0;
+        while (i < traj.locations.length) {
+            Location loc = traj.locations[i];
+            ScreenPosition pos = map.getScreenPosition(loc);
+            while (i < traj.locations.length && !intoMap(pos, minX, maxX, minY, maxY)) {//找到第一个在内的
+                loc = traj.locations[i];
+                pos = map.getScreenPosition(loc);
+                i += 1;
+            }
+            if (i == traj.locations.length)
+                break;
+            beginShape();
+            while (i < traj.locations.length && intoMap(pos, minX, maxX, minY, maxY)) {//找到最后一个在内的
+                loc = traj.locations[i];
+                pos = map.getScreenPosition(loc);
+                vertex(pos.x + xOff, pos.y + yOff);
+                i += 1;
+            }
+            endShape();
+        }
 
+    }
+
+    private boolean intoMap(ScreenPosition pos, int minX, int maxX, int minY, int maxY) {
+        return (pos.x > minX && pos.x < maxX && pos.y > minY && pos.y < maxY);
     }
 
     public static void main(String[] args) {
         PApplet.main(DemoInterface.class.getName());
     }
+
 }

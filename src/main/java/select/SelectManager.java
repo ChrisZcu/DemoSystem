@@ -22,11 +22,17 @@ public class SelectManager {
         this.regionType = regionType;
         this.mapList = mapList;
         this.blockList = blockList;
+
+        System.out.println(regionType);
     }
 
 
     private int[] startMapCal(TrajBlock trajBlock, int opIndex) {
+        if (trajBlock.getBlockType() == BlockType.NONE)
+            return new int[0];
+
         int threadNum = trajBlock.getThreadNum();
+
         ExecutorService threadPool = new ThreadPoolExecutor(threadNum, threadNum, 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>());
 
@@ -38,11 +44,11 @@ public class SelectManager {
         int[] resShowIndex = {};
         try {
             for (int i = 0; i < threadNum - 1; i++) {
-                SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), i * threadSize, (i + 1) * threadSize, map);
+                SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), i * threadSize, (i + 1) * threadSize, opIndex);
                 int[] trajIndexAry = (int[]) threadPool.submit(sw).get();
                 resShowIndex = (int[]) ArrayUtils.addAll(resShowIndex, trajIndexAry);
             }
-            SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), (threadNum - 1) * threadSize, totalLength, map);
+            SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), (threadNum - 1) * threadSize, totalLength, opIndex);
             int[] trajIndexAry = (int[]) threadPool.submit(sw).get();
             resShowIndex = (int[]) ArrayUtils.addAll(resShowIndex, trajIndexAry);
 
@@ -56,7 +62,7 @@ public class SelectManager {
         } catch (ExecutionException | InterruptedException e) {
             System.err.println(e);
         }
-        System.out.println(trajBlock.getBlockType() + "time: " + (System.currentTimeMillis() - start_time));
+        System.out.println(trajBlock.getBlockType() + " time: " + (System.currentTimeMillis() - start_time));
         System.out.println("ALL Done");
         return resShowIndex;
     }

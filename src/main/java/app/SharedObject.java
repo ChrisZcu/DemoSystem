@@ -42,12 +42,27 @@ public class SharedObject {
     private static ArrayList<ArrayList<Region>> regionWLayerList = new ArrayList<>();
     private int wayPointLayer = 1;
 
+    private float[][] mapLocInfo = new float[2][4];
+
+    public void setMapLocInfo(float[][] mapLocInfo) {
+        this.mapLocInfo = mapLocInfo;
+    }
+
+    public float[][] getMapLocInfo() {
+        return mapLocInfo;
+    }
+
     private static boolean[] regionPresent = new boolean[3];// indicate the current region draw.
 
     // map
     private static UnfoldingMap[] mapList;
 
     private boolean finishSelectRegion;
+
+    public boolean isScreenShot() {
+        return screenShot;
+    }
+
     private boolean screenShot;
     private boolean dragRegion = false;
 
@@ -367,5 +382,27 @@ public class SharedObject {
         } else {
             return RegionType.O_D;
         }
+    }
+
+    public String getBlockInfo() {
+        //TODO add map logic
+        StringBuilder info = new StringBuilder();
+        if (regionO == null)
+            info.append("\norigin: NONE");
+        else
+            info.append("\n").append(regionO.toString());
+        if (regionD == null)
+            info.append("\ndestination: NONE");
+        else
+            info.append("\n").append(regionD.toString());
+        for (ArrayList<Region> wList : regionWLayerList) {
+            for (Region r : wList) {
+                info.append("\n").append(r.toString());
+            }
+        }
+        for (TrajBlock bt : blockList) {
+            info.append("\n").append(bt.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST));
+        }
+        return info.toString();
     }
 }

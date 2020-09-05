@@ -1,11 +1,13 @@
 package model;
 
+import app.SharedObject;
+import de.fhpotsdam.unfolding.UnfoldingMap;
+
 import java.awt.*;
 
 /**
  * Indicates the left-top position and right-bottom position of selected region.
- *
- * */
+ */
 public class Region {
     public Position leftTop;
     public Position rightBtm;
@@ -29,5 +31,10 @@ public class Region {
         leftTop = rightBtm = null;
     }
 
-
+    @Override
+    public String toString() {
+        UnfoldingMap map = SharedObject.getInstance().getMapList()[0];
+        //TODO add info for each map
+        return null;
+    }
 }

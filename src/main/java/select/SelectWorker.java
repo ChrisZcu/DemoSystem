@@ -20,15 +20,15 @@ public class SelectWorker implements Callable {
     private ArrayList<Region> regionWList;
     private int begin;
     private int end;
-    private UnfoldingMap map;
+    private int optIndex;
     private Trajectory[] trajectory;
 
-    public SelectWorker(RegionType regionType, Trajectory[] trajectory, int begin, int end, UnfoldingMap map) {
+    public SelectWorker(RegionType regionType, Trajectory[] trajectory, int begin, int end, int optIndex) {
         this.regionType = regionType;
         this.trajectory = trajectory;
         this.begin = begin;
         this.end = end;
-        this.map = map;
+        this.optIndex = optIndex;
     }
 
     @Override
@@ -36,13 +36,13 @@ public class SelectWorker implements Callable {
         int[] res;
         switch (regionType) {
             case O_D:
-                res = getODTraj(begin, end, trajectory, map);
+                res = getODTraj(begin, end, trajectory, optIndex);
                 break;
             case WAY_POINT:
-                res = getWayPointTraj(begin, end, trajectory, map);
+                res = getWayPointTraj(begin, end, trajectory, optIndex);
                 break;
             case O_D_W:
-                res = getODWTraj(begin, end, trajectory, map);
+                res = getODWTraj(begin, end, trajectory, optIndex);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + regionType);
