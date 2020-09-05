@@ -1,9 +1,11 @@
-package util;
+package swing;
 
 import app.SharedObject;
 import draw.TrajDrawManager;
 import model.BlockType;
 import model.TrajBlock;
+import util.GBC;
+import util.PSC;
 
 import javax.swing.*;
 import java.awt.*;

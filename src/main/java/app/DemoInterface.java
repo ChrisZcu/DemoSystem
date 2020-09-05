@@ -9,8 +9,9 @@ import draw.TrajDrawManager;
 import model.*;
 import processing.core.PApplet;
 import processing.core.PGraphics;
+import swing.MenuWindow;
 import util.PSC;
-import util.SelectDataDialog;
+import swing.SelectDataDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,9 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
-
-import static util.Swing.createTopMenu;
-
 
 public class DemoInterface extends PApplet {
     private TrajDrawManager trajDrawManager;
@@ -72,6 +70,7 @@ public class DemoInterface extends PApplet {
 
     /* Other interface component */
 
+    private MenuWindow menuWindow;
     private SelectDataDialog selectDataDialog;
 
     @Override
@@ -124,8 +123,9 @@ public class DemoInterface extends PApplet {
         SharedObject.getInstance().setViewVisibleList(viewVisibleList);
 
         // init other interface component
-        createTopMenu(screenWidth, mapDownOff - 5, frame, this);
-        this.selectDataDialog = new SelectDataDialog(frame);
+        menuWindow = new MenuWindow(screenWidth, mapDownOff - 5, this);
+        menuWindow.setVisible(true);
+        selectDataDialog = new SelectDataDialog(frame);
 
         (new Thread(this::loadData)).start();
     }
@@ -254,6 +254,7 @@ public class DemoInterface extends PApplet {
             } else {
                 System.out.println("not to open dialog");
             }
+            return;
         } else {
             System.out.println("eleId == -1");
         }
@@ -424,7 +425,7 @@ public class DemoInterface extends PApplet {
 
         for (UnfoldingMap map : mapList) {
             map.setZoomRange(1, 20);
-            map.zoomAndPanTo(14, PRESENT);
+            map.zoomAndPanTo(11, PRESENT);
             map.setBackgroundColor(255);
             map.setTweening(false);
             MapUtils.createDefaultEventDispatcher(this, map);

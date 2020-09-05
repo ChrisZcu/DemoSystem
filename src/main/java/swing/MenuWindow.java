@@ -1,4 +1,4 @@
-package util;
+package swing;
 
 import app.SharedObject;
 import draw.TrajDrawManager;
@@ -9,13 +9,11 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class Swing {
-    private static SelectDataDialog selectDataDialog;
+public class MenuWindow extends JWindow {
 
-    public static void createTopMenu(int width, int height, Frame frame, PApplet pApplet) {
-        JWindow menuWindow = new JWindow();
-        menuWindow.setSize(width, height);
-        menuWindow.setLocation(0, 0);
+    public MenuWindow(int width, int height, PApplet pApplet) {
+        setSize(width, height);
+        setLocation(0, 0);
 
         int buttonWidth = width / 7;
         JPanel panel = new JPanel();
@@ -136,8 +134,7 @@ public class Swing {
         exitButton.addActionListener(exitButtonActionListen);
         exitButton.setSize(buttonWidth, height);
 
-
-        Container panel2 = menuWindow.getContentPane();
+        Container panel2 = getContentPane();
         panel2.add(new JLabel("[--]menu function"), BorderLayout.PAGE_START);
         panel2.add(panel, BorderLayout.CENTER);
 
@@ -151,7 +148,6 @@ public class Swing {
         panel.add(clearRegionButton);
         panel.add(exitButton);
 
-        menuWindow.setAlwaysOnTop(true);
-        menuWindow.setVisible(true);
+        setAlwaysOnTop(true);
     }
 }
