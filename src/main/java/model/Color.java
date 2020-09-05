@@ -12,5 +12,4 @@ public enum Color {
     public static Color[] getColor() {
         return new Color[]{DEEP_BLUE, SKY_BLUE, LIGHT_BLUE, YELLOW, ORANGE, RED};
     }
-
 }
