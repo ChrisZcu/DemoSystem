@@ -70,6 +70,7 @@ public class DemoInterface extends PApplet {
 
     /* Other interface component */
 
+    private MenuWindow menuWindow;
     private SelectDataDialog selectDataDialog;
 
     @Override
@@ -231,8 +232,14 @@ public class DemoInterface extends PApplet {
         for (EleButton dataButton : dataButtonList) {
             dataButton.render(this);
         }
-    }
 
+        int dataButtonXOff = 2;
+        int dataButtonYOff = 2;
+        drawInfoTextBox(0, dataButtonXOff, dataButtonYOff + mapDownOff + mapHeight - 20 - 4, 200, 20);
+        drawInfoTextBox(1, mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff + mapHeight - 20 - 4, 200, 20);
+        drawInfoTextBox(2, dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
+        drawInfoTextBox(3, mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
+    }
     private int optIndex;
 
     @Override
