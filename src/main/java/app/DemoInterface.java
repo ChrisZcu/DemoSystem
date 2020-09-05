@@ -30,8 +30,9 @@ public class DemoInterface extends PApplet {
 
     private UnfoldingMap[] mapList;
 
-    private int checkLevel = -1;
-    private Location checkCenter = new Location(-1, -1);
+    private int[] checkLevel = {-1, -1, -1, -1};
+    private Location[] checkCenter = {new Location(-1, -1), new Location(-1, -1),
+            new Location(-1, -1), new Location(-1, -1)};
 
     private int screenWidth;
     private int screenHeight;
@@ -46,8 +47,10 @@ public class DemoInterface extends PApplet {
     private final int heighGapDis = 4;
     private final int widthGapDis = 6;
 
-    private boolean[] viewVisibleList;      // is the map view visible
-    private boolean[] linkedList;       // is the map view linked to others
+    private boolean[] viewVisibleList = {true, true, true, true};      // is the map view visible
+    private boolean[] linkedList = {true, true, true, true};       // is the map view linked to others
+    //private boolean[] linkedList = {true, true, false, false};
+    private int mapController = 0;
 
     private boolean loadFinished = false;
     private int regionId = 0;
@@ -106,7 +109,7 @@ public class DemoInterface extends PApplet {
         createTopMenu(screenWidth, mapDownOff - 5, frame, this);
         this.selectDataDialog = new SelectDataDialog(frame);
 
-        (new Thread(this::loadData)).start();
+//        (new Thread(this::loadData)).start();
 
     }
 
@@ -119,21 +122,64 @@ public class DemoInterface extends PApplet {
         loadFinished = true;
     }
 
+    private void updateMap(int currentMapController) {
+        boolean[] mapChanged = {false, false, false, false};
+        boolean mapControllerChanged = !(currentMapController == mapController);
+
+        for (int i = 0; i < mapList.length; ++i) {
+            mapList[i].draw();
+            mapChanged[i] = checkLevel[i] != mapList[i].getZoomLevel() || !checkCenter[i].equals(mapList[i].getCenter());
+        }
+
+        if (mapControllerChanged) {
+            for (int i = 0; i < mapList.length; ++i) {
+                int zoomLevel = mapList[currentMapController].getZoomLevel();
+                Location center = mapList[currentMapController].getCenter();
+
+                if (linkedList[i] && viewVisibleList[i] && mapChanged[i]) {
+                    mapList[i].zoomToLevel(zoomLevel);
+                    mapList[i].panTo(center);
+
+                    checkLevel[i] = zoomLevel;
+                    checkCenter[i] = center;
+                }
+            }
+            mapController = currentMapController;
+        } else {
+            if (mapChanged[mapController]) {
+                //System.out.println(mapControllerChanged+" "+mapChanged[mapController]);
+                int zoomLevel = mapList[mapController].getZoomLevel();
+                Location center = mapList[mapController].getCenter();
+
+                for (int i = 0; i < mapList.length; ++i) {
+                    if (linkedList[i] && viewVisibleList[i]) {
+                        mapList[i].zoomToLevel(zoomLevel);
+                        mapList[i].panTo(center);
+
+                        checkLevel[i] = zoomLevel;
+                        checkCenter[i] = center;
+                    }
+                }
+            }
+        }
+
+    }
+
+
+
     @Override
     public void draw() {
-        boolean mapChanged = true;
-        for (UnfoldingMap map : mapList) {
-            map.draw();
-            mapChanged = checkLevel != map.getZoomLevel() || !checkCenter.equals(map.getCenter());
-        }
+        updateMap(mapController);
+
 
         for (EleButton dataButton : dataButtonList) {
             dataButton.render(this);
         }
 
-        if (mapChanged) {
-            //TODO update the map
-        }
+//        if (mapChanged) {
+//            //TODO update the map
+//        }
+
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
             /*if (!viewVisibleList[mapIdx]) {
