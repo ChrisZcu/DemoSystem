@@ -330,6 +330,33 @@ public class DemoInterface extends PApplet {
         }
     }
 
+    @Override
+    public void mouseWheel(){
+        boolean mapControllerZoomed = false;
+
+        for (int i = 0; i < mapList.length; ++i) {
+            if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
+                    && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
+                trajDrawManager.cleanImgFor(i);
+                trajDrawManager.startNewRenderTaskFor(i);
+                System.out.println("map " + i + "zoomed and redrawed");
+
+                if (i == mapController) mapControllerZoomed = true;
+            }
+        }
+
+        if (mapControllerZoomed) {
+            for (int i = 0; i < mapList.length; ++i) {
+                if (viewVisibleList[i] && linkedList[i]) {
+                    trajDrawManager.cleanImgFor(i);
+                    imgCleaned[i] = true;
+                    trajDrawManager.startNewRenderTaskFor(i);
+                    System.out.println("map " + i + "zoomed and redrawed");
+                }
+            }
+        }
+    }
+
     private int getOptIndex(int mouseX, int mouseY) {
         for (int i = 0; i < 4; i++) {
             if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
