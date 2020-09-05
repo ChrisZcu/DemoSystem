@@ -53,9 +53,10 @@ public class DemoInterface extends PApplet {
     private final int widthGapDis = 6;
 
     private boolean[] viewVisibleList = {true, true, true, true};      // is the map view visible
-    private boolean[] linkedList = {true, true, true, true};       // is the map view linked to others
-    //private boolean[] linkedList = {true, true, false, false};
+    //6private boolean[] linkedList = {true, true, true, true};       // is the map view linked to others
+    private boolean[] linkedList = {true, true, false, false};
     private int mapController = 0;
+    private boolean[] imgCleaned = {false, false, false, false};
 
     private boolean loadFinished = false;
     private int regionId = 0;
@@ -120,7 +121,7 @@ public class DemoInterface extends PApplet {
         createTopMenu(screenWidth, mapDownOff - 5, frame, this);
         this.selectDataDialog = new SelectDataDialog(frame);
 
-//        (new Thread(this::loadData)).start();
+        (new Thread(this::loadData)).start();
 
     }
 
@@ -213,12 +214,37 @@ public class DemoInterface extends PApplet {
             System.out.println("eleId == -1");
         }
 
-        if (mouseButton == RIGHT) {
+        if (mouseButton == LEFT) {
+            boolean mapControllerPressed = false;
+
+            for (int i = 0; i < mapList.length; ++i) {
+                if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
+                        && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
+                    System.out.println("map " + i + "pressed");
+                    trajDrawManager.cleanImgFor(i);
+                    imgCleaned[i] = true;
+                    System.out.println("map " + i + "cleaned");
+
+                    if (i == mapController) mapControllerPressed = true;
+                }
+            }
+
+            if (mapControllerPressed) {
+                for (int i = 0; i < mapList.length; ++i) {
+                    if (viewVisibleList[i] && linkedList[i]) {
+                        trajDrawManager.cleanImgFor(i);
+                        imgCleaned[i] = true;
+                        System.out.println("map " + i + "cleaned");
+                    }
+                }
+            }
+        } else if (mouseButton == RIGHT) {
             if (SharedObject.getInstance().checkSelectRegion()) {
                 regionDragged = true;
                 lastClick = new Position(mouseX, mouseY);
             }
         }
+
         //drag
         if (SharedObject.getInstance().isDragRegion()) {
             for (Region r : SharedObject.getInstance().getAllRegions()) {
@@ -235,6 +261,14 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void mouseReleased() {
+        for (int i = 0; i < mapList.length; ++i) {
+            if (viewVisibleList[i] && imgCleaned[i]) {
+                trajDrawManager.startNewRenderTaskFor(i);
+                imgCleaned[i] = false;
+                System.out.println("map " + i + "redrawed");
+            }
+        }
+
         if (regionDragged) {
             regionDragged = false;
             Region selectRegion = getSelectRegion(lastClick, optIndex);
@@ -248,6 +282,8 @@ public class DemoInterface extends PApplet {
             }
             SharedObject.getInstance().eraseRegionPren();
         }
+
+
     }
 
     private int getOptIndex() {
