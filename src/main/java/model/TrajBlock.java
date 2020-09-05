@@ -5,14 +5,16 @@ package model;
  * All info about the trajectory is here.
  */
 public final class TrajBlock {
-    private BlockType blockType; // full, random, VFGS
+    private int mapIdx;         // the idx of the map that this block assigned to.
+    private BlockType blockType;
     private Trajectory[] trajList;    // all traj given to this block
     private int threadNum;
     private int dIdx, rIdx;           // the param for select color
 
-    public TrajBlock() {
-        blockType = BlockType.NONE;
-        trajList = null;
+    public TrajBlock(int mapIdx) {
+        this.mapIdx = mapIdx;
+        this.blockType = BlockType.NONE;
+        this.trajList = null;
     }
 
     public void setNewBlock(BlockType blockType, Trajectory[] trajList,
@@ -37,6 +39,10 @@ public final class TrajBlock {
                 // do nothing
         }
         return info;
+    }
+
+    public int getMapIdx() {
+        return mapIdx;
     }
 
     public BlockType getBlockType() {
