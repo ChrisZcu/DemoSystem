@@ -2,6 +2,8 @@ package model;
 
 import app.SharedObject;
 
+import java.awt.*;
+
 /**
  * The traj structured block which used to show on one map view.
  * <p>
@@ -15,7 +17,7 @@ public final class TrajBlock {
     private BlockType blockType;
     private Trajectory[] trajList;  // main traj list given to this block (layer main)
     private Trajectory[] trajSltList;       // double select traj list
-    private Colour mainColor, sltColor;     // two color for two layers
+    private Color mainColor, sltColor;     // two color for two layers
     private int threadNum;
     private int dIdx, rIdx;         // the param for select color
 
@@ -50,19 +52,19 @@ public final class TrajBlock {
         return info;
     }
 
-    public Colour getMainColor() {
+    public Color getMainColor() {
         return mainColor;
     }
 
-    public void setMainColor(Colour mainColor) {
+    public void setMainColor(Color mainColor) {
         this.mainColor = mainColor;
     }
 
-    public Colour getSltColor() {
+    public Color getSltColor() {
         return sltColor;
     }
 
-    public void setSltColor(Colour sltColor) {
+    public void setSltColor(Color sltColor) {
         this.sltColor = sltColor;
     }
 

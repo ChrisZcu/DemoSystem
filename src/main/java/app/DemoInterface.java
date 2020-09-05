@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static model.Colour.*;
 import static util.Swing.createTopMenu;
 
 
@@ -140,22 +139,22 @@ public class DemoInterface extends PApplet {
 
         SharedObject.getInstance().setBlockAt(0, BlockType.FULL, -1, -1);
         tb = SharedObject.getInstance().getBlockList()[0];
-        tb.setMainColor(RED);
-        tb.setSltColor(LIGHT_BLUE);
+        tb.setMainColor(PSC.RED);
+        tb.setSltColor(PSC.BLUE);
 
         SharedObject.getInstance().setBlockAt(1, BlockType.VFGS, 0, 0);
         tb = SharedObject.getInstance().getBlockList()[1];
-        tb.setMainColor(RED);
-        tb.setSltColor(LIGHT_BLUE);
+        tb.setMainColor(PSC.RED);
+        tb.setSltColor(PSC.BLUE);
 
         SharedObject.getInstance().setBlockAt(2, BlockType.RAND, 0, -1);
         tb = SharedObject.getInstance().getBlockList()[2];
-        tb.setMainColor(RED);
-        tb.setSltColor(LIGHT_BLUE);
+        tb.setMainColor(PSC.RED);
+        tb.setSltColor(PSC.BLUE);
 
         tb = SharedObject.getInstance().getBlockList()[3];
-        tb.setMainColor(RED);
-        tb.setSltColor(LIGHT_BLUE);
+        tb.setMainColor(PSC.RED);
+        tb.setSltColor(PSC.BLUE);
 
         trajDrawManager.startAllNewRenderTask(TrajDrawManager.MAIN);
         loadFinished = true;
@@ -271,7 +270,9 @@ public class DemoInterface extends PApplet {
                     imgCleaned[i] = true;
                     System.out.println("map " + i + "cleaned");
 
-                    if (i == mapController) mapControllerPressed = true;
+                    if (i == mapController) {
+                        mapControllerPressed = true;
+                    }
                 }
             }
 
@@ -365,11 +366,12 @@ public class DemoInterface extends PApplet {
         }
 
         if (SharedObject.getInstance().checkRegion(0)) {    // O
-            selectRegion.colour = DEEP_BLUE;
+            selectRegion.color = PSC.COLOR_LIST[0];
         } else if (SharedObject.getInstance().checkRegion(1)) {     // D
-            selectRegion.colour = SKY_BLUE;
+            selectRegion.color = PSC.COLOR_LIST[1];
         } else {
-            selectRegion.colour = Colour.getColor()[SharedObject.getInstance().getWayLayer() + 1];
+            int nextColorIdx = SharedObject.getInstance().getWayLayer() + 1;
+            selectRegion.color = PSC.COLOR_LIST[nextColorIdx];
         }
 
         return selectRegion;
@@ -394,7 +396,7 @@ public class DemoInterface extends PApplet {
 
         for (UnfoldingMap map : mapList) {
             map.setZoomRange(1, 20);
-            map.zoomAndPanTo(11, PRESENT);
+            map.zoomAndPanTo(14, PRESENT);
             map.setBackgroundColor(255);
             map.setTweening(false);
             MapUtils.createDefaultEventDispatcher(this, map);
@@ -433,7 +435,7 @@ public class DemoInterface extends PApplet {
 
         lT = r.leftTop;
         rB = r.rightBtm;
-        stroke(PSC.COLORS[r.colour.value].getRGB());
+        stroke(r.color.getRGB());
 
         length = Math.abs(lT.x - rB.x);
         high = Math.abs(lT.y - rB.y);

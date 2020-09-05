@@ -4,13 +4,15 @@ import app.SharedObject;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
 
+import java.awt.*;
+
 /**
  * Indicates the left-top position and right-bottom position of selected region.
  */
 public class Region {
     public Position leftTop;
     public Position rightBtm;
-    public Colour colour;
+    public Color color;
     public int id;
 
     public Region() {
@@ -58,8 +60,9 @@ public class Region {
 
         for (int i = 0; i < 4; i++) {
             if (x >= mapXList[i] && x <= mapXList[i] + mapWidth
-                    && y >= mapYList[i] && y <= mapYList[i] + mapHeight)
+                    && y >= mapYList[i] && y <= mapYList[i] + mapHeight) {
                 return i;
+            }
         }
         return 0;
     }

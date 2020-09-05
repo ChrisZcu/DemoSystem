@@ -30,8 +30,9 @@ public class SelectManager {
 
 
     private Trajectory[] startMapCal(TrajBlock trajBlock, int opIndex) {
-        if (trajBlock.getBlockType() == BlockType.NONE)
+        if (trajBlock.getBlockType() == BlockType.NONE) {
             return new Trajectory[0];
+        }
 
         int threadNum = trajBlock.getThreadNum();
 

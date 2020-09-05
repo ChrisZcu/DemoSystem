@@ -98,6 +98,8 @@ public class TrajDrawManager {
 
         @Override
         public void run() {
+            long startTime = System.currentTimeMillis();
+
             // start painting tasks
             UnfoldingMap map = mapList[mapIdx];
             TrajBlock tb = blockList[mapIdx];
@@ -113,17 +115,17 @@ public class TrajDrawManager {
             if (layerType == MAIN) {
                 layer = "main";
                 trajImageList = trajImageMtx[mapIdx];
-                color = PSC.COLORS[tb.getMainColor().value];
+                color = tb.getMainColor();
             } else {
                 layer = "slt";
                 trajImageList = trajImageSltMtx[mapIdx];
-                color = PSC.COLORS[tb.getSltColor().value];
+                color = tb.getSltColor();
             }
 
             Trajectory[] trajList = layerType == 0 ?
                     tb.getTrajList() : tb.getTrajSltList();
             int totLen = trajList.length;
-            System.out.println(">>>> " + getName() + "trajList len = " + totLen);
+            System.out.println(">>>> " + getName() + " trajList len = " + totLen);
             int threadNum = tb.getThreadNum();
             int segLen = totLen / threadNum;
             float offsetX = mapXList[mapIdx];
@@ -143,7 +145,8 @@ public class TrajDrawManager {
                 trajDrawWorkerList[idx] = worker;
                 threadPool.submit(worker);
             }
-            System.out.println(getName() + " finished work partition");
+            System.out.println(getName() + " finished work partition in "
+                    + (startTime - System.currentTimeMillis()));
         }
     }
 
@@ -221,9 +224,7 @@ public class TrajDrawManager {
     }
 
     /**
-     * Clean the traj buffer images for one map view, both layer
-     *
-     * @param optViewIdx
+     * Clean the traj buffer images for one map view, both layers
      */
     public void cleanImgFor(int optViewIdx) {
         Arrays.fill(trajImageMtx[optViewIdx], null);
