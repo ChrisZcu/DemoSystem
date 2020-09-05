@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 
 public class DemoInterface extends PApplet {
@@ -34,6 +33,11 @@ public class DemoInterface extends PApplet {
     private static final Location PRESENT = PORTO_CENTER;
 
     private UnfoldingMap[] mapList;
+    private UnfoldingMap extraMap;      // the only one map shown one app when oneMapIdx in [0, 3]
+    // 4 -> not show extraMap
+    // [-1, -4] -> ready to show the map[0, 3]
+    // [0, 3] now it is zoom and pan to mapList[oneMapIdx]
+    private int oneMapIdx = -1;
 
     private int[] checkLevel = {-1, -1, -1, -1};
     private Location[] checkCenter = {new Location(-1, -1), new Location(-1, -1),
@@ -52,7 +56,7 @@ public class DemoInterface extends PApplet {
     private final int heighGapDis = 4;
     private final int widthGapDis = 6;
 
-    private boolean[] viewVisibleList = {true, true, true, true};  // is the map view visible
+    private boolean[] viewVisibleList = {false, true, true, true};  // is the map view visible
     private boolean[] linkedList = {true, true, true, true};       // is the map view linked to others
     //private boolean[] linkedList = {true, true, false, false};
     private int mapController = 0;
@@ -79,7 +83,7 @@ public class DemoInterface extends PApplet {
     public void settings() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         screenWidth = (int) screenSize.getWidth();
-        int screenHeight = (int) screenSize.getHeight();
+        screenHeight = (int) screenSize.getHeight();
 
         mapWidth = (screenWidth - widthGapDis) / 2;
         mapHeight = (screenHeight - mapDownOff - heighGapDis) / 2;
@@ -120,8 +124,6 @@ public class DemoInterface extends PApplet {
                 null, mapXList, mapYList, mapWidth, mapHeight);
         SharedObject.getInstance().setTrajDrawManager(trajDrawManager);
 
-        viewVisibleList = new boolean[4];
-        Arrays.fill(viewVisibleList, true);     // temp
         SharedObject.getInstance().setViewVisibleList(viewVisibleList);
 
         // init other interface component
@@ -155,27 +157,7 @@ public class DemoInterface extends PApplet {
     public void draw() {
         updateMap(mapController);
 
-        // draw the main traj buffer images
-        nextMap:
-        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
-            for (PGraphics pg : trajImgMtx[mapIdx]) {
-                if (pg == null) {
-                    continue nextMap;
-                }
-                image(pg, mapXList[mapIdx], mapYList[mapIdx]);
-            }
-        }
-
-        // draw the double select traj buffer images
-        nextMap:
-        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
-            for (PGraphics pg : trajImgSltMtx[mapIdx]) {
-                if (pg == null) {
-                    continue nextMap;
-                }
-                image(pg, mapXList[mapIdx], mapYList[mapIdx]);
-            }
-        }
+        updateTrajImages();
 
         if (regionDragged) {//drag the region, not finished
             drawRegion(getSelectRegion(lastClick, optIndex));
@@ -209,8 +191,14 @@ public class DemoInterface extends PApplet {
             SharedObject.getInstance().setScreenShot(false);
         }
 
-        for (EleButton dataButton : dataButtonList) {
-            dataButton.render(this);
+        // add visible logic
+        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
+            if (!viewVisibleList[mapIdx]) {
+                continue;
+            }
+            for (int eleIdx = mapIdx; eleIdx < dataButtonList.length; eleIdx += 4) {
+               dataButtonList[eleIdx].render(this);
+            }
         }
 
         int dataButtonXOff = 2;
@@ -220,6 +208,37 @@ public class DemoInterface extends PApplet {
         drawInfoTextBox(2, dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
         drawInfoTextBox(3, mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
     }
+
+    private void updateTrajImages() {
+        // draw the main traj buffer images
+        nextMap:
+        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
+            if (!viewVisibleList[mapIdx]) {
+                continue;
+            }
+            for (PGraphics pg : trajImgMtx[mapIdx]) {
+                if (pg == null) {
+                    continue nextMap;
+                }
+                image(pg, mapXList[mapIdx], mapYList[mapIdx]);
+            }
+        }
+
+        // draw the double select traj buffer images
+        nextMap:
+        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
+            if (!viewVisibleList[mapIdx]) {
+                continue;
+            }
+            for (PGraphics pg : trajImgSltMtx[mapIdx]) {
+                if (pg == null) {
+                    continue nextMap;
+                }
+                image(pg, mapXList[mapIdx], mapYList[mapIdx]);
+            }
+        }
+    }
+
     private int optIndex;
 
     @Override
@@ -228,7 +247,9 @@ public class DemoInterface extends PApplet {
 
         int eleId = -1;
         for (EleButton dataButton : dataButtonList) {
-            if (dataButton.isMouseOver(this)) {
+            // FIXME add mapIdx to button field
+            int mapIdx = dataButton.getEleId() % 4;
+            if (dataButton.isMouseOver(this, viewVisibleList[mapIdx])) {
                 eleId = dataButton.getEleId();
                 break;
             }
@@ -242,7 +263,7 @@ public class DemoInterface extends PApplet {
                 //TODO @Shangxuan add control logic, mention the unique only one control
                 dataButtonList[eleId].colorExg();
             } else if (eleId > 3) {
-                int optMapIdx = eleId - 4;      // here mapIdx = eleIdx - 4
+                int optMapIdx = eleId % 4;
                 TrajBlock tb = SharedObject.getInstance().getBlockList()[optMapIdx];
 
                 // change main layer color
@@ -256,7 +277,7 @@ public class DemoInterface extends PApplet {
                 tdm.startNewRenderTaskFor(optMapIdx, TrajDrawManager.MAIN);
             } else if (loadFinished) {
                 System.out.println("open dialog");
-                selectDataDialog.showDialogFor(eleId);  // here eleId = mapIdx
+                selectDataDialog.showDialogFor(eleId % 4);
             } else {
                 System.out.println("not to open dialog");
             }
@@ -310,6 +331,7 @@ public class DemoInterface extends PApplet {
             }
         }
     }
+
     //TODO add zoom level and center listener to control map update
 
     @Override
@@ -346,7 +368,7 @@ public class DemoInterface extends PApplet {
                     && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
                 trajDrawManager.cleanImgFor(i);
                 trajDrawManager.startNewRenderTaskFor(i);
-                System.out.println("map " + i + "zoomed and redrawed");
+                System.out.println("map " + i + "zoomed and redrawn");
 
                 if (i == mapController) {
                     mapControllerZoomed = true;
@@ -360,7 +382,7 @@ public class DemoInterface extends PApplet {
                     trajDrawManager.cleanImgFor(i);
                     imgCleaned[i] = true;
                     trajDrawManager.startNewRenderTaskFor(i);
-                    System.out.println("map " + i + "zoomed and redrawed");
+                    System.out.println("map " + i + "zoomed and redrawn");
                 }
             }
         }
@@ -417,7 +439,6 @@ public class DemoInterface extends PApplet {
     }
 
     private void initMapSurface() {
-
         mapList = new UnfoldingMap[4];
         mapXList = new float[]{
                 0, mapWidth + widthGapDis,
@@ -432,6 +453,8 @@ public class DemoInterface extends PApplet {
             mapList[i] = new UnfoldingMap(this, mapXList[i], mapYList[i], mapWidth, mapHeight,
                     new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
         }
+        extraMap = new UnfoldingMap(this, mapXList[0], mapYList[0], screenWidth, screenHeight,
+                new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
 
         for (UnfoldingMap map : mapList) {
             map.setZoomRange(1, 20);
@@ -498,6 +521,9 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawInfoTextBox(int i, int x, int y, int width, int height) {
+        if (!viewVisibleList[i]) {
+            return;
+        }
         TrajBlock tb = SharedObject.getInstance().getBlockList()[i];
         String info = tb.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST);
 
@@ -549,9 +575,25 @@ public class DemoInterface extends PApplet {
         boolean[] mapChanged = {false, false, false, false};
         boolean mapControllerChanged = !(currentMapController == mapController);
 
+        if (oneMapIdx < 0) {
+            // switch to extraMap mode
+            oneMapIdx = -oneMapIdx + 1;
+            UnfoldingMap targetMap = mapList[oneMapIdx];
+            extraMap.zoomAndPanTo(targetMap.getZoomLevel(), targetMap.getCenter());
+        }
+
+        if (oneMapIdx != 4) {
+            // show extraMap
+//            extraMap.draw();
+//            return;
+        }
+
         for (int i = 0; i < mapList.length; ++i) {
-            mapList[i].draw();
-            mapChanged[i] = checkLevel[i] != mapList[i].getZoomLevel() || !checkCenter[i].equals(mapList[i].getCenter());
+            if (viewVisibleList[i]) {
+                mapList[i].draw();
+            }
+            mapChanged[i] = checkLevel[i] != mapList[i].getZoomLevel()
+                    || !checkCenter[i].equals(mapList[i].getCenter());
         }
 
         if (mapControllerChanged) {
