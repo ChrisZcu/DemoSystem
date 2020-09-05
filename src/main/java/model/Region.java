@@ -3,6 +3,7 @@ package model;
 import app.SharedObject;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
+import de.fhpotsdam.unfolding.utils.ScreenPosition;
 
 import java.awt.*;
 
@@ -15,6 +16,11 @@ public class Region {
     public Color color;
     public int id;
 
+    private Location leftTopLoc;
+    private Location rightTopLoc;
+    private Location leftBtmLoc;
+    private Location rightBtmLoc;
+
     public Region() {
 
     }
@@ -22,6 +28,23 @@ public class Region {
     public Region(Position lt, Position rb) {
         this.leftTop = lt;
         this.rightBtm = rb;
+    }
+
+    public void initLoc(Location leftTopLoc, Location rightTopLoc, Location leftBtmLoc, Location rightBtmLoc) {
+        this.leftTopLoc = leftTopLoc;
+        this.rightTopLoc = rightTopLoc;
+        this.rightBtmLoc = rightBtmLoc;
+        this.leftBtmLoc = leftBtmLoc;
+    }
+
+    public void updateScreenPosition(UnfoldingMap map) {
+        ScreenPosition lt = map.getScreenPosition(leftTopLoc);
+        ScreenPosition rb = map.getScreenPosition(rightBtmLoc);
+        leftTop.x = (int) lt.x;
+        leftTop.y = (int) lt.y;
+        rightBtm.x = (int) rb.x;
+        rightBtm.y = (int) rb.y;
+
     }
 
     public boolean equal(Region r) {

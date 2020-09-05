@@ -54,6 +54,10 @@ public class PSC {
             new Color(235, 200, 68),
             new Color(241, 108, 32),
             new Color(190, 46, 29),
+            new Color(79, 79, 79),
+            new Color(0, 0, 0),
+            new Color(255,255,255)
+
     };
 
     public static final Color RED = new Color(255, 0, 0);

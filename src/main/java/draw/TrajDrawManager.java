@@ -125,7 +125,7 @@ public class TrajDrawManager {
             Trajectory[] trajList = layerType == 0 ?
                     tb.getTrajList() : tb.getTrajSltList();
             int totLen = trajList.length;
-            System.out.println(">>>> " + getName() + " trajList len = " + totLen);
+//            System.out.println(">>>> " + getName() + "trajList len = " + totLen);
             int threadNum = tb.getThreadNum();
             int segLen = totLen / threadNum;
             float offsetX = mapXList[mapIdx];
@@ -145,8 +145,7 @@ public class TrajDrawManager {
                 trajDrawWorkerList[idx] = worker;
                 threadPool.submit(worker);
             }
-            System.out.println(getName() + " finished work partition in "
-                    + (System.currentTimeMillis() - time));
+//            System.out.println(getName() + " finished work partition");
         }
     }
 

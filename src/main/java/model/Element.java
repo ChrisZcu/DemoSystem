@@ -29,4 +29,16 @@ public class Element extends PApplet {
         return (mouseX > x) && (mouseX < (x + width)) &&
                 (mouseY > y) && (mouseY < (y + height));
     }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public String getEleName() {
+        return eleName;
+    }
 }

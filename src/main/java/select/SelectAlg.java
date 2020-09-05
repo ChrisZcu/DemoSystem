@@ -29,11 +29,7 @@ public class SelectAlg {
         SharedObject instance = SharedObject.getInstance();
         UnfoldingMap map = instance.getMapList()[optIndex];
 
-        float xOff = instance.getMapLocInfo()[0][optIndex];
-        float yOff = instance.getMapLocInfo()[1][optIndex];
-
         Region regionO = instance.getRegionO(), regionD = instance.getRegionD();
-
 
         ArrayList<Trajectory> res = new ArrayList<>();
         for (int i = begin; i < end; i++) {
@@ -66,7 +62,7 @@ public class SelectAlg {
             Trajectory traj = trajectory[i];
             for (int j = 1, bound = traj.locations.length - 1; j < bound; j++) {
                 if (inCheck(regionWList, traj.locations[j], map)) {
-                    res.add(i);
+                    res.add(traj.getTrajId());
                     break;
                 }
             }
@@ -79,7 +75,7 @@ public class SelectAlg {
         ArrayList<ArrayList<Region>> regionWList = SharedObject.getInstance().getRegionWLayerList();
         ArrayList<Integer> res = getWayPointTraj(begin, end, trajectory, regionWList.get(0), optIndex);
 
-        for (int i = 0; i < regionWList.size(); i++) {
+        for (int i = 1; i < regionWList.size(); i++) {
             ArrayList<Integer> resTmp = getWayPointTraj(begin, end, trajectory, regionWList.get(i), optIndex);
             res.retainAll(resTmp);
         }
@@ -126,7 +122,6 @@ public class SelectAlg {
 
     public static Trajectory[] getODWTraj(int begin, int end, Trajectory[] trajectory, int optIndex) {
         Trajectory[] ODTraj = getODTraj(begin, end, trajectory, optIndex);
-
         return getWayPointTraj(0, ODTraj.length, ODTraj, optIndex);
     }
 
@@ -150,7 +145,7 @@ public class SelectAlg {
     //16.26
     private static boolean inCheck(ArrayList<Region> rList, Location loc, UnfoldingMap map) {
         if (rList == null) {
-            return true;
+            return false;
         }
         double px = map.getScreenPosition(loc).x;
         double py = map.getScreenPosition(loc).y;

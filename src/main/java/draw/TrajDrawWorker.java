@@ -62,7 +62,7 @@ public class TrajDrawWorker extends Thread {
         pg.strokeWeight(1);
         pg.stroke(color.getRGB());
 
-        System.out.println(this.getName() + " start");
+//        System.out.println(this.getName() + " start");
 
         for (int i = begin; i < end; i++) {
             pg.beginShape();
@@ -86,7 +86,7 @@ public class TrajDrawWorker extends Thread {
 //            trajCnt[index] ++;
         }
 
-        System.out.println(this.getName() + " finished");
+//        System.out.println(this.getName() + " finished");
         trajImages[index] = pg;
     }
 }

@@ -190,17 +190,6 @@ public class DemoInterface extends PApplet {
             drawRegion(getSelectRegion(lastClick, optIndex));
         }
 
-//        if (SharedObject.getInstance().isFinishSelectRegion()) {//finish select
-//            SharedObject instance = SharedObject.getInstance();
-//            for (int i = 0; i < instance.getTrajSelectResList().length; i++) {
-//                for (Integer trajId : instance.getTrajSelectResList()[i]) {
-//                    drawTraj(instance.getTrajFull()[trajId], mapXList[i], mapYList[i],
-//                            0, mapWidth - widthGapDis, 0, mapHeight - heighGapDis, mapList[i]);
-//                }
-//            }
-//        }
-
-
         for (Region r : SharedObject.getInstance().getRegionWithoutWList()) {
             drawRegion(r);
             strokeWeight(circleSize);
@@ -254,7 +243,16 @@ public class DemoInterface extends PApplet {
             }
         }
         if (eleId != -1) {
-            if (loadFinished) {
+            // mentioned the init state
+            if (eleId > 11) {// for linked
+                //TODO @Shangxuan add link logic
+                dataButtonList[eleId].colorExg();
+            } else if (eleId > 7) {//for control
+                //TODO @Shangxuan add control logic, mention the unique only one control
+                dataButtonList[eleId].colorExg();
+            } else if (eleId > 3) {
+                //TODO @Zhengxin add color control
+            } else if (loadFinished) {
                 System.out.println("open dialog");
                 selectDataDialog.showDialogFor(eleId);
             } else {
@@ -310,6 +308,7 @@ public class DemoInterface extends PApplet {
             }
         }
     }
+    //TODO add zoom level and center listener to control map update
 
     @Override
     public void mouseReleased() {
@@ -408,6 +407,9 @@ public class DemoInterface extends PApplet {
             int nextColorIdx = SharedObject.getInstance().getWayLayer() + 1;
             selectRegion.color = PSC.COLOR_LIST[nextColorIdx];
         }
+        int width = selectRegion.rightBtm.x - selectRegion.leftTop.x;
+        int height = selectRegion.rightBtm.y - selectRegion.leftTop.y;
+
 
         return selectRegion;
     }
@@ -431,7 +433,7 @@ public class DemoInterface extends PApplet {
 
         for (UnfoldingMap map : mapList) {
             map.setZoomRange(1, 20);
-            map.zoomAndPanTo(11, PRESENT);
+            map.zoomAndPanTo(12, PRESENT);
             map.setBackgroundColor(255);
             map.setTweening(false);
             MapUtils.createDefaultEventDispatcher(this, map);
@@ -440,13 +442,25 @@ public class DemoInterface extends PApplet {
     }
 
     private void initDataButton() {
-        dataButtonList = new EleButton[4];
-        int dataButtonXOff = 2;
-        int dataButtonYOff = 2;
+        dataButtonList = new EleButton[16];
+        int dataButtonXOff = 4;
+        int dataButtonYOff = 4;
         dataButtonList[0] = new EleButton(dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 0, "DataSelect");
         dataButtonList[1] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 1, "DataSelect");
         dataButtonList[2] = new EleButton(dataButtonXOff, mapHeight + mapDownOff + heighGapDis, 70, 20, 2, "DataSelect");
         dataButtonList[3] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis, 70, 20, 3, "DataSelect");
+
+        dataButtonList[4] = new EleButton(dataButtonXOff, dataButtonYOff + mapDownOff + 35, 70, 20, 4, "ColorExg");
+        dataButtonList[5] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff + 35, 70, 20, 5, "ColorExg");
+        dataButtonList[6] = new EleButton(dataButtonXOff, mapHeight + mapDownOff + heighGapDis + 35, 70, 20, 6, "ColorExg");
+        dataButtonList[7] = new EleButton(mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis + 35, 70, 20, 7, "ColorExg");
+
+        for (int i = 8; i < 16; i++) {
+            String buttonInfo = (i < 12) ? "Control" : "Linked";
+
+            int yOff = i < 12 ? 35 : 28;
+            dataButtonList[i] = new MapControlButton(dataButtonList[i - 4].getX(), dataButtonList[i - 4].getY() + yOff, 70, 20, i, buttonInfo);
+        }
     }
 
     private void drawRegion(Region r) {
