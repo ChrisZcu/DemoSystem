@@ -32,8 +32,8 @@ public class SelectWorker implements Callable {
     }
 
     @Override
-    public int[] call() throws Exception {
-        int[] res;
+    public Trajectory[] call() throws Exception {
+        Trajectory[] res;
         switch (regionType) {
             case O_D:
                 res = getODTraj(begin, end, trajectory, optIndex);

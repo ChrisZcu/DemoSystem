@@ -20,14 +20,21 @@ public class PSC {
             = "data/GPS/porto_full.txt";
 
     public static String PATH_PREFIX
-            = "data/GPS/";
+            = "data/GPS/Porto5w/";
 
     // traj limit for full set. -1 for no limit
-    public static final int LIMIT = -1;
+    public static final int LIMIT = 5_0000;
 
     // recommend: core # * 2 or little higher
     public static final int FULL_THREAD_NUM = 5;
     public static final int SAMPLE_THREAD_NUM = 2;
+    public static final int SELECT_THREAD_NUM = 2;
+
+    /**
+     * The pool size of control pool in {@link draw.TrajDrawManager}.
+     * When start redraw traj too fast, the pool will overflow and throw an exception
+     */
+    public static final int CONTROL_POOL_SIZE = 4;
 
     /**
      * VFGS result set (i.e. R / R+ in paper).
@@ -38,7 +45,7 @@ public class PSC {
 
     public static final String OUTPUT_PATH = PATH_PREFIX + "output/";
 
-    public static final String OUTPUT_PATH1 = "data/GPS/output/";
+    public static final String OUTPUT_PATH1 = "data/output/";
     // six provided color to algorithm
     public static final Color[] COLORS = {
             new Color(15, 91, 120),
