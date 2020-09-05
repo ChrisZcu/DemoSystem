@@ -15,6 +15,7 @@ public class EleButton extends Element {
 
     @Override
     public void render(PApplet pApplet) {
+        pApplet.noStroke();
         pApplet.fill(PSC.COLOR_LIST[LIGHT_GREY.value].getRGB());
 
         pApplet.rect(x, y, width, height);

@@ -17,6 +17,8 @@ public class MapControlButton extends EleButton {
 
     @Override
     public void render(PApplet pApplet) {
+        pApplet.noStroke();
+
         pApplet.fill(PSC.COLOR_LIST[color.value].getRGB());
         pApplet.rect(x, y, width, height);
 
@@ -26,6 +28,7 @@ public class MapControlButton extends EleButton {
         pApplet.textAlign(LEFT, TOP);
     }
 
+    @Override
     public int getEleId() {
         return eleId;
     }
@@ -52,8 +55,10 @@ public class MapControlButton extends EleButton {
 
     @Override
     public void colorExg() {
-        if (color.value == 6)
+        if (color.value == 6) {
             color = Colour.getColor()[7];
-        else color = Colour.getColor()[6];
+        } else {
+            color = Colour.getColor()[6];
+        }
     }
 }

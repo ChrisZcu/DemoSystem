@@ -2,7 +2,7 @@ package model;
 
 import processing.core.PApplet;
 
-public class Element extends PApplet {
+public abstract class Element extends PApplet {
     int x, y, width, height;
     int eleId;
     String eleName;
@@ -17,10 +17,7 @@ public class Element extends PApplet {
         eleName = "None";
     }
 
-    public void render(PApplet pApplet) {
-        pApplet.noFill();
-        pApplet.rect(x, y, width, height);
-    }
+    public abstract void render(PApplet pApplet);
 
     public boolean isMouseOver(PApplet pApplet) {
         int mouseX = pApplet.mouseX;
