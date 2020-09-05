@@ -70,7 +70,6 @@ public class DemoInterface extends PApplet {
 
     /* Other interface component */
 
-    private MenuWindow menuWindow;
     private SelectDataDialog selectDataDialog;
 
     @Override
@@ -473,6 +472,22 @@ public class DemoInterface extends PApplet {
         noFill();
         strokeWeight(3);
         rect(lT.x, lT.y, length, high);
+    }
+
+    private void drawInfoTextBox(int i, int x, int y, int width, int height) {
+        TrajBlock tb = SharedObject.getInstance().getBlockList()[i];
+        String info = tb.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST);
+
+        fill(112, 128, 144);
+
+        stroke(112, 128, 144);
+        strokeWeight(2);
+        rect(x, y, width, height);
+
+        fill(0x11);
+        textAlign(CENTER, CENTER);
+        text(info, x + (width / 2), y + (height / 2));
+        textAlign(LEFT, TOP);
     }
 
 //    private void drawTraj(Trajectory traj, float xOff, float yOff, int minX, int maxX, int minY, int maxY, UnfoldingMap map) {
