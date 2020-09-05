@@ -5,6 +5,7 @@ package model;
  * All info about the trajectory is here.
  */
 public final class TrajBlock {
+    private int mapIndex; // correspond map region
     private BlockType blockType; // full, random, VFGS
     private Trajectory[] trajList;    // all traj given to this block
     private int threadNum;
