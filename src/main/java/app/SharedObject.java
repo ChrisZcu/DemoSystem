@@ -327,8 +327,8 @@ public class SharedObject {
      */
     public void initBlockList() {
         blockList = new TrajBlock[4];
-        for (int i = 0; i < 4; i++) {
-            blockList[i] = new TrajBlock();
+        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
+            blockList[mapIdx] = new TrajBlock(mapIdx);
         }
     }
 

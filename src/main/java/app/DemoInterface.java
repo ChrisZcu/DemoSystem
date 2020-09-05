@@ -360,8 +360,9 @@ public class DemoInterface extends PApplet {
                 pos = map.getScreenPosition(loc);
                 i += 1;
             }
-            if (i == traj.locations.length)
+            if (i == traj.locations.length) {
                 break;
+            }
             beginShape();
             while (i < traj.locations.length && intoMap(pos, minX, maxX, minY, maxY)) {//找到最后一个在内的
                 loc = traj.locations[i];
