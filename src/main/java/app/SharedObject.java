@@ -7,6 +7,7 @@ import select.SelectManager;
 import util.IOHandle;
 import util.PSC;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -347,6 +348,24 @@ public class SharedObject {
         blockList = new TrajBlock[4];
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
             blockList[mapIdx] = new TrajBlock(mapIdx);
+        }
+    }
+
+    /**
+     * Set the color of all main layers
+     */
+    public void setAllMainColor(Color color) {
+        for (TrajBlock tb : blockList) {
+            tb.setMainColor(color);
+        }
+    }
+
+    /**
+     * Set the color of all double select result layers
+     */
+    public void setAllSltColor(Color color) {
+        for (TrajBlock tb : blockList) {
+            tb.setSltColor(color);
         }
     }
 

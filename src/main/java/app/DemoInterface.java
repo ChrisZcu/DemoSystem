@@ -10,8 +10,8 @@ import model.*;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import swing.MenuWindow;
-import util.PSC;
 import swing.SelectDataDialog;
+import util.PSC;
 
 import javax.swing.*;
 import java.awt.*;
@@ -67,6 +67,8 @@ public class DemoInterface extends PApplet {
 
     private int circleSize = 15;
     private boolean mouseMove = false;
+
+    private boolean mainLayerIsGray = false;
 
     /* Other interface component */
 
@@ -127,34 +129,23 @@ public class DemoInterface extends PApplet {
         menuWindow.setVisible(true);
         selectDataDialog = new SelectDataDialog(frame);
 
+        // other settings
+        textFont(createFont("宋体", 12));
+
         (new Thread(this::loadData)).start();
     }
 
     private void loadData() {
-        TrajBlock tb;
-
         SharedObject.getInstance().loadTrajData();
 
         // temp:
 
         SharedObject.getInstance().setBlockAt(0, BlockType.FULL, -1, -1);
-        tb = SharedObject.getInstance().getBlockList()[0];
-        tb.setMainColor(PSC.GRAY);
-        tb.setSltColor(PSC.RED);
-
         SharedObject.getInstance().setBlockAt(1, BlockType.VFGS, 0, 0);
-        tb = SharedObject.getInstance().getBlockList()[1];
-        tb.setMainColor(PSC.GRAY);
-        tb.setSltColor(PSC.RED);
-
         SharedObject.getInstance().setBlockAt(2, BlockType.RAND, 0, -1);
-        tb = SharedObject.getInstance().getBlockList()[2];
-        tb.setMainColor(PSC.GRAY);
-        tb.setSltColor(PSC.RED);
 
-        tb = SharedObject.getInstance().getBlockList()[3];
-        tb.setMainColor(PSC.GRAY);
-        tb.setSltColor(PSC.RED);
+        SharedObject.getInstance().setAllMainColor(PSC.RED);
+        SharedObject.getInstance().setAllSltColor(PSC.RED);
 
         trajDrawManager.startAllNewRenderTask(TrajDrawManager.MAIN);
         loadFinished = true;
@@ -251,10 +242,21 @@ public class DemoInterface extends PApplet {
                 //TODO @Shangxuan add control logic, mention the unique only one control
                 dataButtonList[eleId].colorExg();
             } else if (eleId > 3) {
-                //TODO @Zhengxin add color control
+                int optMapIdx = eleId - 4;      // here mapIdx = eleIdx - 4
+                TrajBlock tb = SharedObject.getInstance().getBlockList()[optMapIdx];
+
+                // change main layer color
+                Color c = tb.getMainColor();
+                c = (c == PSC.RED) ? PSC.GRAY : PSC.RED;
+                tb.setMainColor(c);
+
+                // redraw it
+                TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
+                tdm.cleanImgFor(optMapIdx, TrajDrawManager.MAIN);
+                tdm.startNewRenderTaskFor(optMapIdx, TrajDrawManager.MAIN);
             } else if (loadFinished) {
                 System.out.println("open dialog");
-                selectDataDialog.showDialogFor(eleId);
+                selectDataDialog.showDialogFor(eleId);  // here eleId = mapIdx
             } else {
                 System.out.println("not to open dialog");
             }
@@ -499,10 +501,10 @@ public class DemoInterface extends PApplet {
         TrajBlock tb = SharedObject.getInstance().getBlockList()[i];
         String info = tb.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST);
 
-        fill(112, 128, 144);
+        fill(240, 240, 240, 160);
 
-        stroke(112, 128, 144);
-        strokeWeight(2);
+        stroke(200, 200, 200, 200);
+        strokeWeight(1);
         rect(x, y, width, height);
 
         fill(0x11);
