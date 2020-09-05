@@ -135,25 +135,28 @@ public class DemoInterface extends PApplet {
 
         SharedObject.getInstance().loadTrajData();
 
+        // temp:
+
         SharedObject.getInstance().setBlockAt(0, BlockType.FULL, -1, -1);
         tb = SharedObject.getInstance().getBlockList()[0];
         tb.setMainColor(RED);
+        tb.setSltColor(LIGHT_BLUE);
 
         SharedObject.getInstance().setBlockAt(1, BlockType.VFGS, 0, 0);
         tb = SharedObject.getInstance().getBlockList()[1];
         tb.setMainColor(RED);
+        tb.setSltColor(LIGHT_BLUE);
 
         SharedObject.getInstance().setBlockAt(2, BlockType.RAND, 0, -1);
         tb = SharedObject.getInstance().getBlockList()[2];
         tb.setMainColor(RED);
+        tb.setSltColor(LIGHT_BLUE);
 
-//        SharedObject.getInstance().setBlockSltAt(3, );
         tb = SharedObject.getInstance().getBlockList()[3];
         tb.setMainColor(RED);
-        tb.setSltColor(ORANGE);
+        tb.setSltColor(LIGHT_BLUE);
 
         trajDrawManager.startAllNewRenderTask(TrajDrawManager.MAIN);
-        trajDrawManager.startNewRenderTaskFor(3, TrajDrawManager.SLT);
         loadFinished = true;
     }
 
@@ -161,9 +164,21 @@ public class DemoInterface extends PApplet {
     public void draw() {
         updateMap(mapController);
 
+        // draw the main traj buffer images
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
             for (PGraphics pg : trajImgMtx[mapIdx]) {
+                if (pg == null) {
+                    continue nextMap;
+                }
+                image(pg, mapXList[mapIdx], mapYList[mapIdx]);
+            }
+        }
+
+        // draw the double select traj buffer images
+        nextMap:
+        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
+            for (PGraphics pg : trajImgSltMtx[mapIdx]) {
                 if (pg == null) {
                     continue nextMap;
                 }
@@ -175,15 +190,15 @@ public class DemoInterface extends PApplet {
             drawRegion(getSelectRegion(lastClick, optIndex));
         }
 
-        if (SharedObject.getInstance().isFinishSelectRegion()) {//finish select
-            SharedObject instance = SharedObject.getInstance();
-            for (int i = 0; i < instance.getTrajSelectResList().length; i++) {
-                for (Integer trajId : instance.getTrajSelectResList()[i]) {
-                    drawTraj(instance.getTrajFull()[trajId], mapXList[i], mapYList[i],
-                            0, mapWidth - widthGapDis, 0, mapHeight - heighGapDis, mapList[i]);
-                }
-            }
-        }
+//        if (SharedObject.getInstance().isFinishSelectRegion()) {//finish select
+//            SharedObject instance = SharedObject.getInstance();
+//            for (int i = 0; i < instance.getTrajSelectResList().length; i++) {
+//                for (Integer trajId : instance.getTrajSelectResList()[i]) {
+//                    drawTraj(instance.getTrajFull()[trajId], mapXList[i], mapYList[i],
+//                            0, mapWidth - widthGapDis, 0, mapHeight - heighGapDis, mapList[i]);
+//                }
+//            }
+//        }
 
 
         for (Region r : SharedObject.getInstance().getRegionWithoutWList()) {

@@ -409,16 +409,19 @@ public class SharedObject {
 
     public String getBlockInfo() {
         StringBuilder info = new StringBuilder("Region info:");
-        if (regionO == null)
+        if (regionO == null) {
             info.append("\nOrigin: NONE");
-        else
+        } else {
             info.append("\nOrigin:\n").append(regionO.toString());
-        if (regionD == null)
+        }
+        if (regionD == null) {
             info.append("\n\nDestination: NONE");
-        else
+        } else {
             info.append("\n\nDestination:\n").append(regionD.toString());
-        if (regionWLayerList.size() > 0)
+        }
+        if (regionWLayerList.size() > 0) {
             info.append("\n\nWay points:\n");
+        }
         for (ArrayList<Region> wList : regionWLayerList) {
             for (Region r : wList) {
                 info.append("\n").append(r.toString());

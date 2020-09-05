@@ -2,6 +2,7 @@ package select;
 
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
+import draw.TrajDrawManager;
 import model.BlockType;
 import model.RegionType;
 import app.SharedObject;
@@ -29,8 +30,9 @@ public class SelectManager {
 
 
     private int[] startMapCal(TrajBlock trajBlock, int opIndex) {
-        if (trajBlock.getBlockType() == BlockType.NONE)
+        if (trajBlock.getBlockType() == BlockType.NONE) {
             return new int[0];
+        }
 
         int threadNum = trajBlock.getThreadNum();
 
@@ -73,10 +75,15 @@ public class SelectManager {
             int[] trajIndexAry = startMapCal(blockList[i], i);
             TrajBlock trajBlock = blockList[i];
             Trajectory[] trajTmp = new Trajectory[trajIndexAry.length];
+            Trajectory[] trajFull = SharedObject.getInstance().getTrajFull();   // take it to make it faster
             for (int j = 0; j < trajTmp.length; j++) {
-                trajTmp[j] = SharedObject.getInstance().getTrajFull()[trajIndexAry[j]];
+                trajTmp[j] = trajFull[trajIndexAry[j]];
             }
+            SharedObject.getInstance().setBlockSltAt(i, trajTmp);
             trajBlock.setTrajSltList(trajTmp);
+            TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
+            tdm.cleanImgFor(i, TrajDrawManager.SLT);
+            tdm.startNewRenderTaskFor(i, TrajDrawManager.SLT);
         }
     }
 }

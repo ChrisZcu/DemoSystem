@@ -1,5 +1,7 @@
 package model;
 
+import app.SharedObject;
+
 /**
  * The traj structured block which used to show on one map view.
  * <p>
@@ -80,6 +82,10 @@ public final class TrajBlock {
         return trajSltList;
     }
 
+    /**
+     * It will be called in {@link SharedObject#setBlockSltAt(int, Trajectory[])}.
+     * Hence call that func instead call it directly.
+     */
     public void setTrajSltList(Trajectory[] trajSltList) {
         this.trajSltList = trajSltList;
     }

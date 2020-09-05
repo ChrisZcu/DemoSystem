@@ -98,7 +98,6 @@ public class TrajDrawManager {
 
         @Override
         public void run() {
-            String layer = layerType == 0 ? "main" : "slt";
             // start painting tasks
             UnfoldingMap map = mapList[mapIdx];
             TrajBlock tb = blockList[mapIdx];
@@ -107,9 +106,24 @@ public class TrajDrawManager {
                 return;       // no need to draw
             }
 
+            String layer;
+            PGraphics[] trajImageList;
+            Color color;
+
+            if (layerType == MAIN) {
+                layer = "main";
+                trajImageList = trajImageMtx[mapIdx];
+                color = PSC.COLORS[tb.getMainColor().value];
+            } else {
+                layer = "slt";
+                trajImageList = trajImageSltMtx[mapIdx];
+                color = PSC.COLORS[tb.getSltColor().value];
+            }
+
             Trajectory[] trajList = layerType == 0 ?
                     tb.getTrajList() : tb.getTrajSltList();
             int totLen = trajList.length;
+            System.out.println(">>>> " + getName() + "trajList len = " + totLen);
             int threadNum = tb.getThreadNum();
             int segLen = totLen / threadNum;
             float offsetX = mapXList[mapIdx];
@@ -123,8 +137,8 @@ public class TrajDrawManager {
 
                 String workerName = "worker-" + mapIdx + "-" + idx + "-" + layer;
                 TrajDrawWorker worker = new TrajDrawWorker(workerName,
-                        map, pg, trajImageMtx[mapIdx], trajList,
-                        trajCnt, idx, offsetX, offsetY, begin, end, Color.RED);     // FIXME update color
+                        map, pg, trajImageList, trajList, trajCnt,
+                        idx, offsetX, offsetY, begin, end, color);
 
                 trajDrawWorkerList[idx] = worker;
                 threadPool.submit(worker);
@@ -168,7 +182,7 @@ public class TrajDrawManager {
      * @param layerType {@link #MAIN} or {@link #SLT}
      */
     public void cleanAllImg(int layerType) {
-        if (layerType == 0) {
+        if (layerType == MAIN) {
             for (PGraphics[] trajImageList : trajImageMtx) {
                 Arrays.fill(trajImageList, null);
             }
@@ -185,7 +199,7 @@ public class TrajDrawManager {
      * @param layerType {@link #MAIN} or {@link #SLT}
      */
     public void cleanImgFor(int optViewIdx, int layerType) {
-        if (layerType == 0) {
+        if (layerType == MAIN) {
             Arrays.fill(trajImageMtx[optViewIdx], null);
         } else {
             Arrays.fill(trajImageSltMtx[optViewIdx], null);
@@ -198,7 +212,7 @@ public class TrajDrawManager {
      * @param layerType {@link #MAIN} or {@link #SLT}
      */
     private void interruptUnfinished(int mapIdx, int layerType) {
-        TrajDrawWorker[] trajDrawWorkerList = layerType == 0 ?
+        TrajDrawWorker[] trajDrawWorkerList = (layerType == MAIN) ?
                 trajDrawWorkerMtx[mapIdx] : trajDrawSltWorkerMtx[mapIdx];
         for (TrajDrawWorker worker : trajDrawWorkerList) {
             if (worker == null) {
@@ -219,7 +233,7 @@ public class TrajDrawManager {
     private void updateTrajImageFor(int mapIdx, int layerType) {
         // create new control thread
         String threadName = "manager-" + mapIdx + "-"
-                + (layerType == 0 ? "main" : "slt");
+                + (layerType == MAIN ? "main" : "slt");
         Thread controlThread = new DrawWorkerStarter(threadName, mapIdx, layerType);
         controlThread.setPriority(10);
         controlPool.submit(controlThread);
