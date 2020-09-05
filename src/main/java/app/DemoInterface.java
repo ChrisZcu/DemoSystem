@@ -56,9 +56,8 @@ public class DemoInterface extends PApplet {
 
     private boolean[] viewVisibleList = {true, true, true, true};  // is the map view visible
     private boolean[] linkedList = {true, true, true, true};       // is the map view linked to others
-    //private boolean[] linkedList = {true, true, false, false};
+    private boolean[] imgCleaned = {false, false, false, false};   // is the image cleaned after dragging
     private int mapController = 0;
-    private boolean[] imgCleaned = {false, false, false, false};
 
     private boolean loadFinished = false;
     private int regionId = 0;
@@ -233,7 +232,13 @@ public class DemoInterface extends PApplet {
             dataButton.render(this);
         }
 
-    }
+        int dataButtonXOff = 2;
+        int dataButtonYOff = 2;
+        drawInfoTextBox(0, dataButtonXOff, dataButtonYOff + mapDownOff + mapHeight - 20 - 4, 200, 20);
+        drawInfoTextBox(1, mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff + mapHeight - 20 - 4, 200, 20);
+        drawInfoTextBox(2, dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
+        drawInfoTextBox(3, mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
+}
 
     private int optIndex;
 
@@ -331,7 +336,7 @@ public class DemoInterface extends PApplet {
     }
 
     @Override
-    public void mouseWheel(){
+    public void mouseWheel() {
         boolean mapControllerZoomed = false;
 
         for (int i = 0; i < mapList.length; ++i) {
@@ -471,6 +476,22 @@ public class DemoInterface extends PApplet {
         noFill();
         strokeWeight(3);
         rect(lT.x, lT.y, length, high);
+    }
+
+    private void drawInfoTextBox(int i, int x, int y, int width, int height) {
+        TrajBlock tb = SharedObject.getInstance().getBlockList()[i];
+        String info = tb.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST);
+
+        fill(112, 128, 144);
+
+        stroke(112, 128, 144);
+        strokeWeight(2);
+        rect(x, y, width, height);
+
+        fill(0x11);
+        textAlign(CENTER, CENTER);
+        text(info, x + (width / 2), y + (height / 2));
+        textAlign(LEFT, TOP);
     }
 
 //    private void drawTraj(Trajectory traj, float xOff, float yOff, int minX, int maxX, int minY, int maxY, UnfoldingMap map) {
