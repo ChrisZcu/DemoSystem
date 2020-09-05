@@ -118,8 +118,8 @@ public class DemoInterface extends PApplet {
         SharedObject.getInstance().setMapList(mapList);
         SharedObject.getInstance().initBlockList();
 
-        trajImgMtx = new PGraphics[4][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
-        trajImgSltMtx = new PGraphics[4][PSC.SELECT_THREAD_NUM];
+        trajImgMtx = new PGraphics[5][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
+        trajImgSltMtx = new PGraphics[5][PSC.SELECT_THREAD_NUM];
 
         // Warning: the constructor of the TrajDrawManager must be called AFTER initBlockList()
         trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, trajImgSltMtx,
@@ -208,10 +208,14 @@ public class DemoInterface extends PApplet {
 
         int dataButtonXOff = 2;
         int dataButtonYOff = 2;
-        drawInfoTextBox(0, dataButtonXOff, dataButtonYOff + mapDownOff + mapHeight - 20 - 4, 200, 20);
-        drawInfoTextBox(1, mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff + mapHeight - 20 - 4, 200, 20);
-        drawInfoTextBox(2, dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
-        drawInfoTextBox(3, mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
+        if (oneMapIdx == 4) {
+            drawInfoTextBox(0, dataButtonXOff, dataButtonYOff + mapDownOff + mapHeight - 20 - 4, 200, 20);
+            drawInfoTextBox(1, mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff + mapHeight - 20 - 4, 200, 20);
+            drawInfoTextBox(2, dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
+            drawInfoTextBox(3, mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
+        } else {
+            drawInfoTextBox(4, dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
+        }
     }
 
     private void updateTrajImages() {
@@ -272,7 +276,8 @@ public class DemoInterface extends PApplet {
                 System.out.println("switch one map : " + oneMapIdx);
                 switchOneMapMode(eleId % 4);
             } else if (eleId > 3) {
-                int optMapIdx = eleId % 4;
+                // FIXME stupid code
+                int optMapIdx = (oneMapIdx >= 0 && oneMapIdx <= 3) ? 4 : eleId % 4;
                 TrajBlock tb = SharedObject.getInstance().getBlockList()[optMapIdx];
 
                 // change main layer color
@@ -321,6 +326,8 @@ public class DemoInterface extends PApplet {
             Arrays.fill(viewVisibleList, true);
         } else {
             oneMapIdx = -mapIdx - 1;
+            TrajBlock[] blockList = SharedObject.getInstance().getBlockList();
+            blockList[4] = blockList[mapIdx];
             Arrays.fill(viewVisibleList, false);
         }
         background(220, 220, 220);
@@ -474,11 +481,11 @@ public class DemoInterface extends PApplet {
 
     private void initMapSurface() {
         mapList = new UnfoldingMap[5];
-        mapXList = new float[]{
+        mapXList = new float[] {
                 0, mapWidth + widthGapDis,
                 0, mapWidth + widthGapDis
         };
-        mapYList = new float[]{
+        mapYList = new float[] {
                 mapDownOff, mapDownOff,
                 mapDownOff + mapHeight + heighGapDis, mapDownOff + mapHeight + heighGapDis
         };
@@ -564,13 +571,12 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawInfoTextBox(int i, int x, int y, int width, int height) {
-        boolean visible = viewVisibleList[i] || (oneMapIdx >= 0 && i == 2);
+        boolean visible = i == 4 || viewVisibleList[i];
         if (!visible) {
             return;
         }
         String info;
-        TrajBlock tb = SharedObject.getInstance()
-                .getBlockList()[(oneMapIdx == 4) ? i : oneMapIdx];        // FIXME need to change
+        TrajBlock tb = SharedObject.getInstance().getBlockList()[i];
 
         info = tb.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST);
 
