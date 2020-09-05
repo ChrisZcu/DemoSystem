@@ -83,6 +83,9 @@ public class DemoInterface extends PApplet {
         mapWidth = (screenWidth - widthGapDis) / 2;
         mapHeight = (screenHeight - mapDownOff - heighGapDis) / 2;
 
+        SharedObject.getInstance().setMapWidth(mapWidth);
+        SharedObject.getInstance().setMapHeight(mapHeight);
+
         size(screenWidth, screenHeight - 1, P2D);
     }
 
@@ -158,28 +161,6 @@ public class DemoInterface extends PApplet {
     public void draw() {
         updateMap(mapController);
 
-        if (SharedObject.getInstance().isScreenShot()) {
-            int totalFileNum = Objects.requireNonNull(new File(PSC.OUTPUT_PATH).list()).length;
-
-            String path = PSC.OUTPUT_PATH1 + "screenShot_" + (totalFileNum / 2) + ".png";
-            saveFrame(path);
-
-            String infilePath = PSC.OUTPUT_PATH1 + "screenShotInfo_" + (totalFileNum / 2) + ".txt";
-            try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(infilePath));
-                writer.write(SharedObject.getInstance().getBlockInfo());
-            } catch (IOException ignored) {
-            }
-        }
-
-        for (EleButton dataButton : dataButtonList) {
-            dataButton.render(this);
-        }
-
-//        if (mapChanged) {
-//            //TODO update the map
-//        }
-
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
             for (PGraphics pg : trajImgMtx[mapIdx]) {
@@ -217,13 +198,33 @@ public class DemoInterface extends PApplet {
                 point(r.leftTop.x, r.leftTop.y);
             }
         }
+        if (SharedObject.getInstance().isScreenShot()) {
+            int totalFileNum = Objects.requireNonNull(new File(PSC.OUTPUT_PATH1).list()).length;
+
+            String path = PSC.OUTPUT_PATH1 + "screenShot_" + (totalFileNum / 2) + ".png";
+            saveFrame(path);
+
+            String infilePath = PSC.OUTPUT_PATH1 + "screenShotInfo_" + (totalFileNum / 2) + ".txt";
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(infilePath));
+                writer.write(SharedObject.getInstance().getBlockInfo());
+                writer.close();
+            } catch (IOException ignored) {
+            }
+            SharedObject.getInstance().setScreenShot(false);
+        }
+
+        for (EleButton dataButton : dataButtonList) {
+            dataButton.render(this);
+        }
+
     }
 
     private int optIndex;
 
     @Override
     public void mousePressed() {
-        optIndex = getOptIndex();
+        optIndex = getOptIndex(mouseX, mouseY);
 
         int eleId = -1;
         for (EleButton dataButton : dataButtonList) {
@@ -280,7 +281,7 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    private int getOptIndex() {
+    private int getOptIndex(int mouseX, int mouseY) {
         for (int i = 0; i < 4; i++) {
             if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
                     && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
@@ -291,8 +292,8 @@ public class DemoInterface extends PApplet {
     }
 
     private Region getSelectRegion(Position lastClick, int optIndex) {
-        float mx = constrain(mouseX, mapXList[optIndex] + 3, mapXList[optIndex] + mapWidth - 3);
-        float my = constrain(mouseY, mapYList[optIndex] + 3, mapYList[optIndex] + mapHeight - 3);
+        float mx = constrain(mouseX, mapXList[optIndex] + 3 + circleSize / 2, mapXList[optIndex] + mapWidth - 3 - circleSize / 2);
+        float my = constrain(mouseY, mapYList[optIndex] + 3 + circleSize / 2, mapYList[optIndex] + mapHeight - 3 - circleSize / 2);
 
         Position curClick = new Position(mx, my);
         Region selectRegion = new Region();
@@ -375,8 +376,8 @@ public class DemoInterface extends PApplet {
         int high = Math.abs(lT.y - rB.y);
 
         if (mouseMove && r.id == dragRegionId) {
-            float mx = constrain(mouseX, mapXList[optIndex] + 3, mapXList[optIndex] + mapWidth - 3 - length);
-            float my = constrain(mouseY, mapYList[optIndex] + 3, mapYList[optIndex] + mapHeight - 3 - high);
+            float mx = constrain(mouseX, mapXList[optIndex] + 3 + circleSize / 2, mapXList[optIndex] + mapWidth - 3 - length - circleSize / 2);
+            float my = constrain(mouseY, mapYList[optIndex] + 3 + circleSize / 2, mapYList[optIndex] + mapHeight - 3 - high - circleSize / 2);
 
             r.leftTop = new Position(mx, my);
             r.rightBtm = new Position(mx + length, my + high);

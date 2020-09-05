@@ -6,6 +6,7 @@ import model.BlockType;
 import model.RegionType;
 import app.SharedObject;
 import model.TrajBlock;
+import model.Trajectory;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.concurrent.*;
@@ -69,7 +70,13 @@ public class SelectManager {
 
     public void startRun() {
         for (int i = 0; i < blockList.length; i++) {
-            SharedObject.getInstance().getTrajSelectResList()[i] = startMapCal(blockList[i], i);
+            int[] trajIndexAry = startMapCal(blockList[i], i);
+            TrajBlock trajBlock = blockList[i];
+            Trajectory[] trajTmp = new Trajectory[trajIndexAry.length];
+            for (int j = 0; j < trajTmp.length; j++) {
+                trajTmp[j] = SharedObject.getInstance().getTrajFull()[trajIndexAry[j]];
+            }
+            trajBlock.setTrajSltList(trajTmp);
         }
     }
 }

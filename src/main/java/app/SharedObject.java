@@ -36,6 +36,25 @@ public class SharedObject {
 
     private static boolean[] viewVisibleList;
 
+    private int mapWidth;
+    private int mapHeight;
+
+    public int getMapWidth() {
+        return mapWidth;
+    }
+
+    public void setMapWidth(int mapWidth) {
+        this.mapWidth = mapWidth;
+    }
+
+    public int getMapHeight() {
+        return mapHeight;
+    }
+
+    public void setMapHeight(int mapHeight) {
+        this.mapHeight = mapHeight;
+    }
+
     // regions
     private static Region regionO = null;
     private static Region regionD = null;
@@ -321,7 +340,6 @@ public class SharedObject {
         return trajRandList;
     }
 
-
     /**
      * This must be called before use {@link #setBlockAt}
      */
@@ -390,25 +408,26 @@ public class SharedObject {
     }
 
     public String getBlockInfo() {
-        //TODO add map logic
-        StringBuilder info = new StringBuilder();
-        if (regionO == null) {
-            info.append("\norigin: NONE");
-        } else {
-            info.append("\n").append(regionO.toString());
-        }
-        if (regionD == null) {
-            info.append("\ndestination: NONE");
-        } else {
-            info.append("\n").append(regionD.toString());
-        }
+        StringBuilder info = new StringBuilder("Region info:");
+        if (regionO == null)
+            info.append("\nOrigin: NONE");
+        else
+            info.append("\nOrigin:\n").append(regionO.toString());
+        if (regionD == null)
+            info.append("\n\nDestination: NONE");
+        else
+            info.append("\n\nDestination:\n").append(regionD.toString());
+        if (regionWLayerList.size() > 0)
+            info.append("\n\nWay points:\n");
         for (ArrayList<Region> wList : regionWLayerList) {
             for (Region r : wList) {
                 info.append("\n").append(r.toString());
             }
         }
-        for (TrajBlock bt : blockList) {
-            info.append("\n").append(bt.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST));
+        info.append("\nTrajectory info:");
+        for (int i=0; i <4; i++) {
+            TrajBlock bt = blockList[i];
+            info.append("\n").append("map").append(i).append(bt.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST));
         }
         return info.toString();
     }

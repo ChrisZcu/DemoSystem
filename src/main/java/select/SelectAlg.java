@@ -68,8 +68,6 @@ public class SelectAlg {
     }
 
     public static int[] getWayPointTraj(int begin, int end, Trajectory[] trajectory, int optIndex) {
-        SharedObject instance = SharedObject.getInstance();
-        UnfoldingMap map = instance.getMapList()[optIndex];
 
         ArrayList<ArrayList<Region>> regionWList = SharedObject.getInstance().getRegionWLayerList();
         ArrayList<Integer> res = getWayPointTraj(begin, end, trajectory, regionWList.get(0), optIndex);

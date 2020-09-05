@@ -20,10 +20,10 @@ public class PSC {
             = "data/GPS/porto_full.txt";
 
     public static String PATH_PREFIX
-            = "data/GPS/porto5w/";
+            = "data/GPS/";
 
     // traj limit for full set. -1 for no limit
-    public static final int LIMIT = 5_0000;
+    public static final int LIMIT = -1;
 
     // recommend: core # * 2 or little higher
     public static final int FULL_THREAD_NUM = 5;
@@ -45,8 +45,7 @@ public class PSC {
 
     public static final String OUTPUT_PATH = PATH_PREFIX + "output/";
 
-    public static final String OUTPUT_PATH1 = "data/GPS/output/";
-
+    public static final String OUTPUT_PATH1 = "data/output/";
     // six provided color to algorithm
     public static final Color[] COLORS = {
             new Color(15, 91, 120),
