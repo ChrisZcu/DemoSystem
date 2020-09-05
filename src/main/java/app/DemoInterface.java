@@ -7,7 +7,6 @@ import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManager;
 import model.*;
-import model.Color;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
@@ -23,13 +22,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static model.Color.*;
+import static model.Colour.*;
 import static util.Swing.createTopMenu;
 
 
 public class DemoInterface extends PApplet {
     private TrajDrawManager trajDrawManager;
-    private PGraphics[][] trajImgMtx;           // the 4 trajImg buffer layers list
+    private PGraphics[][] trajImgMtx;       // the 4 trajImg buffer list for main layer
+    private PGraphics[][] trajImgSltMtx;    // the 4 trajImg buffer list for double select result
     private EleButton[] dataButtonList;
 
     private float[][] mapLocInfo;
@@ -109,7 +109,7 @@ public class DemoInterface extends PApplet {
         SharedObject.getInstance().initBlockList();
 
         trajImgMtx = new PGraphics[4][Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM)];
-        trajImgMtx = new PGraphics[4][PSC.SELECT_THREAD_NUM];
+        trajImgSltMtx = new PGraphics[4][PSC.SELECT_THREAD_NUM];
 
         // Warning: the constructor of the TrajDrawManager must be called AFTER initBlockList()
         trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, trajImgSltMtx,
@@ -125,15 +125,32 @@ public class DemoInterface extends PApplet {
         this.selectDataDialog = new SelectDataDialog(frame);
 
         (new Thread(this::loadData)).start();
-
     }
 
     private void loadData() {
+        TrajBlock tb;
+
         SharedObject.getInstance().loadTrajData();
+
         SharedObject.getInstance().setBlockAt(0, BlockType.FULL, -1, -1);
+        tb = SharedObject.getInstance().getBlockList()[0];
+        tb.setMainColor(RED);
+
         SharedObject.getInstance().setBlockAt(1, BlockType.VFGS, 0, 0);
+        tb = SharedObject.getInstance().getBlockList()[1];
+        tb.setMainColor(RED);
+
         SharedObject.getInstance().setBlockAt(2, BlockType.RAND, 0, -1);
-        trajDrawManager.startAllNewRenderTask(false);
+        tb = SharedObject.getInstance().getBlockList()[2];
+        tb.setMainColor(RED);
+
+//        SharedObject.getInstance().setBlockSltAt(3, );
+        tb = SharedObject.getInstance().getBlockList()[3];
+        tb.setMainColor(RED);
+        tb.setSltColor(ORANGE);
+
+        trajDrawManager.startAllNewRenderTask(TrajDrawManager.MAIN);
+        trajDrawManager.startNewRenderTaskFor(3, TrajDrawManager.SLT);
         loadFinished = true;
     }
 
@@ -266,8 +283,9 @@ public class DemoInterface extends PApplet {
     private int getOptIndex() {
         for (int i = 0; i < 4; i++) {
             if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
-                    && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight)
+                    && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
                 return i;
+            }
         }
         return 0;
     }
@@ -297,14 +315,12 @@ public class DemoInterface extends PApplet {
             }
         }
 
-        if (SharedObject.getInstance().checkRegion(0)) // O
-        {
-            selectRegion.color = DEEP_BLUE;
-        } else if (SharedObject.getInstance().checkRegion(1)) //D
-        {
-            selectRegion.color = SKY_BLUE;
+        if (SharedObject.getInstance().checkRegion(0)) {    // O
+            selectRegion.colour = DEEP_BLUE;
+        } else if (SharedObject.getInstance().checkRegion(1)) {     // D
+            selectRegion.colour = SKY_BLUE;
         } else {
-            selectRegion.color = Color.getColor()[SharedObject.getInstance().getWayLayer() + 1];
+            selectRegion.colour = Colour.getColor()[SharedObject.getInstance().getWayLayer() + 1];
         }
 
         return selectRegion;
@@ -368,7 +384,7 @@ public class DemoInterface extends PApplet {
 
         lT = r.leftTop;
         rB = r.rightBtm;
-        stroke(PSC.COLORS[r.color.value].getRGB());
+        stroke(PSC.COLORS[r.colour.value].getRGB());
 
         length = Math.abs(lT.x - rB.x);
         high = Math.abs(lT.y - rB.y);

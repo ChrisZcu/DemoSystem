@@ -13,6 +13,7 @@ public final class TrajBlock {
     private BlockType blockType;
     private Trajectory[] trajList;  // main traj list given to this block (layer main)
     private Trajectory[] trajSltList;       // double select traj list
+    private Colour mainColor, sltColor;     // two color for two layers
     private int threadNum;
     private int dIdx, rIdx;         // the param for select color
 
@@ -45,6 +46,22 @@ public final class TrajBlock {
                 // do nothing
         }
         return info;
+    }
+
+    public Colour getMainColor() {
+        return mainColor;
+    }
+
+    public void setMainColor(Colour mainColor) {
+        this.mainColor = mainColor;
+    }
+
+    public Colour getSltColor() {
+        return sltColor;
+    }
+
+    public void setSltColor(Colour sltColor) {
+        this.sltColor = sltColor;
     }
 
     public int getMapIdx() {

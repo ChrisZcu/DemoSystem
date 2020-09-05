@@ -3,15 +3,13 @@ package model;
 import app.SharedObject;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 
-import java.awt.*;
-
 /**
  * Indicates the left-top position and right-bottom position of selected region.
  */
 public class Region {
     public Position leftTop;
     public Position rightBtm;
-    public Color color;
+    public Colour colour;
     public int id;
 
     public Region() {

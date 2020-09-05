@@ -26,6 +26,9 @@ import java.util.concurrent.*;
  * @see app.DemoInterface
  */
 public class TrajDrawManager {
+    public static final int MAIN = 0;       // main background layer
+    public static final int SLT = 1;        // double select result layer
+
     private final PApplet app;
     private final UnfoldingMap[] mapList;
     private final PGraphics[][] trajImageMtx;       // for main traj result
@@ -37,17 +40,14 @@ public class TrajDrawManager {
     private final TrajDrawWorker[][] trajDrawWorkerMtx;
     // workers for double select result
     private final TrajDrawWorker[][] trajDrawSltWorkerMtx;
-    private final boolean[] refreshList;
 
     private final float[] mapXList, mapYList;
     private final int width, height;        // size for one map view
 
     // multi-thread for part image painting
     private final ExecutorService threadPool;
-
     // single thread pool for images controlling
     private final ExecutorService controlPool;
-    private Thread controlThread;
 
     public TrajDrawManager(DemoInterface app, UnfoldingMap[] mapList,
                            PGraphics[][] trajImageMtx, PGraphics[][] trajImageSltMtx,
@@ -72,19 +72,14 @@ public class TrajDrawManager {
 
         // init pool
         // drop last thread if full
-        this.threadPool = new ThreadPoolExecutor(totThreadNum, totThreadNum , 0L,
+        this.threadPool = new ThreadPoolExecutor(totThreadNum, totThreadNum, 0L,
                 TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
         // single thread pool in sure the control orders run one by one
         this.controlPool = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<>(PSC.CONTROL_POOL_SIZE),
                 new ThreadPoolExecutor.AbortPolicy());
-
-        this.refreshList = new boolean[4];
-        Arrays.fill(refreshList, true);
     }
-
-    /* Main traj draw part */
 
     /**
      * Inner class for the task that starts all painting workers.
@@ -93,17 +88,17 @@ public class TrajDrawManager {
      */
     private final class DrawWorkerStarter extends Thread {
         private final int mapIdx;
-        private final boolean doubleSelect;
+        private final int layerType;
 
-        public DrawWorkerStarter(String name, int mapIdx, boolean doubleSelect) {
+        public DrawWorkerStarter(String name, int mapIdx, int layerType) {
             super(name);
-            this.mapIdx = mapIdx;       // not used for now
-            this.doubleSelect = doubleSelect;
+            this.mapIdx = mapIdx;
+            this.layerType = layerType;
         }
 
         @Override
         public void run() {
-            String layer = doubleSelect ? "slt" : "main";
+            String layer = layerType == 0 ? "main" : "slt";
             // start painting tasks
             UnfoldingMap map = mapList[mapIdx];
             TrajBlock tb = blockList[mapIdx];
@@ -112,8 +107,8 @@ public class TrajDrawManager {
                 return;       // no need to draw
             }
 
-            Trajectory[] trajList = doubleSelect ?
-                    tb.getTrajSltList() : tb.getTrajList();
+            Trajectory[] trajList = layerType == 0 ?
+                    tb.getTrajList() : tb.getTrajSltList();
             int totLen = trajList.length;
             int threadNum = tb.getThreadNum();
             int segLen = totLen / threadNum;
@@ -144,34 +139,41 @@ public class TrajDrawManager {
      * Notice that all the traj will be redrawn, even if they are
      * not changed / not visible / not linked.
      * Before call it, the pg should be cleaned.
+     *
+     * @param layerType {@link #MAIN} or {@link #SLT}
      */
-    public void startAllNewRenderTask(boolean doubleSelect) {
+    public void startAllNewRenderTask(int layerType) {
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
-            interruptUnfinished(mapIdx, doubleSelect);
-            updateTrajImageFor(mapIdx, doubleSelect);
+            interruptUnfinished(mapIdx, layerType);
+            updateTrajImageFor(mapIdx, layerType);
         }
     }
 
     /**
      * Update the traj painting for specific map view (main or double select).
      * Other map view will not change.
+     * <p>
      * Before call it, the pg should be cleaned.
+     *
+     * @param layerType {@link #MAIN} or {@link #SLT}
      */
-    public void startNewRenderTaskFor(int optViewIdx, boolean doubleSelect) {
-        interruptUnfinished(optViewIdx, doubleSelect);
-        updateTrajImageFor(optViewIdx, doubleSelect);
+    public void startNewRenderTaskFor(int optViewIdx, int layerType) {
+        interruptUnfinished(optViewIdx, layerType);
+        updateTrajImageFor(optViewIdx, layerType);
     }
 
     /**
      * Clean the traj buffer image for ALL map view
+     *
+     * @param layerType {@link #MAIN} or {@link #SLT}
      */
-    public void cleanAllImg(boolean doubleSelect) {
-        if (doubleSelect) {
-            for (PGraphics[] trajImageList : trajImageSltMtx) {
+    public void cleanAllImg(int layerType) {
+        if (layerType == 0) {
+            for (PGraphics[] trajImageList : trajImageMtx) {
                 Arrays.fill(trajImageList, null);
             }
         } else {
-            for (PGraphics[] trajImageList : trajImageMtx) {
+            for (PGraphics[] trajImageList : trajImageSltMtx) {
                 Arrays.fill(trajImageList, null);
             }
         }
@@ -179,21 +181,25 @@ public class TrajDrawManager {
 
     /**
      * Clean the traj buffer image for one map view
+     *
+     * @param layerType {@link #MAIN} or {@link #SLT}
      */
-    public void cleanImgFor(int optViewIdx, boolean doubleSelect) {
-        if (doubleSelect) {
-            Arrays.fill(trajImageSltMtx[optViewIdx], null);
-        } else {
+    public void cleanImgFor(int optViewIdx, int layerType) {
+        if (layerType == 0) {
             Arrays.fill(trajImageMtx[optViewIdx], null);
+        } else {
+            Arrays.fill(trajImageSltMtx[optViewIdx], null);
         }
     }
 
     /**
      * Clean the unfinished thread of this map
+     *
+     * @param layerType {@link #MAIN} or {@link #SLT}
      */
-    private void interruptUnfinished(int mapIdx, boolean doubleSelect) {
-        TrajDrawWorker[] trajDrawWorkerList = doubleSelect ?
-                trajDrawSltWorkerMtx[mapIdx] : trajDrawWorkerMtx[mapIdx];
+    private void interruptUnfinished(int mapIdx, int layerType) {
+        TrajDrawWorker[] trajDrawWorkerList = layerType == 0 ?
+                trajDrawWorkerMtx[mapIdx] : trajDrawSltWorkerMtx[mapIdx];
         for (TrajDrawWorker worker : trajDrawWorkerList) {
             if (worker == null) {
                 return;
@@ -207,12 +213,14 @@ public class TrajDrawManager {
     /**
      * Start multi-thread (by start a control thread) for a specific task
      * and paint traj to flash images separately.
+     *
+     * @param layerType {@link #MAIN} or {@link #SLT}
      */
-    private void updateTrajImageFor(int mapIdx, boolean doubleSelect) {
+    private void updateTrajImageFor(int mapIdx, int layerType) {
         // create new control thread
-        String threadName = "manager-" + mapIdx + "-" + "slt";
-        controlThread = new DrawWorkerStarter(threadName, mapIdx, doubleSelect);
-
+        String threadName = "manager-" + mapIdx + "-"
+                + (layerType == 0 ? "main" : "slt");
+        Thread controlThread = new DrawWorkerStarter(threadName, mapIdx, layerType);
         controlThread.setPriority(10);
         controlPool.submit(controlThread);
     }
