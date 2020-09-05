@@ -120,7 +120,7 @@ public class DemoInterface extends PApplet {
         createTopMenu(screenWidth, mapDownOff - 5, frame, this);
         this.selectDataDialog = new SelectDataDialog(frame);
 
-        (new Thread(this::loadData)).start();
+//        (new Thread(this::loadData)).start();
 
     }
 
@@ -161,7 +161,7 @@ public class DemoInterface extends PApplet {
         }
 
         if (regionDragged) {//drag the region, not finished
-            drawRegion(getSelectRegion(lastClick));
+            drawRegion(getSelectRegion(lastClick, optIndex));
         }
 
         if (SharedObject.getInstance().isFinishSelectRegion()) {//finish select
@@ -189,8 +189,12 @@ public class DemoInterface extends PApplet {
         }
     }
 
+    private int optIndex;
+
     @Override
     public void mousePressed() {
+        optIndex = getOptIndex();
+
         int eleId = -1;
         for (EleButton dataButton : dataButtonList) {
             if (dataButton.isMouseOver(this)) {
@@ -233,7 +237,7 @@ public class DemoInterface extends PApplet {
     public void mouseReleased() {
         if (regionDragged) {
             regionDragged = false;
-            Region selectRegion = getSelectRegion(lastClick);
+            Region selectRegion = getSelectRegion(lastClick, optIndex);
             selectRegion.id = regionId++;
             if (SharedObject.getInstance().checkRegion(0)) {        // O
                 SharedObject.getInstance().setRegionO(selectRegion);
@@ -246,8 +250,20 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    private Region getSelectRegion(Position lastClick) {
-        Position curClick = new Position(mouseX, mouseY);
+    private int getOptIndex() {
+        for (int i = 0; i < 4; i++) {
+            if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
+                    && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight)
+                return i;
+        }
+        return 0;
+    }
+
+    private Region getSelectRegion(Position lastClick, int optIndex) {
+        float mx = constrain(mouseX, mapXList[optIndex] + 3, mapXList[optIndex] + mapWidth - 3);
+        float my = constrain(mouseY, mapYList[optIndex] + 3, mapYList[optIndex] + mapHeight - 3);
+
+        Position curClick = new Position(mx, my);
         Region selectRegion = new Region();
         if (lastClick.x < curClick.x) {//left
             if (lastClick.y < curClick.y) {//up
@@ -330,8 +346,11 @@ public class DemoInterface extends PApplet {
         int high = Math.abs(lT.y - rB.y);
 
         if (mouseMove && r.id == dragRegionId) {
-            r.leftTop = new Position(mouseX, mouseY);
-            r.rightBtm = new Position(mouseX + length, mouseY + high);
+            float mx = constrain(mouseX, mapXList[optIndex] + 3, mapXList[optIndex] + mapWidth - 3 - length);
+            float my = constrain(mouseY, mapYList[optIndex] + 3, mapYList[optIndex] + mapHeight - 3 - high);
+
+            r.leftTop = new Position(mx, my);
+            r.rightBtm = new Position(mx + length, my + high);
         }
 
         lT = r.leftTop;
