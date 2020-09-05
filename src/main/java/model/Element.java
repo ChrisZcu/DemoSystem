@@ -38,4 +38,40 @@ public abstract class Element extends PApplet {
     public String getEleName() {
         return eleName;
     }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public int getEleId() {
+        return eleId;
+    }
+
+    public void setEleId(int eleId) {
+        this.eleId = eleId;
+    }
+
+    public void setEleName(String eleName) {
+        this.eleName = eleName;
+    }
 }

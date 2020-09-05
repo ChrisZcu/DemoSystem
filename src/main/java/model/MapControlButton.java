@@ -18,7 +18,6 @@ public class MapControlButton extends EleButton {
     @Override
     public void render(PApplet pApplet) {
         pApplet.noStroke();
-
         pApplet.fill(PSC.COLOR_LIST[color.value].getRGB());
         pApplet.rect(x, y, width, height);
 

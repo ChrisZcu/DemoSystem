@@ -1,6 +1,7 @@
 package app;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
+import de.fhpotsdam.unfolding.geo.Location;
 import draw.TrajDrawManager;
 import model.*;
 import select.SelectManager;
@@ -39,6 +40,16 @@ public class SharedObject {
 
     private int mapWidth;
     private int mapHeight;
+
+    private Location[] mapCenter;
+
+    public Location[] getMapCenter() {
+        return mapCenter;
+    }
+
+    public void setMapCenter(Location[] mapCenter) {
+        this.mapCenter = mapCenter;
+    }
 
     public int getMapWidth() {
         return mapWidth;
@@ -175,6 +186,12 @@ public class SharedObject {
 
 
     public void setMapList(UnfoldingMap[] mapList) {
+        mapCenter = new Location[mapList.length];
+        int i = 0;
+        for (UnfoldingMap map : mapList) {
+            mapCenter[i] = map.getCenter();
+            i++;
+        }
         SharedObject.mapList = mapList;
     }
 
@@ -447,10 +464,23 @@ public class SharedObject {
             }
         }
         info.append("\nTrajectory info:");
-        for (int i=0; i <4; i++) {
+        for (int i = 0; i < 4; i++) {
             TrajBlock bt = blockList[i];
             info.append("\n").append("map").append(i).append(bt.getBlockInfoStr(PSC.DELTA_LIST, PSC.RATE_LIST));
         }
         return info.toString();
+    }
+
+    public boolean isPan() {
+        int i = 0;
+        boolean pan = false;
+        for (UnfoldingMap map : mapList) {
+            if (!map.getCenter().equals(mapCenter[i])) {
+                pan = true;
+                mapCenter[i] = map.getCenter();
+            }
+            i++;
+        }
+        return pan;
     }
 }
