@@ -1,14 +1,15 @@
 package select;
 
 
+import app.SharedObject;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import draw.TrajDrawManager;
 import model.BlockType;
 import model.RegionType;
-import app.SharedObject;
 import model.TrajBlock;
 import model.Trajectory;
 import org.apache.commons.lang3.ArrayUtils;
+import util.PSC;
 
 import java.util.concurrent.*;
 
@@ -71,15 +72,22 @@ public class SelectManager {
     }
 
     public void startRun() {
+        // TODO add logic for one map
+        TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
         for (int i = 0; i < 4; i++) {
             Trajectory[] trajAry = startMapCal(blockList[i], i);
             TrajBlock trajBlock = blockList[i];
             trajBlock.setTrajSltList(trajAry);
 
-            TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
+            if (trajBlock.getMainColor() != PSC.GRAY) {
+                // need to repaint
+                trajBlock.setMainColor(PSC.GRAY);
+                tdm.cleanImgFor(i, TrajDrawManager.MAIN);
+                tdm.startNewRenderTaskFor(i, TrajDrawManager.MAIN);
+            }
+
             tdm.cleanImgFor(i, TrajDrawManager.SLT);
             tdm.startNewRenderTaskFor(i, TrajDrawManager.SLT);
-
         }
     }
 }

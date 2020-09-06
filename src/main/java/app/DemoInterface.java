@@ -33,7 +33,7 @@ public class DemoInterface extends PApplet {
     private float[][] mapLocInfo;
     private static final Location PORTO_CENTER = new Location(41.14, -8.639);//维度经度
     private static final Location PRESENT = PORTO_CENTER;
-    private static final int ZOOMLEVEL = 12;
+    private static final int ZOOM_LEVEL = 12;
 
     private UnfoldingMap[] mapList;
     // 4 -> not show extraMap
@@ -571,7 +571,7 @@ public class DemoInterface extends PApplet {
 
         for (UnfoldingMap map : mapList) {
             map.setZoomRange(1, 20);
-            map.zoomAndPanTo(ZOOMLEVEL, PRESENT);
+            map.zoomAndPanTo(ZOOM_LEVEL, PRESENT);
             map.setBackgroundColor(255);
             map.setTweening(false);
             MapUtils.createDefaultEventDispatcher(this, map);

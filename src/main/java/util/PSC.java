@@ -11,7 +11,7 @@ public class PSC {
     // i.e. alpha.
     // These two settings must match the results
     public static double[] RATE_LIST
-            = {/*0.05, */0.01, 0.005, 0.001, /*0.0005, 0.0001, 0.00005, 0.00001*/};
+            = {0.05, 0.01, 0.005, /*0.001, 0.0005, 0.0001, 0.00005, 0.00001*/};
     public static int[] DELTA_LIST
             = {0, 4, 8, 16, /*32, 50, 64, 128*/};
 
@@ -20,13 +20,13 @@ public class PSC {
             = "data/GPS/porto_full.txt";
 
     public static String PATH_PREFIX
-            = "data/GPS/porto5w/";
+            = "data/GPS/porto1k/";
 
     // traj limit for full set. -1 for no limit
-    public static final int LIMIT = 5_0000;
+    public static final int LIMIT = 1000;
 
     // recommend: core # * 2 or little higher
-    public static final int FULL_THREAD_NUM = 5;
+    public static final int FULL_THREAD_NUM = 8;
     public static final int SAMPLE_THREAD_NUM = 2;
     public static final int SELECT_THREAD_NUM = 2;
 
@@ -57,7 +57,6 @@ public class PSC {
             new Color(79, 79, 79),
             new Color(0, 0, 0),
             new Color(255,255,255)
-
     };
 
     public static final Color RED = new Color(255, 0, 0);

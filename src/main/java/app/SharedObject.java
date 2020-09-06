@@ -9,7 +9,6 @@ import util.IOHandle;
 import util.PSC;
 
 import java.awt.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -289,12 +288,13 @@ public class SharedObject {
         if (regionD != null) {
             allRegion.addAll(Arrays.asList(regionDList));
         }
-        if (getRegionWLayerList().size() > 0)
+        if (getRegionWLayerList().size() > 0) {
             for (ArrayList<ArrayList<Region>> regionWList : regionWList) {
                 for (ArrayList<Region> wList : regionWList) {
                     allRegion.addAll(wList);
                 }
             }
+        }
         return allRegion;
     }
 
@@ -446,11 +446,14 @@ public class SharedObject {
     private ArrayList<ArrayList<Region>>[] regionWList = new ArrayList[4];
 
     private void updateRegionList() {
+        // TODO add logic for one map
         for (int i = 0; i < 4; i++) {
-            if (regionO != null)
+            if (regionO != null) {
                 regionOList[i] = regionO.getCorresRegion(mapList[i]);
-            if (regionD != null)
+            }
+            if (regionD != null) {
                 regionDList[i] = regionD.getCorresRegion(mapList[i]);
+            }
             if (regionWLayerList.size() > 0) {
                 ArrayList<ArrayList<Region>> regionWLayerListTmp = new ArrayList<>();
                 for (ArrayList<Region> wList : regionWLayerList) {
@@ -467,9 +470,9 @@ public class SharedObject {
 
     private RegionType getRegionType() {
         if (regionWLayerList.size() > 0) {
-            if (regionO == null && regionD == null)
+            if (regionO == null && regionD == null) {
                 return RegionType.WAY_POINT;
-            else {
+            } else {
                 return RegionType.O_D_W;
             }
         } else {
