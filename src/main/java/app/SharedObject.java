@@ -373,8 +373,8 @@ public class SharedObject {
      * This must be called before use {@link #setBlockAt}
      */
     public void initBlockList() {
-        blockList = new TrajBlock[4];
-        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
+        blockList = new TrajBlock[5];
+        for (int mapIdx = 0; mapIdx < 5; mapIdx++) {
             blockList[mapIdx] = new TrajBlock(mapIdx);
         }
     }

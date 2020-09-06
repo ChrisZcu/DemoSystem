@@ -19,7 +19,11 @@ public abstract class Element extends PApplet {
 
     public abstract void render(PApplet pApplet);
 
-    public boolean isMouseOver(PApplet pApplet) {
+    public boolean isMouseOver(PApplet pApplet, boolean visible) {
+        if (!visible) {
+            return false;
+        }
+
         int mouseX = pApplet.mouseX;
         int mouseY = pApplet.mouseY;
 
