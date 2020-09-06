@@ -3,6 +3,7 @@ package swing;
 import app.SharedObject;
 import draw.TrajDrawManager;
 import processing.core.PApplet;
+import util.PSC;
 
 import javax.swing.*;
 import java.awt.*;
@@ -106,7 +107,9 @@ public class MenuWindow extends JWindow {
             public void actionPerformed(ActionEvent e) {
                 System.out.println("clear all!");
                 TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
+                SharedObject.getInstance().setAllMainColor(PSC.RED);
                 tdm.cleanAllImg(TrajDrawManager.SLT);
+                tdm.startAllNewRenderTask(TrajDrawManager.MAIN);
                 SharedObject.getInstance().cleanRegions();
             }
         };

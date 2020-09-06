@@ -126,11 +126,18 @@ public class TrajDrawManager {
                     tb.getTrajList() : tb.getTrajSltList();
             int totLen = trajList.length;
 //            System.out.println(">>>> " + getName() + "trajList len = " + totLen);
+
             int threadNum = tb.getThreadNum();
             int segLen = totLen / threadNum;
             float offsetX = mapXList[mapIdx];
             float offsetY = mapYList[mapIdx];
             TrajDrawWorker[] trajDrawWorkerList = trajDrawWorkerMtx[mapIdx];
+
+            if (segLen < PSC.MULTI_THREAD_BOUND) {
+                // use single thread instead of multi thread
+                threadNum = 1;
+                segLen = totLen;
+            }
 
             for (int idx = 0; idx < threadNum; idx++) {
                 int begin = segLen * idx;
@@ -145,6 +152,7 @@ public class TrajDrawManager {
                 trajDrawWorkerList[idx] = worker;
                 threadPool.submit(worker);
             }
+
 //            System.out.println(getName() + " finished work partition");
         }
     }

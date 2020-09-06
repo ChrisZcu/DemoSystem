@@ -26,9 +26,15 @@ public class PSC {
     public static final int LIMIT = 1000;
 
     // recommend: core # * 2 or little higher
-    public static final int FULL_THREAD_NUM = 8;
-    public static final int SAMPLE_THREAD_NUM = 2;
-    public static final int SELECT_THREAD_NUM = 2;
+    public static final int FULL_THREAD_NUM = 8;        // for both draw and select
+    public static final int SAMPLE_THREAD_NUM = 2;      // for both draw and select
+    public static final int SELECT_THREAD_NUM = 2;      // only for draw
+    /**
+     * when the traj num is lower than this, only one thread will run
+     * at least > max thread num * 10
+     * otherwise some traj may be disappeared in select / visualization
+     */
+    public static final int MULTI_THREAD_BOUND = 1000;
 
     /**
      * The pool size of control pool in {@link draw.TrajDrawManager}.

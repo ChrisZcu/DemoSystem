@@ -63,6 +63,7 @@ public class TrajDrawWorker extends Thread {
         pg.stroke(color.getRGB());
 
 //        System.out.println(this.getName() + " start");
+//        System.out.println(this.getName() + ", begin=" + begin + " end=" + end);
 
         for (int i = begin; i < end; i++) {
             pg.beginShape();

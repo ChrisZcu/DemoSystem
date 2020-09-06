@@ -37,22 +37,30 @@ public class SelectManager {
 
         int threadNum = trajBlock.getThreadNum();
 
+        // TODO Recreate thread pool? Create once may be a better choice.
         ExecutorService threadPool = new ThreadPoolExecutor(threadNum, threadNum, 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>());
 
-        UnfoldingMap map = mapList[opIndex];
-        long start_time = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
 
-        int totalLength = trajBlock.getTrajList().length;
-        int threadSize = totalLength / trajBlock.getThreadNum();
+        Trajectory[] trajList = trajBlock.getTrajList();
+        int totLen = trajList.length;
+        int segLen = totLen / threadNum;
         Trajectory[] resShowIndex = {};
+
+        if (segLen < PSC.MULTI_THREAD_BOUND) {
+            // use single thread instead of multi thread
+            threadNum = 1;
+            segLen = totLen;
+        }
+
         try {
             for (int i = 0; i < threadNum - 1; i++) {
-                SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), i * threadSize, (i + 1) * threadSize, opIndex);
+                SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), i * segLen, (i + 1) * segLen, opIndex);
                 Trajectory[] trajIndexAry = (Trajectory[]) threadPool.submit(sw).get();
                 resShowIndex = ArrayUtils.addAll(resShowIndex, trajIndexAry);
             }
-            SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), (threadNum - 1) * threadSize, totalLength, opIndex);
+            SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), (threadNum - 1) * segLen, totLen, opIndex);
             Trajectory[] trajIndexAry = (Trajectory[]) threadPool.submit(sw).get();
             resShowIndex = ArrayUtils.addAll(resShowIndex, trajIndexAry);
 
@@ -66,7 +74,8 @@ public class SelectManager {
         } catch (ExecutionException | InterruptedException e) {
             System.err.println(e);
         }
-        System.out.println(trajBlock.getBlockType() + " time: " + (System.currentTimeMillis() - start_time));
+        System.out.println(trajBlock.getBlockType() + " time: " + (System.currentTimeMillis() - startTime)
+                + " select size: " + resShowIndex.length);
         System.out.println("ALL Done");
         return resShowIndex;
     }

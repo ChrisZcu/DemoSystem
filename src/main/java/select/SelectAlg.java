@@ -1,10 +1,11 @@
 package select;
 
+import app.SharedObject;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
+import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import model.Position;
 import model.Region;
-import app.SharedObject;
 import model.Trajectory;
 
 import java.util.ArrayList;
@@ -16,53 +17,52 @@ import java.util.List;
 public class SelectAlg {
 
     /**
-     * Based on the begin and end index to calculate the sub-array trajectory
+     * Based on the begin and end index to calculate the sub-array trajList
      * with the particular origin and destination.
      * <br>
      * regions are all in the SO, regionO, regionD are exclusive.
      *
-     * @param begin      the begin index, included.
-     * @param end        the end index, not included.
-     * @param trajectory the trajectory based, including Full, VFGS, Random
+     * @param begin    the begin index, included.
+     * @param end      the end index, not included.
+     * @param trajList the trajList based, including Full, VFGS, Random
      */
-    public static Trajectory[] getODTraj(int begin, int end, Trajectory[] trajectory, int optIndex) {
+    public static Trajectory[] getODTraj(int begin, int end, Trajectory[] trajList, int optIndex) {
         SharedObject instance = SharedObject.getInstance();
         UnfoldingMap map = instance.getMapList()[optIndex];
 
-        Region regionO = instance.getRegionOList()[optIndex], regionD = instance.getRegionDList()[optIndex];
+        Region regionO = instance.getRegionOList()[optIndex];
+        Region regionD = instance.getRegionDList()[optIndex];
 
         ArrayList<Trajectory> res = new ArrayList<>();
         for (int i = begin; i < end; i++) {
-            Trajectory traj = trajectory[i];
-            if (inCheck(regionO, traj.locations[0], map) && inCheck(regionD, traj.locations[traj.locations.length - 1], map)) {
+            Trajectory traj = trajList[i];
+            Location[] locations = traj.locations;
+            if (inCheck(regionO, locations[0], map)
+                    && inCheck(regionD, locations[locations.length - 1], map)) {
                 res.add(traj);
             }
         }
-        Trajectory[] trajAry = new Trajectory[res.size()];
-        int i = 0;
-        for (Trajectory traj : res) {
-            trajAry[i] = traj;
-            i++;
-        }
-        return trajAry;
+        return res.toArray(new Trajectory[0]);
     }
 
 
     /**
      * calculates the sub-array of trajectory based on way-point region, on the same layer.
      */
-    public static ArrayList<Integer> getWayPointTraj(int begin, int end, Trajectory[] trajectory, ArrayList<Region> regionWList, int optIndex) {
-        ArrayList<Integer> res = new ArrayList<>();
+    public static ArrayList<Trajectory> getWayPointTraj(int begin, int end, Trajectory[] trajList,
+                                                     ArrayList<Region> regionWList, int optIndex) {
+        ArrayList<Trajectory> res = new ArrayList<>();
         SharedObject instance = SharedObject.getInstance();
         UnfoldingMap map = instance.getMapList()[optIndex];
-        float xOff = instance.getMapLocInfo()[0][optIndex];
-        float yOff = instance.getMapLocInfo()[1][optIndex];
+//        float xOff = instance.getMapLocInfo()[0][optIndex];
+//        float yOff = instance.getMapLocInfo()[1][optIndex];
 
         for (int i = begin; i < end; i++) {
-            Trajectory traj = trajectory[i];
-            for (int j = 1, bound = traj.locations.length - 1; j < bound; j++) {
-                if (inCheck(regionWList, traj.locations[j], map)) {
-                    res.add(traj.getTrajId());
+            Trajectory traj = trajList[i];
+            Location[] locations = traj.locations;
+            for (int j = 1, bound = locations.length - 1; j < bound; j++) {
+                if (inCheck(regionWList, locations[j], map)) {
+                    res.add(traj);
                     break;
                 }
             }
@@ -70,23 +70,21 @@ public class SelectAlg {
         return res;
     }
 
+    /**
+     * Calculate way point result according to multi-level layers in {@link SharedObject}.
+     * This method will call {@link #getWayPointTraj} as underlying method.
+     */
     public static Trajectory[] getWayPointTraj(int begin, int end, Trajectory[] trajectory, int optIndex) {
 
         ArrayList<ArrayList<Region>> regionWList = SharedObject.getInstance().getRegionWList()[optIndex];
 
-        ArrayList<Integer> res = getWayPointTraj(begin, end, trajectory, regionWList.get(0), optIndex);
+        ArrayList<Trajectory> res = getWayPointTraj(begin, end, trajectory, regionWList.get(0), optIndex);
 
         for (int i = 1; i < regionWList.size(); i++) {
-            ArrayList<Integer> resTmp = getWayPointTraj(begin, end, trajectory, regionWList.get(i), optIndex);
+            ArrayList<Trajectory> resTmp = getWayPointTraj(begin, end, trajectory, regionWList.get(i), optIndex);
             res.retainAll(resTmp);
         }
-        Trajectory[] trajAry = new Trajectory[res.size()];
-        int i = 0;
-        for (Integer e : res) {
-            trajAry[i] = SharedObject.getInstance().getTrajFull()[e];
-            i++;
-        }
-        return trajAry;
+        return res.toArray(new Trajectory[0]);
     }
 
     /**
@@ -134,15 +132,17 @@ public class SelectAlg {
             return true;
         }
 
-        r.updateScreenPosition(map);
-//        float[] sp = map.mapDisplay.getScreenFromInnerObjectPosition(loc.x, loc.y);     // FIXME
-//        float px = sp[0], py = sp[1];
+        r.updateScreenPosition(map);    // TODO How about run it before the whole alg ?
 
-        double px = map.getScreenPosition(loc).x;
-        double py = map.getScreenPosition(loc).y;
+        ScreenPosition sp = map.getScreenPosition(loc);
+        double px = sp.x;
+        double py = sp.y;
+
         Position leftTop = r.leftTop;
         Position rightBtm = r.rightBtm;
-        return (px >= leftTop.x && px <= rightBtm.x) && (py >= leftTop.y && py <= rightBtm.y);
+
+        return (px >= leftTop.x && px <= rightBtm.x)
+                && (py >= leftTop.y && py <= rightBtm.y);
     }
 
     //16.26
@@ -150,10 +150,11 @@ public class SelectAlg {
         if (rList == null) {
             return false;
         }
-        double px = map.getScreenPosition(loc).x;
-        double py = map.getScreenPosition(loc).y;
+        ScreenPosition sp = map.getScreenPosition(loc);
+        double px = sp.x;
+        double py = sp.y;
         for (Region r : rList) {
-            r.updateScreenPosition(map);
+            r.updateScreenPosition(map);        // TODO How about run it before the whole alg ?
             Position leftTop = r.leftTop;
             Position rightBtm = r.rightBtm;
             if ((px >= leftTop.x && px <= rightBtm.x)
