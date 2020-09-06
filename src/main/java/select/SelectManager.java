@@ -71,7 +71,7 @@ public class SelectManager {
     }
 
     public void startRun() {
-        for (int i = 0; i < blockList.length; i++) {
+        for (int i = 0; i < 4; i++) {
             Trajectory[] trajAry = startMapCal(blockList[i], i);
             TrajBlock trajBlock = blockList[i];
             trajBlock.setTrajSltList(trajAry);
