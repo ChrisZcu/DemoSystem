@@ -28,6 +28,7 @@ public class DemoInterface extends PApplet {
     private PGraphics[][] trajImgMtx;           // the 4 trajImg buffer layers list
     private PGraphics[][] trajImgSltMtx;    // the 4 trajImg buffer list for double select result
     private EleButton[] dataButtonList;
+    private EleButton[] oneMapButtonList;   // button shown in one map mode
 
     private float[][] mapLocInfo;
     private static final Location PORTO_CENTER = new Location(41.14, -8.639);//维度经度
@@ -39,6 +40,7 @@ public class DemoInterface extends PApplet {
     // [-1, -4] -> ready to show the map[0, 3]
     // [0, 3] now it is zoom and pan to mapList[oneMapIdx]
     private int oneMapIdx = 4;
+    private boolean isOneMapMode = false;
 
     private int[] checkLevel = {-1, -1, -1, -1};
     private Location[] checkCenter = {new Location(-1, -1), new Location(-1, -1),
@@ -108,6 +110,7 @@ public class DemoInterface extends PApplet {
 
         initMapSurface();
         initDataButton();
+        initOneMapButtonList();
         mapLocInfo = new float[2][];
         mapLocInfo[0] = mapXList;
         mapLocInfo[1] = mapYList;
@@ -167,29 +170,33 @@ public class DemoInterface extends PApplet {
         }
 
         for (Region r : SharedObject.getInstance().getRegionOList()) {
-            if (r == null)
+            if (r == null) {
                 continue;
+            }
             drawRegion(r);
             strokeWeight(circleSize);
             point(r.leftTop.x, r.leftTop.y);
         }
         for (Region r : SharedObject.getInstance().getRegionDList()) {
-            if (r == null)
+            if (r == null) {
                 continue;
+            }
             drawRegion(r);
             strokeWeight(circleSize);
             point(r.leftTop.x, r.leftTop.y);
         }
 
         for (ArrayList<ArrayList<Region>> regionWList : SharedObject.getInstance().getRegionWList()) {
-            if (regionWList == null)
+            if (regionWList == null) {
                 continue;
-            for (ArrayList<Region> wList : regionWList)
+            }
+            for (ArrayList<Region> wList : regionWList) {
                 for (Region r : wList) {
                     drawRegion(r);
                     strokeWeight(circleSize);
                     point(r.leftTop.x, r.leftTop.y);
                 }
+            }
         }
 
         if (SharedObject.getInstance().isScreenShot()) {
@@ -209,13 +216,20 @@ public class DemoInterface extends PApplet {
         }
 
         // add visible logic
-        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
-            boolean visible = viewVisibleList[mapIdx] || mapIdx == 0;
-            if (!visible) {
-                continue;
+        if (oneMapIdx == 4) {
+            // not in one map mode
+            for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
+                if (!viewVisibleList[mapIdx]) {
+                    continue;
+                }
+                for (int eleIdx = mapIdx; eleIdx < dataButtonList.length; eleIdx += 4) {
+                    dataButtonList[eleIdx].render(this);
+                }
             }
-            for (int eleIdx = mapIdx; eleIdx < dataButtonList.length; eleIdx += 4) {
-               dataButtonList[eleIdx].render(this);
+        } else {
+            // in one map mode
+            for (EleButton btn : oneMapButtonList) {
+                btn.render(this);
             }
         }
 
@@ -230,6 +244,7 @@ public class DemoInterface extends PApplet {
             drawInfoTextBox(4, dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
         }
     }
+
     private void updateTrajImages() {
         // draw the main traj buffer images
         nextMap:
@@ -259,6 +274,7 @@ public class DemoInterface extends PApplet {
             }
         }
     }
+
     private void drawAllMapRegion(Region selectRegion) {
         for (UnfoldingMap map : mapList) {
             drawRegion(selectRegion.getCorresRegion(map));
@@ -270,49 +286,47 @@ public class DemoInterface extends PApplet {
     public void mousePressed() {
         optIndex = getOptIndex(mouseX, mouseY);
 
-        int eleId = -1;
-        for (EleButton dataButton : dataButtonList) {
-            // FIXME add mapIdx to button field
-            // brute force
-            int mapIdx = dataButton.getEleId() % 4;
-            boolean visible = viewVisibleList[mapIdx] || mapIdx == 0;
-            if (dataButton.isMouseOver(this, visible)) {
-                eleId = dataButton.getEleId();
-                break;
-            }
-        }
-        if (eleId != -1) {
-            // mentioned the init state
-            if (eleId > 15) {// for linked
-                //TODO @Shangxuan add link logic
-                dataButtonList[eleId].colorExg();
-            } else if (eleId > 12) {//for control
-                //TODO @Shangxuan add control logic, mention the unique only one control
-                dataButtonList[eleId].colorExg();
-            } else if (eleId > 7) {
-                //TODO max the map
-                System.out.println("switch one map : " + oneMapIdx);
-                switchOneMapMode(eleId % 4);
-            } else if (eleId > 3) {
-                // FIXME stupid code
-                int optMapIdx = (oneMapIdx >= 0 && oneMapIdx <= 3) ? 4 : eleId % 4;
-                TrajBlock tb = SharedObject.getInstance().getBlockList()[optMapIdx];
+        if (oneMapIdx == 4) {
+            // not in one map mode, now there are 4 map in the map
 
-                // change main layer color
-                Color c = tb.getMainColor();
-                c = (c == PSC.RED) ? PSC.GRAY : PSC.RED;
-                tb.setMainColor(c);
-
-                // redraw it
-                TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
-                tdm.cleanImgFor(optMapIdx, TrajDrawManager.MAIN);
-                tdm.startNewRenderTaskFor(optMapIdx, TrajDrawManager.MAIN);
-            } else if (loadFinished) {
-                System.out.println("open dialog");
-                selectDataDialog.showDialogFor(eleId % 4);
-            } else {
-                System.out.println("not to open dialog");
+            int eleId = -1;
+            for (EleButton dataButton : dataButtonList) {
+                boolean visible = viewVisibleList[optIndex];
+                if (dataButton.isMouseOver(this, visible)) {
+                    eleId = dataButton.getEleId();
+                    break;
+                }
             }
+            if (eleId != -1) {
+                // mentioned the init state
+                if (eleId > 15) {// for linked
+                    //TODO @Shangxuan add link logic
+                    dataButtonList[eleId].colorExg();
+                } else if (eleId > 12) {//for control
+                    //TODO @Shangxuan add control logic, mention the unique only one control
+                    dataButtonList[eleId].colorExg();
+                } else if (eleId > 7) {
+                    //TODO max the map
+                    System.out.println("switch one map : " + oneMapIdx);
+                    switchOneMapMode(eleId % 4);
+                } else if (eleId > 3) {
+                    changeMainColorFor(optIndex);
+                    // redraw it if visible
+                    if (viewVisibleList[optIndex]) {
+                        TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
+                        tdm.cleanImgFor(optIndex, TrajDrawManager.MAIN);
+                        tdm.startNewRenderTaskFor(optIndex, TrajDrawManager.MAIN);
+                    }
+                } else if (loadFinished) {
+                    System.out.println("open dialog");
+                    selectDataDialog.showDialogFor(eleId % 4);
+                } else {
+                    System.out.println("not to open dialog");
+                }
+            }
+        } else {
+            // in one map mode
+            handleOneMapBtnPressed(oneMapIdx);
         }
 
         if (mouseButton == RIGHT) {
@@ -335,8 +349,16 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    private void switchOneMapMode(int mapIdx) {
+    /**
+     * Switch between one map mode and 4 map mode.
+     *
+     * @param mapIdx the map that need to maximize / pan back
+     */
+    public void switchOneMapMode(int mapIdx) {
+        UnfoldingMap maxedMap = mapList[mapIdx];
         if (oneMapIdx != 4) {
+            // pan back
+            mapList[oneMapIdx].zoomAndPanTo(mapList[4].getZoomLevel(), mapList[4].getCenter());
             oneMapIdx = 4;
             Arrays.fill(viewVisibleList, true);
         } else {
@@ -344,9 +366,44 @@ public class DemoInterface extends PApplet {
             TrajBlock[] blockList = SharedObject.getInstance().getBlockList();
             blockList[4] = blockList[mapIdx];
             Arrays.fill(viewVisibleList, false);
+
+            // set max map location
+            mapList[4].zoomAndPanTo(maxedMap.getZoomLevel(), maxedMap.getCenter());
         }
         background(220, 220, 220);
         System.out.println(oneMapIdx);
+    }
+
+    /**
+     * Change the main color between {@link PSC#RED} and {@link PSC#GRAY}.
+     *
+     * @param blockIdx notice that the block obj with index 4 is a shadow
+     *                 copy of one obj in 0-3
+     */
+    public void changeMainColorFor(int blockIdx) {
+        TrajBlock tb = SharedObject.getInstance().getBlockList()[blockIdx];
+
+        // change main layer color
+        Color c = tb.getMainColor();
+        c = (c == PSC.RED) ? PSC.GRAY : PSC.RED;
+        tb.setMainColor(c);
+    }
+
+    /**
+     * Handle the button press event when it is in one map mode
+     */
+    public void handleOneMapBtnPressed(int oneMapIdx) {
+        if (oneMapIdx == 4 || oneMapIdx < 0) {
+            // not in one map mode or not ready
+            return;
+        }
+        if (oneMapButtonList[0].isMouseOver(this, true)) {
+            // ColorExg
+            changeMainColorFor(oneMapIdx);
+        } else if (oneMapButtonList[1].isMouseOver(this, true)) {
+            // MinMap
+            switchOneMapMode(oneMapIdx);
+        }
     }
 
     //TODO add zoom level and center listener to control map update
@@ -496,11 +553,11 @@ public class DemoInterface extends PApplet {
 
     private void initMapSurface() {
         mapList = new UnfoldingMap[5];
-        mapXList = new float[] {
+        mapXList = new float[]{
                 0, mapWidth + widthGapDis,
                 0, mapWidth + widthGapDis
         };
-        mapYList = new float[] {
+        mapYList = new float[]{
                 mapDownOff, mapDownOff,
                 mapDownOff + mapHeight + heighGapDis, mapDownOff + mapHeight + heighGapDis
         };
@@ -551,6 +608,19 @@ public class DemoInterface extends PApplet {
         }
 
 
+    }
+
+    /**
+     * init button for one map mode.
+     */
+    private void initOneMapButtonList() {
+        oneMapButtonList = new EleButton[2];
+        int dataButtonXOff = 4;
+        int dataButtonYOff = 4;
+        oneMapButtonList[0] = new EleButton(dataButtonXOff,
+                dataButtonYOff + mapDownOff, 70, 20, 0, "ColorExg");
+        oneMapButtonList[1] = new EleButton(dataButtonXOff,
+                dataButtonYOff + mapDownOff + 35, 70, 20, 1, "MinMap");
     }
 
     private void drawRegion(Region r) {

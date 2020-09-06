@@ -26,6 +26,7 @@ public class EleButton extends Element {
     }
 
 
+    @Override
     public int getEleId() {
         return eleId;
     }
