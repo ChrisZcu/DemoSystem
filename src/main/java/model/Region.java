@@ -14,15 +14,30 @@ public class Region {
     public Position leftTop;
     public Position rightBtm;
     public Color color;
-    public int id;
+    public int id; // modify the type
+    public int mapId; // modify the map index
 
     private Location leftTopLoc;
-    private Location rightTopLoc;
-    private Location leftBtmLoc;
     private Location rightBtmLoc;
 
     public Region() {
 
+    }
+
+    public Location getLeftTopLoc() {
+        return leftTopLoc;
+    }
+
+    public void setLeftTopLoc(Location leftTopLoc) {
+        this.leftTopLoc = leftTopLoc;
+    }
+
+    public Location getRightBtmLoc() {
+        return rightBtmLoc;
+    }
+
+    public void setRightBtmLoc(Location rightBtmLoc) {
+        this.rightBtmLoc = rightBtmLoc;
     }
 
     public Region(Position lt, Position rb) {
@@ -30,11 +45,9 @@ public class Region {
         this.rightBtm = rb;
     }
 
-    public void initLoc(Location leftTopLoc, Location rightTopLoc, Location leftBtmLoc, Location rightBtmLoc) {
+    public void initLoc(Location leftTopLoc, Location rightBtmLoc) {
         this.leftTopLoc = leftTopLoc;
-        this.rightTopLoc = rightTopLoc;
         this.rightBtmLoc = rightBtmLoc;
-        this.leftBtmLoc = leftBtmLoc;
     }
 
     public void updateScreenPosition(UnfoldingMap map) {
@@ -45,6 +58,10 @@ public class Region {
         rightBtm.x = (int) rb.x;
         rightBtm.y = (int) rb.y;
 
+    }
+
+    public void updateScreenPosition() {
+        updateScreenPosition(SharedObject.getInstance().getMapList()[getMapIndex()]);
     }
 
     public boolean equal(Region r) {
@@ -88,5 +105,16 @@ public class Region {
             }
         }
         return 0;
+    }
+
+    public Region getCorresRegion(UnfoldingMap map) {
+        ScreenPosition leftTopScr = map.getScreenPosition(leftTopLoc);
+        ScreenPosition rightBtmScr = map.getScreenPosition(rightBtmLoc);
+
+        Region reg = new Region(new Position(leftTopScr.x, leftTopScr.y), new Position(rightBtmScr.x, rightBtmScr.y));
+        reg.color = color;
+        reg.id = id;
+        reg.initLoc(leftTopLoc,rightBtmLoc);
+        return reg;
     }
 }

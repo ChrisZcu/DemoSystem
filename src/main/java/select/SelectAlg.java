@@ -29,7 +29,7 @@ public class SelectAlg {
         SharedObject instance = SharedObject.getInstance();
         UnfoldingMap map = instance.getMapList()[optIndex];
 
-        Region regionO = instance.getRegionO(), regionD = instance.getRegionD();
+        Region regionO = instance.getRegionOList()[optIndex], regionD = instance.getRegionDList()[optIndex];
 
         ArrayList<Trajectory> res = new ArrayList<>();
         for (int i = begin; i < end; i++) {
@@ -72,7 +72,8 @@ public class SelectAlg {
 
     public static Trajectory[] getWayPointTraj(int begin, int end, Trajectory[] trajectory, int optIndex) {
 
-        ArrayList<ArrayList<Region>> regionWList = SharedObject.getInstance().getRegionWLayerList();
+        ArrayList<ArrayList<Region>> regionWList = SharedObject.getInstance().getRegionWList()[optIndex];
+
         ArrayList<Integer> res = getWayPointTraj(begin, end, trajectory, regionWList.get(0), optIndex);
 
         for (int i = 1; i < regionWList.size(); i++) {
@@ -132,6 +133,8 @@ public class SelectAlg {
         if (r == null) {
             return true;
         }
+
+        r.updateScreenPosition(map);
 //        float[] sp = map.mapDisplay.getScreenFromInnerObjectPosition(loc.x, loc.y);     // FIXME
 //        float px = sp[0], py = sp[1];
 
@@ -150,6 +153,7 @@ public class SelectAlg {
         double px = map.getScreenPosition(loc).x;
         double py = map.getScreenPosition(loc).y;
         for (Region r : rList) {
+            r.updateScreenPosition(map);
             Position leftTop = r.leftTop;
             Position rightBtm = r.rightBtm;
             if ((px >= leftTop.x && px <= rightBtm.x)

@@ -9,6 +9,7 @@ import util.IOHandle;
 import util.PSC;
 
 import java.awt.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -167,6 +168,7 @@ public class SharedObject {
     // regions
     public void setRegionO(Region r) {
         regionO = r;
+        updateRegionList();
     }
 
     public Region getRegionO() {
@@ -176,6 +178,8 @@ public class SharedObject {
 
     public void setRegionD(Region r) {
         regionD = r;
+        updateRegionList();
+
     }
 
     public Region getRegionD() {
@@ -237,6 +241,9 @@ public class SharedObject {
     public void cleanRegions() {
         regionO = regionD = null;
         regionWLayerList.clear();
+        regionOList = new Region[4];
+        regionDList = new Region[4];
+        regionWList = new ArrayList[4];
         wayPointLayer = 1;
     }
 
@@ -261,6 +268,7 @@ public class SharedObject {
         }
 
         regionWLayerList.get(wayPointLayer - 1).add(r);
+        updateRegionList();
     }
 
     public void updateWLayer() {
@@ -276,14 +284,17 @@ public class SharedObject {
     public ArrayList<Region> getAllRegions() {
         ArrayList<Region> allRegion = new ArrayList<>();
         if (regionO != null) {
-            allRegion.add(regionO);
+            allRegion.addAll(Arrays.asList(regionOList));
         }
         if (regionD != null) {
-            allRegion.add(regionD);
+            allRegion.addAll(Arrays.asList(regionDList));
         }
-        for (ArrayList<Region> wList : regionWLayerList) {
-            allRegion.addAll(wList);
-        }
+        if (getRegionWLayerList().size() > 0)
+            for (ArrayList<ArrayList<Region>> regionWList : regionWList) {
+                for (ArrayList<Region> wList : regionWList) {
+                    allRegion.addAll(wList);
+                }
+            }
         return allRegion;
     }
 
@@ -430,14 +441,37 @@ public class SharedObject {
         setFinishSelectRegion(true); // finish select
     }
 
+    private Region[] regionOList = new Region[4];
+    private Region[] regionDList = new Region[4];
+    private ArrayList<ArrayList<Region>>[] regionWList = new ArrayList[4];
+
+    private void updateRegionList() {
+        for (int i = 0; i < 4; i++) {
+            if (regionO != null)
+                regionOList[i] = regionO.getCorresRegion(mapList[i]);
+            if (regionD != null)
+                regionDList[i] = regionD.getCorresRegion(mapList[i]);
+            if (regionWLayerList.size() > 0) {
+                ArrayList<ArrayList<Region>> regionWLayerListTmp = new ArrayList<>();
+                for (ArrayList<Region> wList : regionWLayerList) {
+                    ArrayList<Region> tmpWList = new ArrayList<>();
+                    for (Region r : wList) {
+                        tmpWList.add(r.getCorresRegion(mapList[i]));
+                    }
+                    regionWLayerListTmp.add(tmpWList);
+                }
+                regionWList[i] = regionWLayerListTmp;
+            }
+        }
+    }
+
     private RegionType getRegionType() {
         if (regionWLayerList.size() > 0) {
-            if (regionO != null) {
+            if (regionO == null && regionD == null)
+                return RegionType.WAY_POINT;
+            else {
                 return RegionType.O_D_W;
-            } else {
-                return RegionType.O_D;
             }
-
         } else {
             return RegionType.O_D;
         }
@@ -482,5 +516,29 @@ public class SharedObject {
             i++;
         }
         return pan;
+    }
+
+    public Region[] getRegionOList() {
+        return regionOList;
+    }
+
+    public void setRegionOList(Region[] regionOList) {
+        this.regionOList = regionOList;
+    }
+
+    public Region[] getRegionDList() {
+        return regionDList;
+    }
+
+    public void setRegionDList(Region[] regionDList) {
+        this.regionDList = regionDList;
+    }
+
+    public ArrayList<ArrayList<Region>>[] getRegionWList() {
+        return regionWList;
+    }
+
+    public void setRegionWList(ArrayList[] regionWList) {
+        this.regionWList = regionWList;
     }
 }

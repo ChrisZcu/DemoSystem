@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static model.Colour.LIGHT_GREY;
-import static model.Colour.WHITE;
 
 public class DemoInterface extends PApplet {
     private TrajDrawManager trajDrawManager;
@@ -160,7 +158,6 @@ public class DemoInterface extends PApplet {
     public void draw() {
         updateMap(mapController);
 
-
         // draw the main traj buffer images
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
@@ -184,21 +181,33 @@ public class DemoInterface extends PApplet {
         }
 
         if (regionDragged) {//drag the region, not finished
-            drawRegion(getSelectRegion(lastClick, optIndex));
+            drawAllMapRegion(getSelectRegion(lastClick, optIndex));
         }
 
-        for (Region r : SharedObject.getInstance().getRegionWithoutWList()) {
+        for (Region r : SharedObject.getInstance().getRegionOList()) {
+            if (r == null)
+                continue;
+            drawRegion(r);
+            strokeWeight(circleSize);
+            point(r.leftTop.x, r.leftTop.y);
+        }
+        for (Region r : SharedObject.getInstance().getRegionDList()) {
+            if (r == null)
+                continue;
             drawRegion(r);
             strokeWeight(circleSize);
             point(r.leftTop.x, r.leftTop.y);
         }
 
-        for (ArrayList<Region> wList : SharedObject.getInstance().getRegionWLayerList()) {
-            for (Region r : wList) {
-                drawRegion(r);
-                strokeWeight(circleSize);
-                point(r.leftTop.x, r.leftTop.y);
-            }
+        for (ArrayList<ArrayList<Region>> regionWList : SharedObject.getInstance().getRegionWList()) {
+            if (regionWList == null)
+                continue;
+            for (ArrayList<Region> wList : regionWList)
+                for (Region r : wList) {
+                    drawRegion(r);
+                    strokeWeight(circleSize);
+                    point(r.leftTop.x, r.leftTop.y);
+                }
         }
 
         if (SharedObject.getInstance().isScreenShot()) {
@@ -227,6 +236,12 @@ public class DemoInterface extends PApplet {
         drawInfoTextBox(1, mapWidth + widthGapDis + dataButtonXOff, dataButtonYOff + mapDownOff + mapHeight - 20 - 4, 200, 20);
         drawInfoTextBox(2, dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
         drawInfoTextBox(3, mapWidth + widthGapDis + dataButtonXOff, mapHeight + mapDownOff + heighGapDis + mapHeight - 20 - 4, 200, 20);
+    }
+
+    private void drawAllMapRegion(Region selectRegion) {
+        for (UnfoldingMap map : mapList) {
+            drawRegion(selectRegion.getCorresRegion(map));
+        }
     }
 
 
@@ -271,9 +286,6 @@ public class DemoInterface extends PApplet {
             } else {
                 System.out.println("not to open dialog");
             }
-            return;
-        } else {
-            System.out.println("eleId == -1");
         }
 
         if (mouseButton == RIGHT) {
@@ -285,11 +297,13 @@ public class DemoInterface extends PApplet {
         //drag
         if (SharedObject.getInstance().isDragRegion()) {
             for (Region r : SharedObject.getInstance().getAllRegions()) {
+                System.out.println(r.leftTop.x + ", " + r.leftTop.y);
+                System.out.println(mouseX + ", " + mouseY);
                 if (mouseX >= r.leftTop.x - circleSize / 2 && mouseX <= r.leftTop.x + circleSize / 2
                         && mouseY >= r.leftTop.y - circleSize / 2 && mouseY <= r.leftTop.y + circleSize / 2) {
                     dragRegionId = r.id;
                     mouseMove = !mouseMove;
-                    System.out.println(dragRegionId);
+                    System.out.println(dragRegionId + "," + r.id + ", " + mouseMove);
                     break;
                 }
             }
@@ -432,9 +446,9 @@ public class DemoInterface extends PApplet {
             int nextColorIdx = SharedObject.getInstance().getWayLayer() + 1;
             selectRegion.color = PSC.COLOR_LIST[nextColorIdx];
         }
-        int width = selectRegion.rightBtm.x - selectRegion.leftTop.x;
-        int height = selectRegion.rightBtm.y - selectRegion.leftTop.y;
 
+        selectRegion.initLoc(mapList[optIndex].getLocation(selectRegion.leftTop.x, selectRegion.leftTop.y),
+                mapList[optIndex].getLocation(selectRegion.rightBtm.x, selectRegion.rightBtm.y));
 
         return selectRegion;
     }
