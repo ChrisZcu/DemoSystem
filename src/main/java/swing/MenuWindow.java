@@ -106,11 +106,14 @@ public class MenuWindow extends JWindow {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println("clear all!");
-                TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
                 SharedObject.getInstance().setAllMainColor(PSC.RED);
+                TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
                 tdm.cleanAllImg(TrajDrawManager.SLT);
                 tdm.startAllNewRenderTask(TrajDrawManager.MAIN);
                 SharedObject.getInstance().cleanRegions();
+
+                // clear old select res deeply
+                SharedObject.getInstance().dropAllSelectRes();
             }
         };
         clearRegionButton.addActionListener(clearRegionActionListen);

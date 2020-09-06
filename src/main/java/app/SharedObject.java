@@ -11,10 +11,8 @@ import util.PSC;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Random;
 
-import static util.Util.translateRate;
+import static util.Util.*;
 
 public class SharedObject {
 
@@ -306,67 +304,12 @@ public class SharedObject {
         Trajectory[] trajFull = IOHandle.loadRowData(PSC.ORIGIN_PATH, PSC.LIMIT);
         instance.setTrajFull(trajFull);
         int[] rateCntList = translateRate(trajFull.length, PSC.RATE_LIST);
-        instance.setTrajVfgsMtx(getTrajVfgsMatrix(trajFull, rateCntList));     // modified
-        instance.setTrajRandList(getTrajRandList(trajFull, rateCntList));
+        instance.setTrajVfgsMtx(calTrajVfgsMatrix(trajFull, rateCntList));
+        instance.setTrajRandList(calTrajRandList(trajFull, rateCntList));
     }
 
     public boolean checkRegion(int index) {
         return regionPresent[index];
-    }
-
-    /**
-     * Compute {@code trajVfgsMtx} from {@link PSC#RES_PATH}.
-     */
-    private Trajectory[][][] getTrajVfgsMatrix(Trajectory[] trajFull, int[] rateCntList) {
-        int[] deltaList = PSC.DELTA_LIST;
-        double[] rateList = PSC.RATE_LIST;
-        int dLen = deltaList.length;
-        int rLen = rateList.length;
-        Trajectory[][][] trajVfgsMtx = new Trajectory[dLen][rLen][];
-
-        Trajectory[][] vfgsRes = IOHandle.loadVfgsResList(PSC.RES_PATH, trajFull,
-                deltaList, rateList);
-
-        // now the results of different rate are in same array.
-        // next we split them.
-
-        for (int dIdx = 0; dIdx < dLen; dIdx++) {
-            for (int rIdx = 0; rIdx < rLen; rIdx++) {
-                int rateCnt = rateCntList[rIdx];
-                trajVfgsMtx[dIdx][rIdx] = Arrays.copyOf(vfgsRes[dIdx], rateCnt);
-            }
-        }
-
-        return trajVfgsMtx;
-    }
-
-    /**
-     * Compute {@code trajRandList}.
-     */
-    private Trajectory[][] getTrajRandList(Trajectory[] trajFull, int[] rateCntList) {
-        Random rand = new Random(1);
-        int dLen = rateCntList.length;
-        Trajectory[][] trajRandList = new Trajectory[dLen][];
-
-        for (int dIdx = 0; dIdx < dLen; dIdx++) {
-            int rateCnt = rateCntList[dIdx];
-            Trajectory[] trajRand = new Trajectory[rateCnt];
-            HashSet<Integer> set = new HashSet<>(rateCnt * 4 / 3 + 1);
-
-            int cnt = 0;
-            while (cnt < trajRand.length) {
-                int idx = rand.nextInt(trajFull.length);
-                if (set.contains(idx)) {
-                    continue;
-                }
-                set.add(idx);
-                trajRand[cnt++] = trajFull[idx];
-            }
-
-            trajRandList[dIdx] = trajRand;
-        }
-
-        return trajRandList;
     }
 
     /**
@@ -543,5 +486,13 @@ public class SharedObject {
 
     public void setRegionWList(ArrayList[] regionWList) {
         this.regionWList = regionWList;
+    }
+
+    public void dropAllSelectRes() {
+        // Only 4 is ok because last trajBlock is
+        // a pointer of one of the first four block
+        for (int i = 0; i < 4; i++) {
+            this.getBlockList()[i].setTrajSltList(null);
+        }
     }
 }
