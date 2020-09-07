@@ -10,48 +10,48 @@ import java.awt.*;
 
 /**
  * Draw the trajectory to the buffer images. Started and Managed by {@link TrajDrawManager}.
- * <br> The details of the pg is hide from this. (no matter what the block is)
  */
 public class TrajDrawWorker extends Thread {
+    private final TrajDrawManager manager;
     private final UnfoldingMap map;
     // temp image that this thread paint on
     // the pg has already be translated.
     private final PGraphics pg;
-    private final PGraphics[] trajImages;   // all traj image parts
     private final Trajectory[] trajList;    // all traj
+    private final int layer;
     private final int[] trajCnt;    // record the # of painted traj
     private final int mapIdx, index;        // param to locate the pg this worker dealing with
-    private final float offsetX, offsetY;     // offset of the map
+    private final float offsetX, offsetY;   // offset of the map
     private final int begin, end;       // the param for select traj
     private final Color color;      // the color for the traj
+    // id for determine whether the result is newest
+    private final int id;
 
     public volatile boolean stop = false;
 
-    public TrajDrawWorker(String name, UnfoldingMap map, PGraphics pg,
-                          PGraphics[] trajImageList, Trajectory[] trajList, int[] trajCnt,
-                          int index, float offsetX, float offsetY,
-                          int begin, int end, Color color) {
+    public TrajDrawWorker(TrajDrawManager manager, String name,
+                          UnfoldingMap map, PGraphics pg,
+                          Trajectory[] trajList, int layer, int[] trajCnt,
+                          int mapIdx, int index, float offsetX, float offsetY,
+                          int begin, int end, Color color, int id) {
         super(name);
+        this.manager = manager;
         this.map = map;
         this.pg = pg;
-        this.trajImages = trajImageList;
         this.trajList = trajList;
+        this.layer = layer;
         this.trajCnt = trajCnt;
-        this.mapIdx = -1;       // not used for now
+        this.mapIdx = mapIdx;
         this.index = index;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.begin = begin;
         this.end = end;
         this.color = color;
+        this.id = id;
 
         // init priority
         this.setPriority(9);
-    }
-
-    @Deprecated
-    public int getMapIdx() {
-        return mapIdx;
     }
 
     @Override
@@ -87,7 +87,7 @@ public class TrajDrawWorker extends Thread {
 //            trajCnt[index] ++;
         }
 
-//        System.out.println(this.getName() + " finished");
-        trajImages[index] = pg;
+        System.out.println(this.getName() + " finished");
+        manager.setTrajImageResult(mapIdx, index, layer, pg, id);
     }
 }

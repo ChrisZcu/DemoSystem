@@ -28,6 +28,7 @@ import java.util.concurrent.*;
 public class TrajDrawManager {
     public static final int MAIN = 0;       // main background layer
     public static final int SLT = 1;        // double select result layer
+    // above two int are also the index in idMtx
 
     private final PApplet app;
     private final UnfoldingMap[] mapList;
@@ -43,6 +44,8 @@ public class TrajDrawManager {
 
     private final float[] mapXList, mapYList;
     private final int width, height;        // size for one map view
+
+    private final int[][] idMtx;     // id to make pg are all newest
 
     // multi-thread for part image painting
     private final ExecutorService threadPool;
@@ -64,11 +67,13 @@ public class TrajDrawManager {
         this.width = width;
         this.height = height;
 
+        this.idMtx = new int[2][5];
+
         int bgThreadNum = Math.max(PSC.FULL_THREAD_NUM, PSC.SAMPLE_THREAD_NUM);
         int sltThreadNum = PSC.SELECT_THREAD_NUM;       // thread num of double select result
         int totThreadNum = bgThreadNum + sltThreadNum;
-        this.trajDrawWorkerMtx = new TrajDrawWorker[4][bgThreadNum];
-        this.trajDrawSltWorkerMtx = new TrajDrawWorker[4][sltThreadNum];
+        this.trajDrawWorkerMtx = new TrajDrawWorker[5][bgThreadNum];
+        this.trajDrawSltWorkerMtx = new TrajDrawWorker[5][sltThreadNum];
 
         // init pool
         // drop last thread if full
@@ -87,11 +92,14 @@ public class TrajDrawManager {
      * by calling {@link #interruptUnfinished}.
      */
     private final class DrawWorkerStarter extends Thread {
+        private final TrajDrawManager manager;
         private final int mapIdx;
         private final int layerType;
 
-        public DrawWorkerStarter(String name, int mapIdx, int layerType) {
+        public DrawWorkerStarter(String name, TrajDrawManager manager,
+                                 int mapIdx, int layerType) {
             super(name);
+            this.manager = manager;
             this.mapIdx = mapIdx;
             this.layerType = layerType;
         }
@@ -108,30 +116,30 @@ public class TrajDrawManager {
                 return;       // no need to draw
             }
 
-            String layer;
-            PGraphics[] trajImageList;
+            String layerStr;
             Color color;
+            TrajDrawWorker[] trajDrawWorkerList;
 
             if (layerType == MAIN) {
-                layer = "main";
-                trajImageList = trajImageMtx[mapIdx];
+                layerStr = "main";
                 color = tb.getMainColor();
+                trajDrawWorkerList = trajDrawWorkerMtx[mapIdx];
             } else {
-                layer = "slt";
-                trajImageList = trajImageSltMtx[mapIdx];
+                layerStr = "slt";
                 color = tb.getSltColor();
+                trajDrawWorkerList = trajDrawSltWorkerMtx[mapIdx];
             }
 
             Trajectory[] trajList = layerType == 0 ?
                     tb.getTrajList() : tb.getTrajSltList();
             int totLen = trajList.length;
-//            System.out.println(">>>> " + getName() + "trajList len = " + totLen);
+            System.out.println(">>>> " + getName() + " trajList len = " + totLen);
 
             int threadNum = tb.getThreadNum();
             int segLen = totLen / threadNum;
             float offsetX = mapXList[mapIdx];
             float offsetY = mapYList[mapIdx];
-            TrajDrawWorker[] trajDrawWorkerList = trajDrawWorkerMtx[mapIdx];
+
 
             if (segLen < PSC.MULTI_THREAD_BOUND) {
                 // use single thread instead of multi thread
@@ -139,20 +147,26 @@ public class TrajDrawManager {
                 segLen = totLen;
             }
 
+            // refresh id
+            // notice that layerType is also a index
+            idMtx[layerType][mapIdx]++;
+            int id = idMtx[layerType][mapIdx];
+
+            interruptUnfinished(mapIdx, layerType);
+
             for (int idx = 0; idx < threadNum; idx++) {
                 int begin = segLen * idx;
                 int end = Math.min(begin + segLen, totLen);    // exclude
                 PGraphics pg = app.createGraphics(width, height);
 
-                String workerName = "worker-" + mapIdx + "-" + idx + "-" + layer;
-                TrajDrawWorker worker = new TrajDrawWorker(workerName,
-                        map, pg, trajImageList, trajList, trajCnt,
-                        idx, offsetX, offsetY, begin, end, color);
+                String workerName = "worker-" + mapIdx + "-" + idx + "-" + layerStr + "-" + id;
+                TrajDrawWorker worker = new TrajDrawWorker(manager,
+                        workerName, map, pg, trajList, layerType, trajCnt,
+                        mapIdx, idx, offsetX, offsetY, begin, end, color, id);
 
                 trajDrawWorkerList[idx] = worker;
                 threadPool.submit(worker);
             }
-
 //            System.out.println(getName() + " finished work partition");
         }
     }
@@ -168,7 +182,6 @@ public class TrajDrawManager {
      */
     public void startAllNewRenderTask(int layerType) {
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
-            interruptUnfinished(mapIdx, layerType);
             updateTrajImageFor(mapIdx, layerType);
         }
     }
@@ -182,7 +195,6 @@ public class TrajDrawManager {
      * @param layerType {@link #MAIN} or {@link #SLT}
      */
     public void startNewRenderTaskFor(int optViewIdx, int layerType) {
-        interruptUnfinished(optViewIdx, layerType);
         updateTrajImageFor(optViewIdx, layerType);
     }
 
@@ -194,8 +206,6 @@ public class TrajDrawManager {
      * Before call it, the pg should be cleaned.
      */
     public void startNewRenderTaskFor(int optViewIdx) {
-        interruptUnfinished(optViewIdx, MAIN);
-        interruptUnfinished(optViewIdx, SLT);
         updateTrajImageFor(optViewIdx, MAIN);
         updateTrajImageFor(optViewIdx, SLT);
     }
@@ -239,24 +249,41 @@ public class TrajDrawManager {
     }
 
     /**
-     * Clean the unfinished thread of this map
+     * The result commit function for workers.
+     */
+    public void setTrajImageResult(int mapIdx, int index, int layer,
+                                   PGraphics pg, int id) {
+        if (idMtx[layer][mapIdx] != id) {
+            return;     // not newest
+        }
+        if (layer == TrajDrawManager.MAIN) {
+            trajImageMtx[mapIdx][index] = pg;
+        } else {
+            trajImageSltMtx[mapIdx][index] = pg;
+        }
+    }
+
+    /**
+     * Stop and clean the unfinished thread of this map.
+     * Called in {@link DrawWorkerStarter#run()}.
      *
      * @param layerType {@link #MAIN} or {@link #SLT}
      */
     private void interruptUnfinished(int mapIdx, int layerType) {
-        TrajDrawWorker[] trajDrawWorkerList = (layerType == MAIN) ?
-                trajDrawWorkerMtx[mapIdx] : trajDrawSltWorkerMtx[mapIdx];
-        try {
-            for (TrajDrawWorker worker : trajDrawWorkerList) {
-                if (worker == null) {
-                    return;
-                }
-                worker.stop = true;
-                worker.join();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        TrajDrawWorker[] trajDrawWorkerList;
+        if (layerType == MAIN) {
+            trajDrawWorkerList = trajDrawWorkerMtx[mapIdx];
+        } else {
+            trajDrawWorkerList = trajDrawSltWorkerMtx[mapIdx];
         }
+
+        for (TrajDrawWorker worker : trajDrawWorkerList) {
+            if (worker == null) {
+                return;
+            }
+            worker.stop = true;
+        }
+
         Arrays.fill(trajDrawWorkerList, null);
     }
 
@@ -271,7 +298,7 @@ public class TrajDrawManager {
         // create new control thread
         String threadName = "manager-" + mapIdx + "-"
                 + (layerType == MAIN ? "main" : "slt");
-        Thread controlThread = new DrawWorkerStarter(threadName, mapIdx, layerType);
+        Thread controlThread = new DrawWorkerStarter(threadName, this, mapIdx, layerType);
         controlThread.setPriority(10);
         controlPool.submit(controlThread);
     }

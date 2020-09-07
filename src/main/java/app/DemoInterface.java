@@ -108,6 +108,7 @@ public class DemoInterface extends PApplet {
 
         initMapSurface();
         initDataButton();
+        initOneMapButtonList();     // init button in one map mode
         mapLocInfo = new float[2][];
         mapLocInfo[0] = mapXList;
         mapLocInfo[1] = mapYList;
@@ -197,21 +198,23 @@ public class DemoInterface extends PApplet {
         }
 
         if (SharedObject.getInstance().isScreenShot()) {
-            File outputDir = new File(PSC.OUTPUT_PATH1);
+            File outputDir = new File(PSC.OUTPUT_PATH);
             if (!outputDir.exists()) {
                 outputDir.mkdirs();
             }
-            int totalFileNum = Objects.requireNonNull(new File(PSC.OUTPUT_PATH1).list()).length;
+            int totalFileNum = Objects.requireNonNull(new File(PSC.OUTPUT_PATH).list()).length;
 
-            String path = PSC.OUTPUT_PATH1 + "screenShot_" + (totalFileNum / 2) + ".png";
+            String path = PSC.OUTPUT_PATH + "screenShot_" + (totalFileNum / 2) + ".png";
             saveFrame(path);
 
-            String infilePath = PSC.OUTPUT_PATH1 + "screenShotInfo_" + (totalFileNum / 2) + ".txt";
+            String infilePath = PSC.OUTPUT_PATH + "screenShotInfo_" + (totalFileNum / 2) + ".txt";
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(infilePath));
                 writer.write(SharedObject.getInstance().getBlockInfo());
                 writer.close();
+                System.out.println("Screenshot Saved");
             } catch (IOException ignored) {
+                System.out.println("Save screenshot failed");
             }
             SharedObject.getInstance().setScreenShot(false);
         }
@@ -248,30 +251,18 @@ public class DemoInterface extends PApplet {
 
     private void updateTrajImages() {
         // draw the main traj buffer images
-//        nextMap:
-//        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
-//            if (!viewVisibleList[mapIdx]) {
-//                continue;
-//            }
-//            for (PGraphics pg : trajImgMtx[mapIdx]) {
-//                if (pg == null) {
-//                    continue nextMap;
-//                }
-//                image(pg, mapXList[mapIdx], mapYList[mapIdx]);
-//            }
-//        }
         drawCanvas(trajImgMtx);
         // draw the double select traj buffer images
         drawCanvas(trajImgSltMtx);
     }
 
-    private void drawCanvas(PGraphics[][] trajImg) {
+    private void drawCanvas(PGraphics[][] trajImageMtx) {
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
             if (!viewVisibleList[mapIdx]) {
                 continue;
             }
-            for (PGraphics pg : trajImg[mapIdx]) {
+            for (PGraphics pg : trajImageMtx[mapIdx]) {
                 if (pg == null) {
                     continue nextMap;
                 }

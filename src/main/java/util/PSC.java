@@ -20,21 +20,22 @@ public class PSC {
             = "data/GPS/porto_full.txt";
 
     public static String PATH_PREFIX
-            = "data/GPS/porto1k/";
+            = "data/GPS/porto5w/";
 
     // traj limit for full set. -1 for no limit
-    public static final int LIMIT = 1000;
+    public static final int LIMIT = 5_0000;
 
     // recommend: core # * 2 or little higher
     public static final int FULL_THREAD_NUM = 8;        // for both draw and select
     public static final int SAMPLE_THREAD_NUM = 2;      // for both draw and select
     public static final int SELECT_THREAD_NUM = 2;      // only for draw
     /**
-     * when the traj num is lower than this, only one thread will run
-     * at least > max thread num * 10
-     * otherwise some traj may be disappeared in select / visualization
+     * When the traj num of one thread (tot traj # / thread num)
+     * is lower than this, only one thread will run.
+     * At least > max thread num * 10
+     * otherwise some traj may be disappeared in select / visualization.
      */
-    public static final int MULTI_THREAD_BOUND = 1000;
+    public static final int MULTI_THREAD_BOUND = 5000;
 
     /**
      * The pool size of control pool in {@link draw.TrajDrawManager}.
@@ -48,9 +49,7 @@ public class PSC {
      */
     public static final String RES_PATH = PATH_PREFIX + "vfgs_%d.csv";
 
-    public static final String OUTPUT_PATH = PATH_PREFIX + "output/";
-
-    public static final String OUTPUT_PATH1 = "data/output/";
+    public static final String OUTPUT_PATH = "data/output/";
 
     // six provided color to algorithm
     public static final Color[] COLOR_LIST = {

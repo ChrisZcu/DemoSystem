@@ -83,8 +83,8 @@ public class SelectManager {
     public void startRun() {
         TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
         for (int i = 0; i < 4; i++) {
-            Trajectory[] trajAry = startMapCal(blockList[i], i);
             TrajBlock trajBlock = blockList[i];
+            Trajectory[] trajAry = startMapCal(trajBlock, i);
             trajBlock.setTrajSltList(trajAry);
 
             if (trajBlock.getMainColor() != PSC.GRAY) {
