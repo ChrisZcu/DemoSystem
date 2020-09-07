@@ -137,7 +137,7 @@ public class DemoInterface extends PApplet {
         // other settings
         textFont(createFont("宋体", 12));
 
-        (new Thread(this::loadData)).start();
+//        (new Thread(this::loadData)).start();
     }
 
     private void loadData() {
@@ -273,8 +273,8 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawAllMapRegion(Region selectRegion) {
-        for (UnfoldingMap map : mapList) {
-            drawRegion(selectRegion.getCorresRegion(map));
+        for (int i=0; i < 4; i++) {
+            drawRegion(selectRegion.getCorresRegion(i));
         }
     }
 
@@ -712,6 +712,8 @@ public class DemoInterface extends PApplet {
         if (r == null || r.leftTop == null || r.rightBtm == null) {
             return;
         }
+
+        r.updateScreenPosition();
         noFill();
 
         Position lT = r.leftTop;

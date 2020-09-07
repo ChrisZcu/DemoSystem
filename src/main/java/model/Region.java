@@ -61,7 +61,7 @@ public class Region {
     }
 
     public void updateScreenPosition() {
-        updateScreenPosition(SharedObject.getInstance().getMapList()[getMapIndex()]);
+        updateScreenPosition(SharedObject.getInstance().getMapList()[mapId]);
     }
 
     public boolean equal(Region r) {
@@ -107,7 +107,9 @@ public class Region {
         return 0;
     }
 
-    public Region getCorresRegion(UnfoldingMap map) {
+    public Region getCorresRegion(int mapId) {
+        UnfoldingMap map = SharedObject.getInstance().getMapList()[mapId];
+
         ScreenPosition leftTopScr = map.getScreenPosition(leftTopLoc);
         ScreenPosition rightBtmScr = map.getScreenPosition(rightBtmLoc);
 
@@ -115,6 +117,7 @@ public class Region {
         reg.color = color;
         reg.id = id;
         reg.initLoc(leftTopLoc,rightBtmLoc);
+        reg.mapId = mapId;
         return reg;
     }
 }
