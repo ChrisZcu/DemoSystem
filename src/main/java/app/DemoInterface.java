@@ -197,6 +197,10 @@ public class DemoInterface extends PApplet {
         }
 
         if (SharedObject.getInstance().isScreenShot()) {
+            File outputDir = new File(PSC.OUTPUT_PATH1);
+            if (!outputDir.exists()){
+                outputDir.mkdirs();
+            }
             int totalFileNum = Objects.requireNonNull(new File(PSC.OUTPUT_PATH1).list()).length;
 
             String path = PSC.OUTPUT_PATH1 + "screenShot_" + (totalFileNum / 2) + ".png";
@@ -273,7 +277,7 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawAllMapRegion(Region selectRegion) {
-        for (int i=0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             drawRegion(selectRegion.getCorresRegion(i));
         }
     }
@@ -630,11 +634,11 @@ public class DemoInterface extends PApplet {
 
     private void initMapSurface() {
         mapList = new UnfoldingMap[5];
-        mapXList = new float[] {
+        mapXList = new float[]{
                 0, mapWidth + widthGapDis,
                 0, mapWidth + widthGapDis
         };
-        mapYList = new float[] {
+        mapYList = new float[]{
                 mapDownOff, mapDownOff,
                 mapDownOff + mapHeight + heighGapDis, mapDownOff + mapHeight + heighGapDis
         };
@@ -714,10 +718,15 @@ public class DemoInterface extends PApplet {
         }
 
         r.updateScreenPosition();
-        noFill();
-
         Position lT = r.leftTop;
         Position rB = r.rightBtm;
+
+        if (lT.x < mapXList[r.mapId] || lT.y < mapYList[r.mapId] ||
+                rB.x > mapXList[r.mapId] + mapWidth || rB.y > mapYList[r.mapId] + mapHeight)
+            return;
+
+        noFill();
+
 
         int length = Math.abs(lT.x - rB.x);
         int high = Math.abs(lT.y - rB.y);
