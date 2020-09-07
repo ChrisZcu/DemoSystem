@@ -544,4 +544,14 @@ public class SharedObject {
     public void setRegionWList(ArrayList[] regionWList) {
         this.regionWList = regionWList;
     }
+
+    public void updateRegionList(Region region) {
+        for (Region r : getAllRegions()) {
+            if (r.id == region.id) {
+                r.setLeftTopLoc(region.getLeftTopLoc());
+                r.setRightBtmLoc(region.getRightBtmLoc());
+            }
+        }
+    }
+
 }
