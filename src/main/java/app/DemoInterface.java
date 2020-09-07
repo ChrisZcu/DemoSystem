@@ -137,7 +137,7 @@ public class DemoInterface extends PApplet {
         // other settings
         textFont(createFont("宋体", 12));
 
-//        (new Thread(this::loadData)).start();
+        (new Thread(this::loadData)).start();
     }
 
     private void loadData() {
@@ -332,7 +332,7 @@ public class DemoInterface extends PApplet {
             // mentioned the init state
             if (eleId > 15) {
                 // for linked
-                if (!linkedList[eleId - 16]) {
+                if (mapController != -1 && !linkedList[eleId - 16]) {
                     if (!isMapSame(mapController, eleId - 16)) {
                         trajDrawManager.cleanImgFor(eleId - 16);
                         trajDrawManager.startNewRenderTaskFor(eleId - 16);
@@ -529,7 +529,7 @@ public class DemoInterface extends PApplet {
                 }
             }
 
-            if (imgCleaned[mapController]) {
+            if (mapController != -1 && imgCleaned[mapController]) {
                 for (int i = 0; i < 4; ++i) {
                     if (i != mapController && viewVisibleList[i] && linkedList[i]) {
                         trajDrawManager.cleanImgFor(i);
@@ -562,30 +562,29 @@ public class DemoInterface extends PApplet {
             }
         }
 
-        //TODO: when mapController does not exist
-        boolean mapChanged = checkLevel[mapController] != mapList[mapController].getZoomLevel()
-                || !isLocationSame(checkCenter[mapController], mapList[mapController].getCenter());
+        if (mapController != -1) {
+            boolean mapChanged = checkLevel[mapController] != mapList[mapController].getZoomLevel()
+                    || !isLocationSame(checkCenter[mapController], mapList[mapController].getCenter());
 
-        if (mapChanged) {
-            int zoomLevel = mapList[mapController].getZoomLevel();
-            Location center = mapList[mapController].getCenter();
+            if (mapChanged) {
+                int zoomLevel = mapList[mapController].getZoomLevel();
+                Location center = mapList[mapController].getCenter();
 
-            for (int i = 0; i < 4; ++i) {
-                if (i != mapController && linkedList[i] && viewVisibleList[i]) {
-                    mapList[i].zoomToLevel(zoomLevel);
-                    mapList[i].panTo(center);
+                for (int i = 0; i < 4; ++i) {
+                    if (i != mapController && linkedList[i] && viewVisibleList[i]) {
+                        mapList[i].zoomToLevel(zoomLevel);
+                        mapList[i].panTo(center);
 
-                    checkLevel[i] = zoomLevel;
-                    checkCenter[i] = center;
+                        checkLevel[i] = zoomLevel;
+                        checkCenter[i] = center;
 
-                    //System.out.println("mapController " + mapController + " changed and map " + i + "moved");
+                        //System.out.println("mapController " + mapController + " changed and map " + i + "moved");
+                    }
                 }
+                checkLevel[mapController] = zoomLevel;
+                checkCenter[mapController] = center;
             }
-
-            checkLevel[mapController] = zoomLevel;
-            checkCenter[mapController] = center;
         }
-
     }
 
     private int getOptIndex(int mouseX, int mouseY) {
