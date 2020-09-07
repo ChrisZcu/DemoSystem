@@ -392,17 +392,17 @@ public class SharedObject {
         // TODO add logic for one map
         for (int i = 0; i < 4; i++) {
             if (regionO != null) {
-                regionOList[i] = regionO.getCorresRegion(mapList[i]);
+                regionOList[i] = regionO.getCorresRegion(i);
             }
             if (regionD != null) {
-                regionDList[i] = regionD.getCorresRegion(mapList[i]);
+                regionDList[i] = regionD.getCorresRegion(i);
             }
             if (regionWLayerList.size() > 0) {
                 ArrayList<ArrayList<Region>> regionWLayerListTmp = new ArrayList<>();
                 for (ArrayList<Region> wList : regionWLayerList) {
                     ArrayList<Region> tmpWList = new ArrayList<>();
                     for (Region r : wList) {
-                        tmpWList.add(r.getCorresRegion(mapList[i]));
+                        tmpWList.add(r.getCorresRegion(i));
                     }
                     regionWLayerListTmp.add(tmpWList);
                 }
@@ -486,6 +486,15 @@ public class SharedObject {
 
     public void setRegionWList(ArrayList[] regionWList) {
         this.regionWList = regionWList;
+    }
+
+    public void updateRegionList(Region region) {
+        for (Region r : getAllRegions()) {
+            if (r.id == region.id) {
+                r.setLeftTopLoc(region.getLeftTopLoc());
+                r.setRightBtmLoc(region.getRightBtmLoc());
+            }
+        }
     }
 
     public void dropAllSelectRes() {

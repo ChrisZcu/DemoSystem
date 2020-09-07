@@ -81,7 +81,6 @@ public class SelectManager {
     }
 
     public void startRun() {
-        // TODO add logic for one map
         TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
         for (int i = 0; i < 4; i++) {
             Trajectory[] trajAry = startMapCal(blockList[i], i);

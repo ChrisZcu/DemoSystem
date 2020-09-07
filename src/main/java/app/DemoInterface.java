@@ -67,7 +67,7 @@ public class DemoInterface extends PApplet {
     private boolean loadFinished = false;
     private int regionId = 0;
     private int dragRegionId = -1;
-
+    private int dragRegionIntoMapId = -1;
     private boolean regionDragged = false;
     private Position lastClick;
 
@@ -197,6 +197,10 @@ public class DemoInterface extends PApplet {
         }
 
         if (SharedObject.getInstance().isScreenShot()) {
+            File outputDir = new File(PSC.OUTPUT_PATH1);
+            if (!outputDir.exists()) {
+                outputDir.mkdirs();
+            }
             int totalFileNum = Objects.requireNonNull(new File(PSC.OUTPUT_PATH1).list()).length;
 
             String path = PSC.OUTPUT_PATH1 + "screenShot_" + (totalFileNum / 2) + ".png";
@@ -244,26 +248,30 @@ public class DemoInterface extends PApplet {
 
     private void updateTrajImages() {
         // draw the main traj buffer images
-        nextMap:
-        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
-            if (!viewVisibleList[mapIdx]) {
-                continue;
-            }
-            for (PGraphics pg : trajImgMtx[mapIdx]) {
-                if (pg == null) {
-                    continue nextMap;
-                }
-                image(pg, mapXList[mapIdx], mapYList[mapIdx]);
-            }
-        }
-
+//        nextMap:
+//        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
+//            if (!viewVisibleList[mapIdx]) {
+//                continue;
+//            }
+//            for (PGraphics pg : trajImgMtx[mapIdx]) {
+//                if (pg == null) {
+//                    continue nextMap;
+//                }
+//                image(pg, mapXList[mapIdx], mapYList[mapIdx]);
+//            }
+//        }
+        drawCanvas(trajImgMtx);
         // draw the double select traj buffer images
+        drawCanvas(trajImgSltMtx);
+    }
+
+    private void drawCanvas(PGraphics[][] trajImg) {
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
             if (!viewVisibleList[mapIdx]) {
                 continue;
             }
-            for (PGraphics pg : trajImgSltMtx[mapIdx]) {
+            for (PGraphics pg : trajImg[mapIdx]) {
                 if (pg == null) {
                     continue nextMap;
                 }
@@ -273,8 +281,8 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawAllMapRegion(Region selectRegion) {
-        for (UnfoldingMap map : mapList) {
-            drawRegion(selectRegion.getCorresRegion(map));
+        for (int i = 0; i < 4; i++) {
+            drawRegion(selectRegion.getCorresRegion(i));
         }
     }
 
@@ -283,85 +291,7 @@ public class DemoInterface extends PApplet {
         optIndex = getOptIndex(mouseX, mouseY);
 
         if (oneMapIdx == 4) {
-            // not in one map mode, now there are 4 map in the map
-
-            int eleId = -1;
-            for (EleButton dataButton : dataButtonList) {
-                boolean visible = viewVisibleList[optIndex];
-                if (dataButton.isMouseOver(this, visible)) {
-                    eleId = dataButton.getEleId();
-                    break;
-                }
-            }
-            if (eleId != -1) {
-                // mentioned the init state
-                if (eleId > 15) {
-                    // for linked
-                    if (!linkedList[eleId - 16]) {
-                        if (!isMapSame(mapController, eleId - 16)) {
-                            trajDrawManager.cleanImgFor(eleId - 16);
-                            trajDrawManager.startNewRenderTaskFor(eleId - 16);
-
-                            mapList[eleId - 16].zoomToLevel(mapList[mapController].getZoomLevel());
-                            mapList[eleId - 16].panTo(mapList[mapController].getCenter());
-
-//                        System.out.println("map " + (eleId - 16) + "linked and moved");
-                        }
-                    }
-
-                    linkedList[eleId - 16] = !linkedList[eleId - 16];
-                    dataButtonList[eleId].colorExg();
-                } else if (eleId > 11) {
-                    //for control
-
-                    if (eleId - 12 == mapController) {
-                        mapController = -1;
-                    } else if (mapController == -1) {
-                        mapController = eleId - 12;
-                    } else {
-                        dataButtonList[mapController + 12].colorExg();
-                        mapController = eleId - 12;
-                    }
-                    dataButtonList[eleId].colorExg();
-
-                    if (mapController != -1) {
-                        for (int i = 0; i < 4; ++i) {
-                            if (viewVisibleList[i] && linkedList[i] && !isMapSame(i, mapController)) {
-                                trajDrawManager.cleanImgFor(i);
-                                trajDrawManager.startNewRenderTaskFor(i);
-
-                                mapList[i].zoomToLevel(mapList[mapController].getZoomLevel());
-                                mapList[i].panTo(mapList[mapController].getCenter());
-
-                                //System.out.println("map " + (eleId - 12) + " moved");
-                            }
-                        }
-                    }
-                } else if (eleId > 7) {
-                    //TODO max the map
-                    System.out.println("switch one map : " + oneMapIdx);
-                    switchOneMapMode(eleId % 4);
-                } else if (eleId > 3) {
-                    // FIXME stupid code
-                    int optMapIdx = (oneMapIdx >= 0 && oneMapIdx <= 3) ? 4 : eleId % 4;
-                    TrajBlock tb = SharedObject.getInstance().getBlockList()[optMapIdx];
-
-                    // change main layer color
-                    Color c = tb.getMainColor();
-                    c = (c == PSC.RED) ? PSC.GRAY : PSC.RED;
-                    tb.setMainColor(c);
-
-                    // redraw it
-                    TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
-                    tdm.cleanImgFor(optMapIdx, TrajDrawManager.MAIN);
-                    tdm.startNewRenderTaskFor(optMapIdx, TrajDrawManager.MAIN);
-                } else if (loadFinished) {
-                    System.out.println("open dialog");
-                    selectDataDialog.showDialogFor(eleId % 4);
-                } else {
-                    System.out.println("not to open dialog");
-                }
-            }
+            buttonClickListener();
         } else {
             // in one map mode
             handleOneMapBtnPressed(oneMapIdx);
@@ -379,10 +309,92 @@ public class DemoInterface extends PApplet {
                 if (mouseX >= r.leftTop.x - circleSize / 2 && mouseX <= r.leftTop.x + circleSize / 2
                         && mouseY >= r.leftTop.y - circleSize / 2 && mouseY <= r.leftTop.y + circleSize / 2) {
                     dragRegionId = r.id;
+                    dragRegionIntoMapId = r.mapId;
                     mouseMove = !mouseMove;
                     System.out.println(dragRegionId + "," + r.id + ", " + mouseMove);
                     break;
                 }
+            }
+        }
+    }
+
+    private void buttonClickListener() {
+        // not in one map mode, now there are 4 map in the map
+        int eleId = -1;
+        for (EleButton dataButton : dataButtonList) {
+            boolean visible = viewVisibleList[optIndex];
+            if (dataButton.isMouseOver(this, visible)) {
+                eleId = dataButton.getEleId();
+                break;
+            }
+        }
+        if (eleId != -1) {
+            // mentioned the init state
+            if (eleId > 15) {
+                // for linked
+                if (mapController != -1 && !linkedList[eleId - 16]) {
+                    if (!isMapSame(mapController, eleId - 16)) {
+                        trajDrawManager.cleanImgFor(eleId - 16);
+                        trajDrawManager.startNewRenderTaskFor(eleId - 16);
+
+                        mapList[eleId - 16].zoomToLevel(mapList[mapController].getZoomLevel());
+                        mapList[eleId - 16].panTo(mapList[mapController].getCenter());
+
+//                        System.out.println("map " + (eleId - 16) + "linked and moved");
+                    }
+                }
+
+                linkedList[eleId - 16] = !linkedList[eleId - 16];
+                dataButtonList[eleId].colorExg();
+            } else if (eleId > 11) {
+                //for control
+
+                if (eleId - 12 == mapController) {
+                    mapController = -1;
+                } else if (mapController == -1) {
+                    mapController = eleId - 12;
+                } else {
+                    dataButtonList[mapController + 12].colorExg();
+                    mapController = eleId - 12;
+                }
+                dataButtonList[eleId].colorExg();
+
+                if (mapController != -1) {
+                    for (int i = 0; i < 4; ++i) {
+                        if (viewVisibleList[i] && linkedList[i] && !isMapSame(i, mapController)) {
+                            trajDrawManager.cleanImgFor(i);
+                            trajDrawManager.startNewRenderTaskFor(i);
+
+                            mapList[i].zoomToLevel(mapList[mapController].getZoomLevel());
+                            mapList[i].panTo(mapList[mapController].getCenter());
+
+                            //System.out.println("map " + (eleId - 12) + " moved");
+                        }
+                    }
+                }
+            } else if (eleId > 7) {
+                // max the map
+                System.out.println("switch one map : " + oneMapIdx);
+                switchOneMapMode(eleId % 4);
+            } else if (eleId > 3) {
+                // FIXME stupid code
+                int optMapIdx = (oneMapIdx >= 0 && oneMapIdx <= 3) ? 4 : eleId % 4;
+                TrajBlock tb = SharedObject.getInstance().getBlockList()[optMapIdx];
+
+                // change main layer color
+                Color c = tb.getMainColor();
+                c = (c == PSC.RED) ? PSC.GRAY : PSC.RED;
+                tb.setMainColor(c);
+
+                // redraw it
+                TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
+                tdm.cleanImgFor(optMapIdx, TrajDrawManager.MAIN);
+                tdm.startNewRenderTaskFor(optMapIdx, TrajDrawManager.MAIN);
+            } else if (loadFinished) {
+                System.out.println("open dialog");
+                selectDataDialog.showDialogFor(eleId % 4);
+            } else {
+                System.out.println("not to open dialog");
             }
         }
     }
@@ -392,7 +404,7 @@ public class DemoInterface extends PApplet {
      *
      * @param mapIdx the map that need to maximize / pan back
      */
-    public void switchOneMapMode(int mapIdx) {
+    private void switchOneMapMode(int mapIdx) {
         UnfoldingMap maxedMap = mapList[mapIdx];
         if (oneMapIdx != 4) {
             // pan back
@@ -418,7 +430,7 @@ public class DemoInterface extends PApplet {
      * @param blockIdx notice that the block obj with index 4 is a shadow
      *                 copy of one obj in 0-3
      */
-    public void changeMainColorFor(int blockIdx) {
+    private void changeMainColorFor(int blockIdx) {
         TrajBlock tb = SharedObject.getInstance().getBlockList()[blockIdx];
 
         // change main layer color
@@ -430,7 +442,7 @@ public class DemoInterface extends PApplet {
     /**
      * Handle the button press event when it is in one map mode
      */
-    public void handleOneMapBtnPressed(int oneMapIdx) {
+    private void handleOneMapBtnPressed(int oneMapIdx) {
         if (oneMapIdx == 4 || oneMapIdx < 0) {
             // not in one map mode or not ready
             return;
@@ -443,8 +455,6 @@ public class DemoInterface extends PApplet {
             switchOneMapMode(oneMapIdx);
         }
     }
-
-    //TODO add zoom level and center listener to control map update
 
     @Override
     public void mouseReleased() {
@@ -495,14 +505,25 @@ public class DemoInterface extends PApplet {
         }
 
         if (mapControllerZoomed) {
+            int zoomLevel = mapList[mapController].getZoomLevel();
+            Location center = mapList[mapController].getCenter();
+
             for (int i = 0; i < 4; ++i) {
-                if (viewVisibleList[i] && linkedList[i]) {
+                if (i!=mapController&&viewVisibleList[i] && linkedList[i]) {
+                    mapList[i].zoomToLevel(zoomLevel);
+                    mapList[i].panTo(center);
+
+                    checkLevel[i] = zoomLevel;
+                    checkCenter[i] = center;
+
                     trajDrawManager.cleanImgFor(i);
-                    imgCleaned[i] = true;
                     trajDrawManager.startNewRenderTaskFor(i);
+
                     //System.out.println("map " + i + " zoomed and redrawn");
                 }
             }
+            checkLevel[mapController] = zoomLevel;
+            checkCenter[mapController] = center;
         }
     }
 
@@ -519,7 +540,7 @@ public class DemoInterface extends PApplet {
                 }
             }
 
-            if (imgCleaned[mapController]) {
+            if (mapController != -1 && imgCleaned[mapController]) {
                 for (int i = 0; i < 4; ++i) {
                     if (i != mapController && viewVisibleList[i] && linkedList[i]) {
                         trajDrawManager.cleanImgFor(i);
@@ -552,30 +573,29 @@ public class DemoInterface extends PApplet {
             }
         }
 
-        //TODO: when mapController does not exist
-        boolean mapChanged = checkLevel[mapController] != mapList[mapController].getZoomLevel()
-                || !isLocationSame(checkCenter[mapController], mapList[mapController].getCenter());
+        if (mapController != -1) {
+            boolean mapChanged = checkLevel[mapController] != mapList[mapController].getZoomLevel()
+                    || !isLocationSame(checkCenter[mapController], mapList[mapController].getCenter());
 
-        if (mapChanged) {
-            int zoomLevel = mapList[mapController].getZoomLevel();
-            Location center = mapList[mapController].getCenter();
+            if (mapChanged) {
+                int zoomLevel = mapList[mapController].getZoomLevel();
+                Location center = mapList[mapController].getCenter();
 
-            for (int i = 0; i < 4; ++i) {
-                if (i != mapController && linkedList[i] && viewVisibleList[i]) {
-                    mapList[i].zoomToLevel(zoomLevel);
-                    mapList[i].panTo(center);
+                for (int i = 0; i < 4; ++i) {
+                    if (i != mapController && linkedList[i] && viewVisibleList[i]) {
+                        mapList[i].zoomToLevel(zoomLevel);
+                        mapList[i].panTo(center);
 
-                    checkLevel[i] = zoomLevel;
-                    checkCenter[i] = center;
+                        checkLevel[i] = zoomLevel;
+                        checkCenter[i] = center;
 
-                    //System.out.println("mapController " + mapController + " changed and map " + i + "moved");
+                        //System.out.println("mapController " + mapController + " changed and map " + i + "moved");
+                    }
                 }
+                checkLevel[mapController] = zoomLevel;
+                checkCenter[mapController] = center;
             }
-
-            checkLevel[mapController] = zoomLevel;
-            checkCenter[mapController] = center;
         }
-
     }
 
     private int getOptIndex(int mouseX, int mouseY) {
@@ -630,11 +650,11 @@ public class DemoInterface extends PApplet {
 
     private void initMapSurface() {
         mapList = new UnfoldingMap[5];
-        mapXList = new float[] {
+        mapXList = new float[]{
                 0, mapWidth + widthGapDis,
                 0, mapWidth + widthGapDis
         };
-        mapYList = new float[] {
+        mapYList = new float[]{
                 mapDownOff, mapDownOff,
                 mapDownOff + mapHeight + heighGapDis, mapDownOff + mapHeight + heighGapDis
         };
@@ -712,20 +732,35 @@ public class DemoInterface extends PApplet {
         if (r == null || r.leftTop == null || r.rightBtm == null) {
             return;
         }
-        noFill();
 
+        r.updateScreenPosition();
         Position lT = r.leftTop;
         Position rB = r.rightBtm;
+
+        if (lT.x < mapXList[r.mapId] || lT.y < mapYList[r.mapId] ||
+                rB.x > mapXList[r.mapId] + mapWidth || rB.y > mapYList[r.mapId] + mapHeight) {
+            return;
+        }
+
+        noFill();
+
 
         int length = Math.abs(lT.x - rB.x);
         int high = Math.abs(lT.y - rB.y);
 
-        if (mouseMove && r.id == dragRegionId) {
+        if (mouseMove && r.id == dragRegionId && r.mapId == dragRegionIntoMapId) {
             float mx = constrain(mouseX, mapXList[optIndex] + 3 + circleSize / 2, mapXList[optIndex] + mapWidth - 3 - length - circleSize / 2);
             float my = constrain(mouseY, mapYList[optIndex] + 3 + circleSize / 2, mapYList[optIndex] + mapHeight - 3 - high - circleSize / 2);
 
+            r.setLeftTopLoc(mapList[dragRegionIntoMapId].getLocation(mx, my));
+            r.setRightBtmLoc(mapList[dragRegionIntoMapId].getLocation(mx + length, my + high));
+
+            SharedObject.getInstance().updateRegionList(r);
+
             r.leftTop = new Position(mx, my);
             r.rightBtm = new Position(mx + length, my + high);
+
+
         }
 
         lT = r.leftTop;
