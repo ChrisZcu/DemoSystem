@@ -192,6 +192,8 @@ public class SelectDataDialog extends JDialog {
                 deltaLabel.setEnabled(false);
                 deltaComboBox.setEnabled(false);
                 break;
+            default:
+                break;
         }
     }
 

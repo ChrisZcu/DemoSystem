@@ -728,8 +728,9 @@ public class DemoInterface extends PApplet {
         Position rB = r.rightBtm;
 
         if (lT.x < mapXList[r.mapId] || lT.y < mapYList[r.mapId] ||
-                rB.x > mapXList[r.mapId] + mapWidth || rB.y > mapYList[r.mapId] + mapHeight)
+                rB.x > mapXList[r.mapId] + mapWidth || rB.y > mapYList[r.mapId] + mapHeight) {
             return;
+        }
 
         noFill();
 
