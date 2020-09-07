@@ -505,14 +505,25 @@ public class DemoInterface extends PApplet {
         }
 
         if (mapControllerZoomed) {
+            int zoomLevel = mapList[mapController].getZoomLevel();
+            Location center = mapList[mapController].getCenter();
+
             for (int i = 0; i < 4; ++i) {
-                if (viewVisibleList[i] && linkedList[i]) {
+                if (i!=mapController&&viewVisibleList[i] && linkedList[i]) {
+                    mapList[i].zoomToLevel(zoomLevel);
+                    mapList[i].panTo(center);
+
+                    checkLevel[i] = zoomLevel;
+                    checkCenter[i] = center;
+
                     trajDrawManager.cleanImgFor(i);
-                    imgCleaned[i] = true;
                     trajDrawManager.startNewRenderTaskFor(i);
+
                     //System.out.println("map " + i + " zoomed and redrawn");
                 }
             }
+            checkLevel[mapController] = zoomLevel;
+            checkCenter[mapController] = center;
         }
     }
 
