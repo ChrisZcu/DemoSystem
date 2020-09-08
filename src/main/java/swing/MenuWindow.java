@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class MenuWindow extends JWindow {
+    private final JLabel tipsLabel;
 
     public MenuWindow(int width, int height, PApplet pApplet) {
         setSize(width, height);
@@ -141,7 +142,10 @@ public class MenuWindow extends JWindow {
         exitButton.setSize(buttonWidth, height);
 
         Container panel2 = getContentPane();
-        panel2.add(new JLabel("[--]menu function"), BorderLayout.PAGE_START);
+        tipsLabel = new JLabel();
+        tipsLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 10));
+        setTips("App Init");
+        panel2.add(tipsLabel, BorderLayout.PAGE_START);
         panel2.add(panel, BorderLayout.CENTER);
 
         panel.add(oButton);
@@ -155,5 +159,9 @@ public class MenuWindow extends JWindow {
         panel.add(exitButton);
 
         setAlwaysOnTop(true);
+    }
+
+    public void setTips(String tips) {
+        tipsLabel.setText(tips);
     }
 }

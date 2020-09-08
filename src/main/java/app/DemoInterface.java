@@ -142,6 +142,7 @@ public class DemoInterface extends PApplet {
     }
 
     private void loadData() {
+        menuWindow.setTips("Load data ...");
         SharedObject.getInstance().loadTrajData();
 
         // temp:
@@ -155,6 +156,7 @@ public class DemoInterface extends PApplet {
 
         trajDrawManager.startAllNewRenderTask(TrajDrawManager.MAIN);
         loadFinished = true;
+        menuWindow.setTips("Data loaded.");
     }
 
     @Override
@@ -382,6 +384,7 @@ public class DemoInterface extends PApplet {
                 selectDataDialog.showDialogFor(eleId % 4);
             } else {
                 System.out.println("not to open dialog");
+                menuWindow.setTips("Data not loaded. Not to open the dialog.");
             }
         }
     }
@@ -516,10 +519,10 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void mouseDragged() {
-        if (!regionDragged) {
+        if (!regionDragged && mouseButton != RIGHT) {
             for (int i = 0; i < 4; ++i) {
-                if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
-                        && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
+                if ((mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
+                        && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight)) {
                     trajDrawManager.cleanImgFor(i);
                     imgCleaned[i] = true;
 
@@ -733,8 +736,9 @@ public class DemoInterface extends PApplet {
             //TODO part-rect draw
 
             if (lT.x > mapXList[r.mapId] + mapWidth || lT.y > mapYList[r.mapId] + mapHeight ||
-                    rB.x < mapXList[r.mapId] || rB.y < mapYList[r.mapId])
+                    rB.x < mapXList[r.mapId] || rB.y < mapYList[r.mapId]) {
                 return;
+            }
 
             float tmpLTX = Math.max(lT.x, mapXList[r.mapId]);
             float tmpLTY = Math.max(lT.y, mapYList[r.mapId]);
