@@ -493,12 +493,6 @@ public class DemoInterface extends PApplet {
     @Override
     public void mouseReleased() {
         for (int i = 0; i < 4; ++i) {
-            if (imgCleaned[i]) {
-                trajDrawManager.startNewRenderTaskFor(i);
-            }
-        }
-
-        for (int i = 0; i < 4; ++i) {
             if (viewVisibleList[i] && imgCleaned[i]) {
                 trajDrawManager.startNewRenderTaskFor(i);
                 imgCleaned[i] = false;
@@ -564,25 +558,31 @@ public class DemoInterface extends PApplet {
     @Override
     public void mouseDragged() {
         if (!regionDragged && mouseButton != RIGHT) {
-            for (int i = 0; i < 4; ++i) {
-                if ((mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
-                        && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight)) {
-                    trajDrawManager.cleanImgFor(i);
-                    imgCleaned[i] = true;
-
-                    //System.out.println("map " + i + " cleaned");
-                }
-            }
-
-            if (mapController != -1 && imgCleaned[mapController]) {
+            if (oneMapIdx == 4) {
                 for (int i = 0; i < 4; ++i) {
-                    if (i != mapController && viewVisibleList[i] && linkedList[i]) {
+                    if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
+                            && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
                         trajDrawManager.cleanImgFor(i);
                         imgCleaned[i] = true;
+
                         //System.out.println("map " + i + " cleaned");
                     }
                 }
+
+                if (mapController != -1 && imgCleaned[mapController]) {
+                    for (int i = 0; i < 4; ++i) {
+                        if (i != mapController && viewVisibleList[i] && linkedList[i]) {
+                            trajDrawManager.cleanImgFor(i);
+                            imgCleaned[i] = true;
+                            //System.out.println("map " + i + " cleaned");
+                        }
+                    }
+                }
+            } else {
+                trajDrawManager.cleanImgFor(oneMapIdx);
+                imgCleaned[oneMapIdx] = true;
             }
+
         }
     }
 
