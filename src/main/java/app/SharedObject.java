@@ -286,7 +286,7 @@ public class SharedObject {
         if (regionD != null) {
             allRegion.addAll(Arrays.asList(regionDList));
         }
-        if (getRegionWLayerList().size() > 0) {
+        if (getRegionWLayerList() != null && getRegionWLayerList().size() > 0) {
             for (ArrayList<ArrayList<Region>> regionWList : regionWList) {
                 for (ArrayList<Region> wList : regionWList) {
                     allRegion.addAll(wList);
