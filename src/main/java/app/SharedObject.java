@@ -497,7 +497,7 @@ public class SharedObject {
         }
         regionO = regionOList[0];
         regionD = regionDList[0];
-        regionWLayerList = regionWList[0];
+        regionWLayerList = regionWList[0]==null ? new ArrayList<ArrayList<Region>>() : regionWList[0];
     }
 
     public void dropAllSelectRes() {
