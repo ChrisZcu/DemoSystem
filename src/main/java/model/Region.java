@@ -116,7 +116,7 @@ public class Region {
         Region reg = new Region(new Position(leftTopScr.x, leftTopScr.y), new Position(rightBtmScr.x, rightBtmScr.y));
         reg.color = color;
         reg.id = id;
-        reg.initLoc(leftTopLoc,rightBtmLoc);
+        reg.initLoc(leftTopLoc, rightBtmLoc);
         reg.mapId = mapId;
         return reg;
     }

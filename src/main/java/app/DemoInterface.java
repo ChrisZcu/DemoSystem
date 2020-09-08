@@ -159,11 +159,13 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void draw() {
+        background(220, 220, 220);
+
         updateMap();
 
         updateTrajImages();
 
-        if (regionDragged) {//drag the region, not finished
+        if (regionDragged) {//drag the region, draw but not finish
             drawAllMapRegion(getSelectRegion(lastClick, optIndex));
         }
 
@@ -172,16 +174,12 @@ public class DemoInterface extends PApplet {
                 continue;
             }
             drawRegion(r);
-            strokeWeight(circleSize);
-            point(r.leftTop.x, r.leftTop.y);
         }
         for (Region r : SharedObject.getInstance().getRegionDList()) {
             if (r == null) {
                 continue;
             }
             drawRegion(r);
-            strokeWeight(circleSize);
-            point(r.leftTop.x, r.leftTop.y);
         }
 
         for (ArrayList<ArrayList<Region>> regionWList : SharedObject.getInstance().getRegionWList()) {
@@ -191,8 +189,6 @@ public class DemoInterface extends PApplet {
             for (ArrayList<Region> wList : regionWList) {
                 for (Region r : wList) {
                     drawRegion(r);
-                    strokeWeight(circleSize);
-                    point(r.leftTop.x, r.leftTop.y);
                 }
             }
         }
@@ -500,7 +496,7 @@ public class DemoInterface extends PApplet {
             Location center = mapList[mapController].getCenter();
 
             for (int i = 0; i < 4; ++i) {
-                if (i!=mapController&&viewVisibleList[i] && linkedList[i]) {
+                if (i != mapController && viewVisibleList[i] && linkedList[i]) {
                     mapList[i].zoomToLevel(zoomLevel);
                     mapList[i].panTo(center);
 
@@ -724,17 +720,36 @@ public class DemoInterface extends PApplet {
             return;
         }
 
+        stroke(r.color.getRGB());
+        noFill();
+        strokeWeight(3);
+
         r.updateScreenPosition();
         Position lT = r.leftTop;
         Position rB = r.rightBtm;
 
         if (lT.x < mapXList[r.mapId] || lT.y < mapYList[r.mapId] ||
                 rB.x > mapXList[r.mapId] + mapWidth || rB.y > mapYList[r.mapId] + mapHeight) {
+            //TODO part-rect draw
+
+            if (lT.x > mapXList[r.mapId] + mapWidth || lT.y > mapYList[r.mapId] + mapHeight ||
+                    rB.x < mapXList[r.mapId] || rB.y < mapYList[r.mapId])
+                return;
+
+            float tmpLTX = Math.max(lT.x, mapXList[r.mapId]);
+            float tmpLTY = Math.max(lT.y, mapYList[r.mapId]);
+
+            float tmpRBX = Math.min(rB.x, mapXList[r.mapId] + mapWidth);
+            float tmpRBY = Math.min(rB.y, mapYList[r.mapId] + mapHeight);
+
+
+            line(tmpLTX, tmpLTY, tmpRBX, tmpLTY);
+            line(tmpRBX, tmpLTY, tmpRBX, tmpRBY);
+            line(tmpRBX, tmpRBY, tmpLTX, tmpRBY);
+            line(tmpLTX, tmpRBY, tmpLTX, tmpLTY);
+
             return;
         }
-
-        noFill();
-
 
         int length = Math.abs(lT.x - rB.x);
         int high = Math.abs(lT.y - rB.y);
@@ -756,14 +771,15 @@ public class DemoInterface extends PApplet {
 
         lT = r.leftTop;
         rB = r.rightBtm;
-        stroke(r.color.getRGB());
 
         length = Math.abs(lT.x - rB.x);
         high = Math.abs(lT.y - rB.y);
 
         lT = r.leftTop;
-        strokeWeight(3);
         rect(lT.x, lT.y, length, high);
+
+        strokeWeight(circleSize);
+        point(r.leftTop.x, r.leftTop.y);
     }
 
     private void drawInfoTextBox(int i, int x, int y, int width, int height) {

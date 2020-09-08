@@ -495,6 +495,9 @@ public class SharedObject {
                 r.setRightBtmLoc(region.getRightBtmLoc());
             }
         }
+        regionO = regionOList[0];
+        regionD = regionDList[0];
+        regionWLayerList = regionWList[0];
     }
 
     public void dropAllSelectRes() {
