@@ -59,10 +59,15 @@ public class DemoInterface extends PApplet {
     private final int heighGapDis = 4;
     private final int widthGapDis = 6;
 
-    private boolean[] viewVisibleList = {true, true, true, true};  // is the map view visible
+    private boolean[] viewVisibleList = {true, true, true, true, false};  // is the map view visible
     private boolean[] linkedList = {true, true, false, false};     // is the map view linked to others
     private boolean[] imgCleaned = {false, false, false, false};
     private int mapController = 0;
+
+    // is the map main layer (i.e. background) visible
+    private boolean[] trajBgVisibleList = {true, true, true, true, true};
+    // is the map select layer (i.e. background) visible, not used for now
+    private boolean[] trajSltVisibleList = {true, true, true, true, true};
 
     private boolean loadFinished = false;
     private int regionId = 0;
@@ -74,8 +79,6 @@ public class DemoInterface extends PApplet {
     private int circleSize = 15;
     private boolean mouseMove = false;
     private boolean dragged = false;
-
-    private boolean mainLayerIsGray = false;
 
     /* Other interface component */
 
@@ -249,15 +252,15 @@ public class DemoInterface extends PApplet {
 
     private void updateTrajImages() {
         // draw the main traj buffer images
-        drawCanvas(trajImgMtx);
+        drawCanvas(trajImgMtx, trajBgVisibleList);
         // draw the double select traj buffer images
-        drawCanvas(trajImgSltMtx);
+        drawCanvas(trajImgSltMtx, trajSltVisibleList);
     }
 
-    private void drawCanvas(PGraphics[][] trajImageMtx) {
+    private void drawCanvas(PGraphics[][] trajImageMtx, boolean[] layerVisibleList) {
         nextMap:
         for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
-            if (!viewVisibleList[mapIdx]) {
+            if (!viewVisibleList[mapIdx] || !layerVisibleList[mapIdx]) {
                 continue;
             }
             for (PGraphics pg : trajImageMtx[mapIdx]) {
@@ -318,33 +321,34 @@ public class DemoInterface extends PApplet {
             }
         }
         if (eleId != -1) {
+            int mapIdx = eleId % 4;
             // mentioned the init state
-            if (eleId > 15) {
+            if (eleId > 19) {
                 // for linked
-                if (mapController != -1 && !linkedList[eleId - 16]) {
-                    if (!isMapSame(mapController, eleId - 16)) {
-                        trajDrawManager.cleanImgFor(eleId - 16);
-                        trajDrawManager.startNewRenderTaskFor(eleId - 16);
+                if (mapController != -1 && !linkedList[mapIdx]) {
+                    if (!isMapSame(mapController, mapIdx)) {
+                        trajDrawManager.cleanImgFor(mapIdx);
+                        trajDrawManager.startNewRenderTaskFor(mapIdx);
 
-                        mapList[eleId - 16].zoomToLevel(mapList[mapController].getZoomLevel());
-                        mapList[eleId - 16].panTo(mapList[mapController].getCenter());
+                        mapList[mapIdx].zoomToLevel(mapList[mapController].getZoomLevel());
+                        mapList[mapIdx].panTo(mapList[mapController].getCenter());
 
 //                        System.out.println("map " + (eleId - 16) + "linked and moved");
                     }
                 }
 
-                linkedList[eleId - 16] = !linkedList[eleId - 16];
+                linkedList[mapIdx] = !linkedList[mapIdx];
                 dataButtonList[eleId].colorExg();
-            } else if (eleId > 11) {
+            } else if (eleId > 15) {
                 //for control
 
-                if (eleId - 12 == mapController) {
+                if (mapIdx == mapController) {
                     mapController = -1;
                 } else if (mapController == -1) {
-                    mapController = eleId - 12;
+                    mapController = mapIdx;
                 } else {
-                    dataButtonList[mapController + 12].colorExg();
-                    mapController = eleId - 12;
+                    dataButtonList[mapController + 16].colorExg();
+                    mapController = mapIdx;
                 }
                 dataButtonList[eleId].colorExg();
 
@@ -361,14 +365,16 @@ public class DemoInterface extends PApplet {
                         }
                     }
                 }
-            } else if (eleId > 7) {
+            } else if (eleId > 11) {
                 // max the map
-                System.out.println("switch one map : " + oneMapIdx);
-                switchOneMapMode(eleId % 4);
+                System.out.println("switch one map, mapIdx=" + mapIdx);
+                switchOneMapMode(mapIdx);
+            } else if (eleId > 7) {
+                // HideBG / ShowBG
+                System.out.println("change BG visible, mapIdx=" + mapIdx);
+                changeBgVisible(mapIdx);
             } else if (eleId > 3) {
-                // FIXME stupid code
-                int optMapIdx = (oneMapIdx >= 0 && oneMapIdx <= 3) ? 4 : eleId % 4;
-                TrajBlock tb = SharedObject.getInstance().getBlockList()[optMapIdx];
+                TrajBlock tb = SharedObject.getInstance().getBlockList()[mapIdx];
 
                 // change main layer color
                 Color c = tb.getMainColor();
@@ -377,11 +383,11 @@ public class DemoInterface extends PApplet {
 
                 // redraw it
                 TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
-                tdm.cleanImgFor(optMapIdx, TrajDrawManager.MAIN);
-                tdm.startNewRenderTaskFor(optMapIdx, TrajDrawManager.MAIN);
+                tdm.cleanImgFor(mapIdx, TrajDrawManager.MAIN);
+                tdm.startNewRenderTaskFor(mapIdx, TrajDrawManager.MAIN);
             } else if (loadFinished) {
                 System.out.println("open dialog");
-                selectDataDialog.showDialogFor(eleId % 4);
+                selectDataDialog.showDialogFor(mapIdx);
             } else {
                 System.out.println("not to open dialog");
                 menuWindow.setTips("Data not loaded. Not to open the dialog.");
@@ -430,6 +436,30 @@ public class DemoInterface extends PApplet {
     }
 
     /**
+     * When not in one map mode, call it to change
+     * the bg shown state for specific map.
+     */
+    private void changeBgVisible(int mapIdx) {
+        boolean visibleNow = !trajBgVisibleList[mapIdx];
+        trajBgVisibleList[mapIdx] = visibleNow;
+        String str = visibleNow ? "HideBG" : "ShowBG";
+        for (int i = 8; i < 12; i++) {
+            dataButtonList[i].setEleName(str);
+        }
+    }
+
+    /**
+     * When in one map mode, call it to change bg show or not
+     */
+    private void changeBgVisibleOneMap() {
+        boolean visibleNow = !trajBgVisibleList[oneMapIdx];
+        trajBgVisibleList[oneMapIdx] = visibleNow;
+        trajBgVisibleList[4] = visibleNow;
+        oneMapButtonList[1].setEleName(visibleNow ? 
+                "HideBG" : "ShowBG");
+    }
+
+    /**
      * Handle the button press event when it is in one map mode
      */
     private void handleOneMapBtnPressed(int oneMapIdx) {
@@ -437,12 +467,26 @@ public class DemoInterface extends PApplet {
             // not in one map mode or not ready
             return;
         }
-        if (oneMapButtonList[0].isMouseOver(this, true)) {
-            // ColorExg
-            changeMainColorFor(oneMapIdx);
-        } else if (oneMapButtonList[1].isMouseOver(this, true)) {
-            // MinMap
-            switchOneMapMode(oneMapIdx);
+        int eleId = -1;
+        for (EleButton dataButton : oneMapButtonList) {
+            if (dataButton.isMouseOver(this, true)) {
+                eleId = dataButton.getEleId();
+                break;
+            }
+        }
+        switch(eleId) {
+            case 0:
+                // ColorExg
+                changeMainColorFor(oneMapIdx);
+                break;
+            case 1:
+                // HideBG / ShowBG
+                changeBgVisibleOneMap();
+                break;
+            case 2:
+                // MinMap
+                switchOneMapMode(oneMapIdx);
+                break;
         }
     }
 
@@ -486,7 +530,7 @@ public class DemoInterface extends PApplet {
                     && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
                 trajDrawManager.cleanImgFor(i);
                 trajDrawManager.startNewRenderTaskFor(i);
-                //System.out.println("map " + i + " zoomed and redrawed");
+                //System.out.println("map " + i + " zoomed and redrawn");
 
                 if (i == mapController) {
                     mapControllerZoomed = true;
@@ -667,7 +711,7 @@ public class DemoInterface extends PApplet {
     }
 
     private void initDataButton() {
-        dataButtonList = new EleButton[20];
+        dataButtonList = new EleButton[24];
         int dataButtonXOff = 4;
         int dataButtonYOff = 4;
         dataButtonList[0] = new EleButton(dataButtonXOff, dataButtonYOff + mapDownOff, 70, 20, 0, "DataSelect");
@@ -682,24 +726,28 @@ public class DemoInterface extends PApplet {
 
         for (int i = 4; i < 8; i++) {
             dataButtonList[i] = new EleButton(dataButtonList[i - 4].getX(), dataButtonList[i - 4].getY() + 35, 70, 20, i, "ColorExg");
-
         }
+        // WARNING: if you want to change this id,
+        // remember to change the id reference in changeBgVisible function.
         for (int i = 8; i < 12; i++) {
+            dataButtonList[i] = new EleButton(dataButtonList[i - 4].getX(), dataButtonList[i - 4].getY() + 28, 70, 20, i, "HideBG");
+        }
+        for (int i = 12; i < 16; i++) {
             dataButtonList[i] = new EleButton(dataButtonList[i - 4].getX(), dataButtonList[i - 4].getY() + 28, 70, 20, i, "MaxMap");
         }
-        for (int i = 12; i < 20; i++) {
-            String buttonInfo = (i < 16) ? "Control" : "Linked";
+        for (int i = 16; i < 24; i++) {
+            String buttonInfo = (i < 20) ? "Control" : "Linked";
 
-            int yOff = i < 16 ? 35 : 28;
+            int yOff = i < 20 ? 35 : 28;
             dataButtonList[i] = new MapControlButton(dataButtonList[i - 4].getX(), dataButtonList[i - 4].getY() + yOff, 70, 20, i, buttonInfo);
         }
 
         if (mapController != -1) {
-            dataButtonList[mapController + 12].colorExg();
+            dataButtonList[mapController + 16].colorExg();
         }
         for (int i = 0; i < 4; ++i) {
             if (linkedList[i]) {
-                dataButtonList[i + 16].colorExg();
+                dataButtonList[i + 20].colorExg();
             }
         }
 
@@ -709,13 +757,15 @@ public class DemoInterface extends PApplet {
      * init button for one map mode.
      */
     private void initOneMapButtonList() {
-        oneMapButtonList = new EleButton[2];
+        oneMapButtonList = new EleButton[3];
         int dataButtonXOff = 4;
         int dataButtonYOff = 4;
         oneMapButtonList[0] = new EleButton(dataButtonXOff,
                 dataButtonYOff + mapDownOff, 70, 20, 0, "ColorExg");
         oneMapButtonList[1] = new EleButton(dataButtonXOff,
-                dataButtonYOff + mapDownOff + 35, 70, 20, 1, "MinMap");
+                dataButtonYOff + mapDownOff + 35, 70, 20, 1, "HideBG");
+        oneMapButtonList[2] = new EleButton(dataButtonXOff,
+                dataButtonYOff + mapDownOff + 70, 70, 20, 2, "MinMap");
     }
 
     private void drawRegion(Region r) {
