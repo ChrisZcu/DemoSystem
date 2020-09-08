@@ -44,6 +44,8 @@ public class DemoInterface extends PApplet {
 
     private int[] checkLevel = {12, 12, 12, 12};
     private Location[] checkCenter = {PRESENT, PRESENT, PRESENT, PRESENT};
+    private int[] levelBeforeOneMapMode = {12, 12, 12, 12, 12};
+    private Location[] centerBeforeOneMapMode = {PRESENT, PRESENT, PRESENT, PRESENT, PRESENT};
 
     private int screenWidth;
     private int screenHeight;
@@ -403,12 +405,48 @@ public class DemoInterface extends PApplet {
     private void switchOneMapMode(int mapIdx) {
         UnfoldingMap maxedMap = mapList[mapIdx];
         if (oneMapIdx != 4) {
-            // pan back
-            mapList[oneMapIdx].zoomAndPanTo(mapList[4].getZoomLevel(), mapList[4].getCenter());
-            oneMapIdx = 4;
+            System.out.println(Arrays.toString(levelBeforeOneMapMode));
+            System.out.println(Arrays.toString(centerBeforeOneMapMode));
 
+            // update visibleList
             Arrays.fill(viewVisibleList, 0, 4, true);
             viewVisibleList[4] = false;
+
+            // pan back
+            int levelAfterOneMapMode = mapList[4].getZoomLevel();
+            Location centerAfterOneMapMode = mapList[4].getCenter();
+
+            if (oneMapIdx == mapController) {
+                for (int i = 0; i < 4; ++i) {
+                    if (viewVisibleList[i] && (linkedList[i] || i == oneMapIdx)) {
+                        mapList[i].zoomToLevel(levelAfterOneMapMode);
+                        mapList[i].panTo(centerAfterOneMapMode);
+
+                        trajDrawManager.cleanImgFor(i);
+                        trajDrawManager.startNewRenderTaskFor(i);
+                    } else if (viewVisibleList[i]) {
+                        mapList[i].zoomToLevel(levelBeforeOneMapMode[i]);
+                        mapList[i].panTo(centerBeforeOneMapMode[i]);
+
+                        trajDrawManager.cleanImgFor(i);
+                        trajDrawManager.startNewRenderTaskFor(i);
+                    }
+                }
+            } else{
+                mapList[oneMapIdx].zoomAndPanTo(levelAfterOneMapMode, centerAfterOneMapMode);
+
+                for (int i = 0; i < 4; ++i) {
+                    if (i != oneMapIdx && viewVisibleList[i]) {
+                        mapList[i].zoomToLevel(levelBeforeOneMapMode[i]);
+                        mapList[i].panTo(centerBeforeOneMapMode[i]);
+
+                        trajDrawManager.cleanImgFor(i);
+                        trajDrawManager.startNewRenderTaskFor(i);
+                    }
+                }
+            }
+
+            oneMapIdx = 4;
         } else {
             oneMapIdx = -mapIdx - 1;
             TrajBlock[] blockList = SharedObject.getInstance().getBlockList();
@@ -417,8 +455,18 @@ public class DemoInterface extends PApplet {
             Arrays.fill(viewVisibleList, 0, 4, false);
             viewVisibleList[4] = true;
 
-            // set max map location
+            for (int i = 0; i < 5; ++i) {
+                levelBeforeOneMapMode[i] = mapList[i].getZoomLevel();
+                centerBeforeOneMapMode[i] = mapList[i].getCenter();
+            }
+
+            System.out.println(Arrays.toString(levelBeforeOneMapMode));
+            System.out.println(Arrays.toString(centerBeforeOneMapMode));
+
+            // set max map locationp'l
             mapList[4].zoomAndPanTo(maxedMap.getZoomLevel(), maxedMap.getCenter());
+
+            trajDrawManager.startNewRenderTaskFor(4);
         }
         background(220, 220, 220);
     }
@@ -458,7 +506,7 @@ public class DemoInterface extends PApplet {
         boolean visibleNow = !trajBgVisibleList[oneMapIdx];
         trajBgVisibleList[oneMapIdx] = visibleNow;
         trajBgVisibleList[4] = visibleNow;
-        oneMapButtonList[1].setEleName(visibleNow ? 
+        oneMapButtonList[1].setEleName(visibleNow ?
                 "HideBG" : "ShowBG");
     }
 
@@ -477,7 +525,7 @@ public class DemoInterface extends PApplet {
                 break;
             }
         }
-        switch(eleId) {
+        switch (eleId) {
             case 0:
                 // ColorExg
                 changeMainColorFor(oneMapIdx);
@@ -527,42 +575,48 @@ public class DemoInterface extends PApplet {
             return;
         }
 
-        boolean mapControllerZoomed = false;
-
-        for (int i = 0; i < 4; ++i) {
-            if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
-                    && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
-                trajDrawManager.cleanImgFor(i);
-                trajDrawManager.startNewRenderTaskFor(i);
-                //System.out.println("map " + i + " zoomed and redrawn");
-
-                if (i == mapController) {
-                    mapControllerZoomed = true;
-                }
-            }
-        }
-
-        if (mapControllerZoomed) {
-            int zoomLevel = mapList[mapController].getZoomLevel();
-            Location center = mapList[mapController].getCenter();
+        if (oneMapIdx == 4) {
+            boolean mapControllerZoomed = false;
 
             for (int i = 0; i < 4; ++i) {
-                if (i != mapController && viewVisibleList[i] && linkedList[i]) {
-                    mapList[i].zoomToLevel(zoomLevel);
-                    mapList[i].panTo(center);
-
-                    checkLevel[i] = zoomLevel;
-                    checkCenter[i] = center;
-
+                if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
+                        && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
                     trajDrawManager.cleanImgFor(i);
                     trajDrawManager.startNewRenderTaskFor(i);
-
                     //System.out.println("map " + i + " zoomed and redrawn");
+
+                    if (i == mapController) {
+                        mapControllerZoomed = true;
+                    }
                 }
             }
-            checkLevel[mapController] = zoomLevel;
-            checkCenter[mapController] = center;
+
+            if (mapControllerZoomed) {
+                int zoomLevel = mapList[mapController].getZoomLevel();
+                Location center = mapList[mapController].getCenter();
+
+                for (int i = 0; i < 4; ++i) {
+                    if (i != mapController && viewVisibleList[i] && linkedList[i]) {
+                        mapList[i].zoomToLevel(zoomLevel);
+                        mapList[i].panTo(center);
+
+                        checkLevel[i] = zoomLevel;
+                        checkCenter[i] = center;
+
+                        trajDrawManager.cleanImgFor(i);
+                        trajDrawManager.startNewRenderTaskFor(i);
+
+                        //System.out.println("map " + i + " zoomed and redrawn");
+                    }
+                }
+                checkLevel[mapController] = zoomLevel;
+                checkCenter[mapController] = center;
+            }
+        } else {
+            trajDrawManager.cleanImgFor(4);
+            trajDrawManager.startNewRenderTaskFor(4);
         }
+
     }
 
     @Override
@@ -885,6 +939,11 @@ public class DemoInterface extends PApplet {
         Location center2 = mapList[m2].getCenter();
 
         return zoomLevel1 == zoomLevel2 && isLocationSame(center1, center2);
+    }
+
+    private boolean isMapSame(int m, int zoomLevel, Location center) {
+        return mapList[m].getZoomLevel() != zoomLevel
+                || !isLocationSame(mapList[m].getCenter(), center);
     }
 
     public static void main(String[] args) {
