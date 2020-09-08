@@ -49,8 +49,8 @@ public class SelectAlg {
     /**
      * calculates the sub-array of trajectory based on way-point region, on the same layer.
      */
-    public static ArrayList<Trajectory> getWayPointTraj(int begin, int end, Trajectory[] trajList,
-                                                     ArrayList<Region> regionWList, int optIndex) {
+    private static ArrayList<Trajectory> getWayPointTraj(int begin, int end, Trajectory[] trajList,
+                                                         ArrayList<Region> regionWList, int optIndex) {
         ArrayList<Trajectory> res = new ArrayList<>();
         SharedObject instance = SharedObject.getInstance();
         UnfoldingMap map = instance.getMapList()[optIndex];
@@ -70,6 +70,27 @@ public class SelectAlg {
         return res;
     }
 
+    private static ArrayList<Trajectory> getWayPointTraj(int begin, int end, ArrayList<Trajectory> trajList,
+                                                         ArrayList<Region> regionWList, int optIndex) {
+        ArrayList<Trajectory> res = new ArrayList<>();
+        SharedObject instance = SharedObject.getInstance();
+        UnfoldingMap map = instance.getMapList()[optIndex];
+//        float xOff = instance.getMapLocInfo()[0][optIndex];
+//        float yOff = instance.getMapLocInfo()[1][optIndex];
+
+        for (int i = begin; i < end; i++) {
+            Trajectory traj = trajList.get(i);
+            Location[] locations = traj.locations;
+            for (int j = 1, bound = locations.length - 1; j < bound; j++) {
+                if (inCheck(regionWList, locations[j], map)) {
+                    res.add(traj);
+                    break;
+                }
+            }
+        }
+        return res;
+    }
+
     /**
      * Calculate way point result according to multi-level layers in {@link SharedObject}.
      * This method will call {@link #getWayPointTraj} as underlying method.
@@ -78,11 +99,12 @@ public class SelectAlg {
 
         ArrayList<ArrayList<Region>> regionWList = SharedObject.getInstance().getRegionWList()[optIndex];
 
+
         ArrayList<Trajectory> res = getWayPointTraj(begin, end, trajectory, regionWList.get(0), optIndex);
 
         for (int i = 1; i < regionWList.size(); i++) {
-            ArrayList<Trajectory> resTmp = getWayPointTraj(begin, end, trajectory, regionWList.get(i), optIndex);
-            res.retainAll(resTmp);
+            res = getWayPointTraj(0, res.size(), res, regionWList.get(i), optIndex);
+//            res.retainAll(resTmp);
         }
         return res.toArray(new Trajectory[0]);
     }
