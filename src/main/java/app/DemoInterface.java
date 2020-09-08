@@ -59,15 +59,15 @@ public class DemoInterface extends PApplet {
     private final int heighGapDis = 4;
     private final int widthGapDis = 6;
 
-    private boolean[] viewVisibleList = {true, true, true, true, false};  // is the map view visible
-    private boolean[] linkedList = {true, true, false, false};     // is the map view linked to others
-    private boolean[] imgCleaned = {false, false, false, false};
+    private final boolean[] viewVisibleList = {true, true, true, true, false};  // is the map view visible
+    private final boolean[] linkedList = {true, true, false, false};     // is the map view linked to others
+    private final boolean[] imgCleaned = {false, false, false, false, false};
     private int mapController = 0;
 
     // is the map main layer (i.e. background) visible
-    private boolean[] trajBgVisibleList = {true, true, true, true, true};
+    private final boolean[] trajBgVisibleList = {true, true, true, true, true};
     // is the map select layer (i.e. background) visible, not used for now
-    private boolean[] trajSltVisibleList = {true, true, true, true, true};
+    private final boolean[] trajSltVisibleList = {true, true, true, true, true};
 
     private boolean loadFinished = false;
     private int regionId = 0;
@@ -259,7 +259,7 @@ public class DemoInterface extends PApplet {
 
     private void drawCanvas(PGraphics[][] trajImageMtx, boolean[] layerVisibleList) {
         nextMap:
-        for (int mapIdx = 0; mapIdx < 4; mapIdx++) {
+        for (int mapIdx = 0; mapIdx < 5; mapIdx++) {
             if (!viewVisibleList[mapIdx] || !layerVisibleList[mapIdx]) {
                 continue;
             }
@@ -406,18 +406,21 @@ public class DemoInterface extends PApplet {
             // pan back
             mapList[oneMapIdx].zoomAndPanTo(mapList[4].getZoomLevel(), mapList[4].getCenter());
             oneMapIdx = 4;
-            Arrays.fill(viewVisibleList, true);
+
+            Arrays.fill(viewVisibleList, 0, 4, true);
+            viewVisibleList[4] = false;
         } else {
             oneMapIdx = -mapIdx - 1;
             TrajBlock[] blockList = SharedObject.getInstance().getBlockList();
             blockList[4] = blockList[mapIdx];
-            Arrays.fill(viewVisibleList, false);
+
+            Arrays.fill(viewVisibleList, 0, 4, false);
+            viewVisibleList[4] = true;
 
             // set max map location
             mapList[4].zoomAndPanTo(maxedMap.getZoomLevel(), maxedMap.getCenter());
         }
         background(220, 220, 220);
-        System.out.println(oneMapIdx);
     }
 
     /**
@@ -492,7 +495,7 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void mouseReleased() {
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 5; ++i) {
             if (viewVisibleList[i] && imgCleaned[i]) {
                 trajDrawManager.startNewRenderTaskFor(i);
                 imgCleaned[i] = false;
@@ -517,6 +520,13 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void mouseWheel() {
+        if (oneMapIdx < 4 && oneMapIdx >= 0) {
+            // in one map mode
+            trajDrawManager.cleanImgFor(4);
+            trajDrawManager.startNewRenderTaskFor(4);
+            return;
+        }
+
         boolean mapControllerZoomed = false;
 
         for (int i = 0; i < 4; ++i) {
@@ -579,10 +589,10 @@ public class DemoInterface extends PApplet {
                     }
                 }
             } else {
-                trajDrawManager.cleanImgFor(oneMapIdx);
-                imgCleaned[oneMapIdx] = true;
+                // in one map mode
+                trajDrawManager.cleanImgFor(4);
+                imgCleaned[4] = true;
             }
-
         }
     }
 
@@ -686,18 +696,20 @@ public class DemoInterface extends PApplet {
         mapList = new UnfoldingMap[5];
         mapXList = new float[]{
                 0, mapWidth + widthGapDis,
-                0, mapWidth + widthGapDis
+                0, mapWidth + widthGapDis,
+                0
         };
         mapYList = new float[]{
                 mapDownOff, mapDownOff,
-                mapDownOff + mapHeight + heighGapDis, mapDownOff + mapHeight + heighGapDis
+                mapDownOff + mapHeight + heighGapDis, mapDownOff + mapHeight + heighGapDis,
+                0
         };
 
         for (int i = 0; i < 4; i++) {
             mapList[i] = new UnfoldingMap(this, mapXList[i], mapYList[i], mapWidth, mapHeight,
                     new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
         }
-        mapList[4] = new UnfoldingMap(this, mapXList[0], mapYList[0], screenWidth, screenHeight,
+        mapList[4] = new UnfoldingMap(this, mapXList[4], mapYList[4], screenWidth, screenHeight,
                 new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
 
         for (UnfoldingMap map : mapList) {

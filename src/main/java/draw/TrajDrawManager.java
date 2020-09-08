@@ -43,7 +43,6 @@ public class TrajDrawManager {
     private final TrajDrawWorker[][] trajDrawSltWorkerMtx;
 
     private final float[] mapXList, mapYList;
-    private final int width, height;        // size for one map view
 
     private final int[][] idMtx;     // id to make pg are all newest
 
@@ -64,8 +63,6 @@ public class TrajDrawManager {
         this.mapXList = mapXList;
         this.mapYList = mapYList;
         this.blockList = SharedObject.getInstance().getBlockList();
-        this.width = width;
-        this.height = height;
 
         this.idMtx = new int[2][5];
 
@@ -139,7 +136,8 @@ public class TrajDrawManager {
             int segLen = totLen / threadNum;
             float offsetX = mapXList[mapIdx];
             float offsetY = mapYList[mapIdx];
-
+            int width = Math.round(map.getWidth());
+            int height = Math.round(map.getHeight());
 
             if (segLen < PSC.MULTI_THREAD_BOUND) {
                 // use single thread instead of multi thread
