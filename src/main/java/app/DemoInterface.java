@@ -520,6 +520,7 @@ public class DemoInterface extends PApplet {
             case 0:
                 // ColorExg
                 changeMainColorFor(oneMapIdx);
+                trajDrawManager.startNewRenderTaskFor(4, TrajDrawManager.MAIN);
                 break;
             case 1:
                 // HideBG / ShowBG
