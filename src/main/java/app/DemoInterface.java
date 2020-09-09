@@ -412,24 +412,27 @@ public class DemoInterface extends PApplet {
                     if (viewVisibleList[i] && (linkedList[i] || i == oneMapIdx)) {
                         mapList[i].zoomToLevel(levelAfterOneMapMode);
                         mapList[i].panTo(centerAfterOneMapMode);
+                        trajDrawManager.cleanImgFor(i);
+                        trajDrawManager.startNewRenderTaskFor(i);
                     } else if (viewVisibleList[i]) {
                         mapList[i].zoomToLevel(levelBeforeOneMapMode[i]);
                         mapList[i].panTo(centerBeforeOneMapMode[i]);
-                    }
-                    trajDrawManager.cleanImgFor(i);
-                    trajDrawManager.startNewRenderTaskFor(i);
+                        trajDrawManager.cleanImgFor(i);
+                        trajDrawManager.startNewRenderTaskFor(i);
+                    } // else: no need to update
                 }
             } else {
                 mapList[oneMapIdx].zoomAndPanTo(levelAfterOneMapMode, centerAfterOneMapMode);
+                trajDrawManager.cleanImgFor(oneMapIdx);
+                trajDrawManager.startNewRenderTaskFor(oneMapIdx);
 
                 for (int i = 0; i < 4; ++i) {
                     if (i != oneMapIdx && viewVisibleList[i]) {
                         mapList[i].zoomToLevel(levelBeforeOneMapMode[i]);
                         mapList[i].panTo(centerBeforeOneMapMode[i]);
-
+                        trajDrawManager.cleanImgFor(i);
+                        trajDrawManager.startNewRenderTaskFor(i);
                     }
-                    trajDrawManager.cleanImgFor(i);
-                    trajDrawManager.startNewRenderTaskFor(i);
                 }
             }
 
