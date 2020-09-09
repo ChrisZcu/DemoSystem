@@ -110,7 +110,7 @@ public class DemoInterface extends PApplet {
         } catch (Exception e) {
             System.err.println("Set look and feel failed!");
         }
-
+        PSC.initRegionColorList();
         initMapSurface();
         initDataButton();
         initOneMapButtonList();     // init button in one map mode
@@ -166,8 +166,6 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void draw() {
-        background(220, 220, 220);
-
         updateMap();
 
         updateTrajImages();
@@ -176,29 +174,32 @@ public class DemoInterface extends PApplet {
             drawAllMapRegion(getSelectRegion(lastClick, optIndex));
         }
 
-        for (Region r : SharedObject.getInstance().getRegionOList()) {
-            if (r == null) {
-                continue;
-            }
+        for (Region r : SharedObject.getInstance().getAllRegions()) {
             drawRegion(r);
         }
-        for (Region r : SharedObject.getInstance().getRegionDList()) {
-            if (r == null) {
-                continue;
-            }
-            drawRegion(r);
-        }
-
-        for (ArrayList<ArrayList<Region>> regionWList : SharedObject.getInstance().getRegionWList()) {
-            if (regionWList == null) {
-                continue;
-            }
-            for (ArrayList<Region> wList : regionWList) {
-                for (Region r : wList) {
-                    drawRegion(r);
-                }
-            }
-        }
+//        for (Region r : SharedObject.getInstance().getRegionOList()) {
+//            if (r == null) {
+//                continue;
+//            }
+//            drawRegion(r);
+//        }
+//        for (Region r : SharedObject.getInstance().getRegionDList()) {
+//            if (r == null) {
+//                continue;
+//            }
+//            drawRegion(r);
+//        }
+//
+//        for (ArrayList<ArrayList<Region>> regionWList : SharedObject.getInstance().getRegionWList()) {
+//            if (regionWList == null) {
+//                continue;
+//            }
+//            for (ArrayList<Region> wList : regionWList) {
+//                for (Region r : wList) {
+//                    drawRegion(r);
+//                }
+//            }
+//        }
 
         if (SharedObject.getInstance().isScreenShot()) {
             File outputDir = new File(PSC.OUTPUT_PATH);
@@ -432,7 +433,7 @@ public class DemoInterface extends PApplet {
                         trajDrawManager.startNewRenderTaskFor(i);
                     }
                 }
-            } else{
+            } else {
                 mapList[oneMapIdx].zoomAndPanTo(levelAfterOneMapMode, centerAfterOneMapMode);
 
                 for (int i = 0; i < 4; ++i) {
@@ -562,7 +563,7 @@ public class DemoInterface extends PApplet {
             } else {
                 SharedObject.getInstance().addWayPoint(selectRegion);
             }
-            SharedObject.getInstance().eraseRegionPren();
+//            SharedObject.getInstance().eraseRegionPren();
         }
     }
 
@@ -736,8 +737,9 @@ public class DemoInterface extends PApplet {
         } else if (SharedObject.getInstance().checkRegion(1)) {     // D
             selectRegion.color = PSC.COLOR_LIST[1];
         } else {
-            int nextColorIdx = SharedObject.getInstance().getWayLayer() + 1;
-            selectRegion.color = PSC.COLOR_LIST[nextColorIdx];
+            int groupId = SharedObject.getInstance().getCurGroupNum();
+            int nextColorIdx = SharedObject.getInstance().getWayLayer();
+            selectRegion.color = PSC.COLOT_TOTAL_LIST[groupId][nextColorIdx];
         }
 
         selectRegion.initLoc(mapList[optIndex].getLocation(selectRegion.leftTop.x, selectRegion.leftTop.y),

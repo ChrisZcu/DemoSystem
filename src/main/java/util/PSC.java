@@ -1,5 +1,7 @@
 package util;
 
+import model.Colour;
+
 import java.awt.*;
 
 /**
@@ -51,6 +53,7 @@ public class PSC {
 
     public static final String OUTPUT_PATH = "data/output/";
 
+    private static final int colorOff = 10;
     // six provided color to algorithm
     public static final Color[] COLOR_LIST = {
             new Color(15, 91, 120),
@@ -61,10 +64,34 @@ public class PSC {
             new Color(190, 46, 29),
             new Color(79, 79, 79),
             new Color(0, 0, 0),
-            new Color(255,255,255)
+            new Color(255, 255, 255)
     };
 
+    public static Color[][] COLOT_TOTAL_LIST;
     public static final Color RED = new Color(255, 0, 0);
     public static final Color BLUE = new Color(2, 124, 255);
     public static final Color GRAY = new Color(150, 150, 150);
+
+    private int groupNum = 5;
+
+    public static void initRegionColorList() {
+        COLOT_TOTAL_LIST = new Color[3][4];
+        Color[] pinkColor = new Color[4];
+        for (int i = 0; i < 120; i += 30) {//pink list
+            pinkColor[i / 30] = new Color(115, 120 - i, 115);
+        }
+        COLOT_TOTAL_LIST[0] = pinkColor;
+
+        Color[] greenColor = new Color[4];
+        for (int i = 0; i < 120; i += 30) {
+            greenColor[i / 30] = new Color(25, 200 - i, 91);
+        }
+        COLOT_TOTAL_LIST[1] = greenColor;
+
+        Color[] blueColor = new Color[4];
+        for (int i = 80; i < 240; i += 40) {
+            blueColor[(i - 80) / 40] = new Color(65, 65, 240 - i);
+        }
+        COLOT_TOTAL_LIST[2] = blueColor;
+    }
 }

@@ -68,8 +68,18 @@ public class SharedObject {
     // regions
     private static Region regionO = null;
     private static Region regionD = null;
-    private static ArrayList<ArrayList<Region>> regionWLayerList = new ArrayList<>();
-    private int wayPointLayer = 1;
+
+    private ArrayList<WayPointGroup> wayPointGroups = new ArrayList<>();
+    public int curGroupNum = 0;
+    private WayPointGroup curGroup = new WayPointGroup(curGroupNum);
+
+    public void setWayPointGroupList(ArrayList<WayPointGroup>[] wayPointGroupList) {
+        this.wayPointGroupList = wayPointGroupList;
+    }
+
+    private Region[] regionOList = new Region[4];
+    private Region[] regionDList = new Region[4];
+    private ArrayList<WayPointGroup>[] wayPointGroupList = new ArrayList[4]; // screen region for 4 map
 
     private float[][] mapLocInfo = new float[2][4];
 
@@ -237,45 +247,43 @@ public class SharedObject {
 
     public void cleanRegions() {
         regionO = regionD = null;
-        regionWLayerList.clear();
+        curGroup.cleanWayPointRegions();
+        wayPointGroups.clear();
+        wayPointGroups = new ArrayList<>();
+        curGroup = new WayPointGroup(0);
         regionOList = new Region[4];
         regionDList = new Region[4];
-        regionWList = new ArrayList[4];
-        wayPointLayer = 1;
+        wayPointGroupList = new ArrayList[4];
+        curGroupNum = 0;
     }
 
-    public ArrayList<Region> getRegionWithoutWList() {
-        ArrayList<Region> res = new ArrayList<>();
-        if (regionO != null) {
-            res.add(regionO);
-        }
-        if (regionD != null) {
-            res.add(regionD);
-        }
-        return res;
+
+    public int getCurGroupNum() {
+        return curGroup.getGroupId();
     }
 
-    public ArrayList<ArrayList<Region>> getRegionWLayerList() {
-        return regionWLayerList;
+    public void setCurGroupNum(int curGroupNum) {
+        this.curGroupNum = curGroupNum;
     }
 
     public void addWayPoint(Region r) {
-        if (regionWLayerList.size() < wayPointLayer) {
-            regionWLayerList.add(new ArrayList<>());
-        }
-
-        regionWLayerList.get(wayPointLayer - 1).add(r);
+        if (curGroupNum == 0)
+            addNewGroup();
+        curGroup.addWayPoint(r);
         updateRegionList();
     }
 
-    public void updateWLayer() {
-        if (wayPointLayer == regionWLayerList.size()) {
-            wayPointLayer++;
-        }
-    }
 
     public int getWayLayer() {
-        return wayPointLayer;
+        return curGroup.getWayPointLayer();
+    }
+
+    public WayPointGroup getCurGroup() {
+        return curGroup;
+    }
+
+    public void setCurGroup(WayPointGroup curGroup) {
+        this.curGroup = curGroup;
     }
 
     public ArrayList<Region> getAllRegions() {
@@ -286,10 +294,10 @@ public class SharedObject {
         if (regionD != null) {
             allRegion.addAll(Arrays.asList(regionDList));
         }
-        if (getRegionWLayerList() != null && getRegionWLayerList().size() > 0) {
-            for (ArrayList<ArrayList<Region>> regionWList : regionWList) {
-                for (ArrayList<Region> wList : regionWList) {
-                    allRegion.addAll(wList);
+        if (wayPointGroups != null && wayPointGroups.size() > 0) {
+            for (ArrayList<WayPointGroup> wayPointGroupList : wayPointGroupList) {//for each map
+                for (WayPointGroup wayPointGroup : wayPointGroupList) {//each group in each map
+                    allRegion.addAll(wayPointGroup.getAllRegions());
                 }
             }
         }
@@ -384,9 +392,6 @@ public class SharedObject {
         setFinishSelectRegion(true); // finish select
     }
 
-    private Region[] regionOList = new Region[4];
-    private Region[] regionDList = new Region[4];
-    private ArrayList<ArrayList<Region>>[] regionWList = new ArrayList[4];
 
     private void updateRegionList() {
         // TODO add logic for one map
@@ -397,22 +402,18 @@ public class SharedObject {
             if (regionD != null) {
                 regionDList[i] = regionD.getCorresRegion(i);
             }
-            if (regionWLayerList.size() > 0) {
-                ArrayList<ArrayList<Region>> regionWLayerListTmp = new ArrayList<>();
-                for (ArrayList<Region> wList : regionWLayerList) {
-                    ArrayList<Region> tmpWList = new ArrayList<>();
-                    for (Region r : wList) {
-                        tmpWList.add(r.getCorresRegion(i));
-                    }
-                    regionWLayerListTmp.add(tmpWList);
+            if (wayPointGroups.size() > 0) {//update the wayPointGroupList
+                ArrayList<WayPointGroup> wayPointGroupTmp = new ArrayList<>();
+                for (WayPointGroup wayPointGroup : wayPointGroups) {
+                    wayPointGroupTmp.add(wayPointGroup.getCorrWayPointGroup(i));
                 }
-                regionWList[i] = regionWLayerListTmp;
+                wayPointGroupList[i] = wayPointGroupTmp;
             }
         }
     }
 
     private RegionType getRegionType() {
-        if (regionWLayerList.size() > 0) {
+        if (wayPointGroups.size() > 0) {
             if (regionO == null && regionD == null) {
                 return RegionType.WAY_POINT;
             } else {
@@ -424,6 +425,7 @@ public class SharedObject {
     }
 
     public String getBlockInfo() {
+        //TODO add store info
         StringBuilder info = new StringBuilder("Region info:");
         if (regionO == null) {
             info.append("\nOrigin: NONE");
@@ -435,14 +437,14 @@ public class SharedObject {
         } else {
             info.append("\n\nDestination:\n").append(regionD.toString());
         }
-        if (regionWLayerList.size() > 0) {
+        if (wayPointGroups.size() > 0) {
             info.append("\n\nWay points:\n");
         }
-        for (ArrayList<Region> wList : regionWLayerList) {
-            for (Region r : wList) {
-                info.append("\n").append(r.toString());
-            }
-        }
+//        for ( : wayPointGroups) {
+//            for (Region r : wList) {
+//                info.append("\n").append(r.toString());
+//            }
+//        }
         info.append("\nTrajectory info:");
         for (int i = 0; i < 4; i++) {
             TrajBlock bt = blockList[i];
@@ -480,13 +482,10 @@ public class SharedObject {
         this.regionDList = regionDList;
     }
 
-    public ArrayList<ArrayList<Region>>[] getRegionWList() {
-        return regionWList;
+    public ArrayList<WayPointGroup>[] getWayPointGroupList() {
+        return wayPointGroupList;
     }
 
-    public void setRegionWList(ArrayList[] regionWList) {
-        this.regionWList = regionWList;
-    }
 
     public void updateRegionList(Region region) {
         for (Region r : getAllRegions()) {
@@ -497,7 +496,7 @@ public class SharedObject {
         }
         regionO = regionOList[0];
         regionD = regionDList[0];
-        regionWLayerList = regionWList[0]==null ? new ArrayList<ArrayList<Region>>() : regionWList[0];
+        wayPointGroups = wayPointGroupList[0] == null ? new ArrayList<>() : wayPointGroupList[0];
     }
 
     public void dropAllSelectRes() {
@@ -506,5 +505,16 @@ public class SharedObject {
         for (int i = 0; i < 4; i++) {
             this.getBlockList()[i].setTrajSltList(null);
         }
+    }
+
+
+    public void addNewGroup() {//增加新的region group
+        //TODO new group logic
+        wayPointGroups.add(new WayPointGroup(curGroupNum++));
+        curGroup = wayPointGroups.get(curGroupNum - 1);
+    }
+
+    public void updateWLayer() {
+        curGroup.updateWayPointLayer();
     }
 }

@@ -2,6 +2,7 @@ package swing;
 
 import app.SharedObject;
 import draw.TrajDrawManager;
+import model.Colour;
 import processing.core.PApplet;
 import util.PSC;
 
@@ -53,7 +54,7 @@ public class MenuWindow extends JWindow {
         wButton.addActionListener(wButtonActionListen);
         wButton.setSize(buttonWidth, height);
 
-        JButton wLayerButton = new JButton("NextWayPointLayer");
+        JButton wLayerButton = new JButton("NextLayer");
         ActionListener wLayerButtonActionListen = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -62,6 +63,16 @@ public class MenuWindow extends JWindow {
         };
         wLayerButton.addActionListener(wLayerButtonActionListen);
         wLayerButton.setSize(buttonWidth, height);
+
+        JButton wGroupButton = new JButton("NextGroup");
+        ActionListener wGroupButtonActionListen = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SharedObject.getInstance().addNewGroup();
+            }
+        };
+        wGroupButton.addActionListener(wGroupButtonActionListen);
+        wGroupButton.setSize(buttonWidth, height);
 
         JButton dragButton = new JButton("DragRegionOff");
         ActionListener dragButtonActionListen = new ActionListener() {
@@ -132,6 +143,7 @@ public class MenuWindow extends JWindow {
         dButton.setBackground(Color.GRAY);
         wButton.setBackground(Color.GRAY);
         wLayerButton.setBackground(Color.GRAY);
+        wGroupButton.setBackground(Color.GRAY);
         dragButton.setBackground(Color.GRAY);
         finishSelectButton.setBackground(Color.GRAY);
         screenShotButton.setBackground(Color.GRAY);
@@ -152,6 +164,7 @@ public class MenuWindow extends JWindow {
         panel.add(dButton);
         panel.add(wButton);
         panel.add(wLayerButton);
+        panel.add(wGroupButton);
         panel.add(dragButton);
         panel.add(finishSelectButton);
         panel.add(screenShotButton);

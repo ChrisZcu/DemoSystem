@@ -7,6 +7,7 @@ import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import model.Position;
 import model.Region;
 import model.Trajectory;
+import model.WayPointGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,17 +97,22 @@ public class SelectAlg {
      * This method will call {@link #getWayPointTraj} as underlying method.
      */
     public static Trajectory[] getWayPointTraj(int begin, int end, Trajectory[] trajectory, int optIndex) {
+        ArrayList<Trajectory> res = new ArrayList<>();
 
-        ArrayList<ArrayList<Region>> regionWList = SharedObject.getInstance().getRegionWList()[optIndex];
+        for (WayPointGroup wayPointGroup : SharedObject.getInstance().getWayPointGroupList()[optIndex]) {
+            res.addAll(getWayPointTraj(begin, end, trajectory, optIndex, wayPointGroup.getWayPointLayerList()));
+        }
+        return res.toArray(new Trajectory[0]);
+    }
 
+    private static ArrayList<Trajectory> getWayPointTraj(int begin, int end, Trajectory[] trajectory, int optIndex, ArrayList<ArrayList<Region>> regionWList) {
 
         ArrayList<Trajectory> res = getWayPointTraj(begin, end, trajectory, regionWList.get(0), optIndex);
 
         for (int i = 1; i < regionWList.size(); i++) {
             res = getWayPointTraj(0, res.size(), res, regionWList.get(i), optIndex);
-//            res.retainAll(resTmp);
         }
-        return res.toArray(new Trajectory[0]);
+        return res;
     }
 
     /**
