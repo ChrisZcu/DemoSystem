@@ -2,7 +2,6 @@ package swing;
 
 import app.SharedObject;
 import draw.TrajDrawManager;
-import model.Colour;
 import processing.core.PApplet;
 import util.PSC;
 

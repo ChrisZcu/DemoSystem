@@ -171,6 +171,7 @@ public class TrajDrawManager {
 
     /**
      * Update all traj painting (main or double select).
+     * Notice that the one map traj will not be update (index == 4)
      * <p>
      * Notice that all the traj will be redrawn, even if they are
      * not changed / not visible / not linked.

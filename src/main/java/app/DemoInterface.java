@@ -18,7 +18,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -413,16 +412,12 @@ public class DemoInterface extends PApplet {
                     if (viewVisibleList[i] && (linkedList[i] || i == oneMapIdx)) {
                         mapList[i].zoomToLevel(levelAfterOneMapMode);
                         mapList[i].panTo(centerAfterOneMapMode);
-
-                        trajDrawManager.cleanImgFor(i);
-                        trajDrawManager.startNewRenderTaskFor(i);
                     } else if (viewVisibleList[i]) {
                         mapList[i].zoomToLevel(levelBeforeOneMapMode[i]);
                         mapList[i].panTo(centerBeforeOneMapMode[i]);
-
-                        trajDrawManager.cleanImgFor(i);
-                        trajDrawManager.startNewRenderTaskFor(i);
                     }
+                    trajDrawManager.cleanImgFor(i);
+                    trajDrawManager.startNewRenderTaskFor(i);
                 }
             } else {
                 mapList[oneMapIdx].zoomAndPanTo(levelAfterOneMapMode, centerAfterOneMapMode);
@@ -432,9 +427,9 @@ public class DemoInterface extends PApplet {
                         mapList[i].zoomToLevel(levelBeforeOneMapMode[i]);
                         mapList[i].panTo(centerBeforeOneMapMode[i]);
 
-                        trajDrawManager.cleanImgFor(i);
-                        trajDrawManager.startNewRenderTaskFor(i);
                     }
+                    trajDrawManager.cleanImgFor(i);
+                    trajDrawManager.startNewRenderTaskFor(i);
                 }
             }
 
@@ -455,9 +450,10 @@ public class DemoInterface extends PApplet {
             System.out.println(Arrays.toString(levelBeforeOneMapMode));
             System.out.println(Arrays.toString(centerBeforeOneMapMode));
 
-            // set max map locationp'l
+            // set max map location
             mapList[4].zoomAndPanTo(maxedMap.getZoomLevel(), maxedMap.getCenter());
 
+            trajDrawManager.cleanImgFor(4);
             trajDrawManager.startNewRenderTaskFor(4);
         }
         background(220, 220, 220);
@@ -692,8 +688,9 @@ public class DemoInterface extends PApplet {
     }
 
     private int getOptIndex(int mouseX, int mouseY) {
-        if (intoMaxMap)
+        if (intoMaxMap) {
             return 4;
+        }
         for (int i = 0; i < 4; i++) {
             if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
                     && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
