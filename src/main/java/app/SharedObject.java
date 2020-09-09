@@ -71,7 +71,7 @@ public class SharedObject {
 
     private ArrayList<WayPointGroup> wayPointGroups = new ArrayList<>();
     public int curGroupNum = 0;
-    private WayPointGroup curGroup = new WayPointGroup(curGroupNum);
+//    private WayPointGroup curGroup = new WayPointGroup(curGroupNum);
 
     public void setWayPointGroupList(ArrayList<WayPointGroup>[] wayPointGroupList) {
         this.wayPointGroupList = wayPointGroupList;
@@ -247,10 +247,10 @@ public class SharedObject {
 
     public void cleanRegions() {
         regionO = regionD = null;
-        curGroup.cleanWayPointRegions();
+//        curGroup.cleanWayPointRegions();
         wayPointGroups.clear();
         wayPointGroups = new ArrayList<>();
-        curGroup = new WayPointGroup(0);
+//        curGroup = new WayPointGroup(0);
         regionOList = new Region[4];
         regionDList = new Region[4];
         wayPointGroupList = new ArrayList[4];
@@ -259,7 +259,7 @@ public class SharedObject {
 
 
     public int getCurGroupNum() {
-        return curGroup.getGroupId();
+        return wayPointGroups.size() == 0 ? 0 : wayPointGroups.get(curGroupNum - 1).getGroupId();
     }
 
     public void setCurGroupNum(int curGroupNum) {
@@ -269,22 +269,15 @@ public class SharedObject {
     public void addWayPoint(Region r) {
         if (curGroupNum == 0)
             addNewGroup();
-        curGroup.addWayPoint(r);
+        wayPointGroups.get(curGroupNum - 1).addWayPoint(r);
         updateRegionList();
     }
 
 
     public int getWayLayer() {
-        return curGroup.getWayPointLayer();
+        return wayPointGroups.size() == 0 ? 0 : wayPointGroups.get(curGroupNum - 1).getWayPointLayer();
     }
 
-    public WayPointGroup getCurGroup() {
-        return curGroup;
-    }
-
-    public void setCurGroup(WayPointGroup curGroup) {
-        this.curGroup = curGroup;
-    }
 
     public ArrayList<Region> getAllRegions() {
         ArrayList<Region> allRegion = new ArrayList<>();
@@ -511,10 +504,10 @@ public class SharedObject {
     public void addNewGroup() {//增加新的region group
         //TODO new group logic
         wayPointGroups.add(new WayPointGroup(curGroupNum++));
-        curGroup = wayPointGroups.get(curGroupNum - 1);
+//        curGroup = wayPointGroups.get(curGroupNum - 1);
     }
 
     public void updateWLayer() {
-        curGroup.updateWayPointLayer();
+        wayPointGroups.get(curGroupNum - 1).updateWayPointLayer();
     }
 }

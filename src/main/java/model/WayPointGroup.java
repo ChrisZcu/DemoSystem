@@ -68,7 +68,6 @@ public class WayPointGroup {
             wayPointLayerList.add(new ArrayList<>());
         }
         wayPointLayerList.get(wayPointLayer).add(r);
-
         //TODO update the shared object
     }
 

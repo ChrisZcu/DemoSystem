@@ -75,7 +75,7 @@ public class DemoInterface extends PApplet {
     private int regionId = 0;
     private int dragRegionId = -1;
     private int dragRegionIntoMapId = -1;
-    private boolean regionDragged = false;
+    private boolean regionDrawing = false;
     private Position lastClick;
 
     private int circleSize = 15;
@@ -170,7 +170,7 @@ public class DemoInterface extends PApplet {
 
         updateTrajImages();
 
-        if (regionDragged) {//drag the region, draw but not finish
+        if (regionDrawing) {//draw but not finish
             drawAllMapRegion(getSelectRegion(lastClick, optIndex));
         }
 
@@ -294,7 +294,7 @@ public class DemoInterface extends PApplet {
 
         if (mouseButton == RIGHT) {
             if (SharedObject.getInstance().checkSelectRegion()) {
-                regionDragged = true;
+                regionDrawing = true;
                 lastClick = new Position(mouseX, mouseY);
             }
         }
@@ -548,21 +548,23 @@ public class DemoInterface extends PApplet {
             if (viewVisibleList[i] && imgCleaned[i]) {
                 trajDrawManager.startNewRenderTaskFor(i);
                 imgCleaned[i] = false;
-                //System.out.println("map " + i + " redrawn");
             }
         }
 
-        if (regionDragged) {
-            regionDragged = false;
+        if (regionDrawing) {
+            regionDrawing = false;
             Region selectRegion = getSelectRegion(lastClick, optIndex);
             selectRegion.id = regionId++;
-            if (SharedObject.getInstance().checkRegion(0)) {        // O
+            if (SharedObject.getInstance().checkRegion(0)) {
+                System.out.println(0);// O
                 SharedObject.getInstance().setRegionO(selectRegion);
             } else if (SharedObject.getInstance().checkRegion(1)) { // D
+                System.out.println(1);
                 SharedObject.getInstance().setRegionD(selectRegion);
             } else {
                 SharedObject.getInstance().addWayPoint(selectRegion);
             }
+//            System.out.println(SharedObject.getInstance().getAllRegions().size());
 //            SharedObject.getInstance().eraseRegionPren();
         }
     }
@@ -622,7 +624,7 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void mouseDragged() {
-        if (!regionDragged && mouseButton != RIGHT) {
+        if (!regionDrawing && mouseButton != RIGHT) {
             if (oneMapIdx == 4) {
                 for (int i = 0; i < 4; ++i) {
                     if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
