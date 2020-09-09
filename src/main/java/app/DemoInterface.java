@@ -166,40 +166,24 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void draw() {
-        updateMap();
+        background(220, 220, 220);
 
+        updateMap();
         updateTrajImages();
 
         if (regionDrawing) {//draw but not finish
             drawAllMapRegion(getSelectRegion(lastClick, optIndex));
         }
-
-        for (Region r : SharedObject.getInstance().getAllRegions()) {
-            drawRegion(r);
+        if (!intoMaxMap) {
+            for (Region r : SharedObject.getInstance().getAllRegions()) {
+                drawRegion(r);
+            }
+        } else {
+            for (Region r : SharedObject.getInstance().getAllRegionsOneMap()) {
+                r.mapId = 4;
+                drawRegion(r);
+            }
         }
-//        for (Region r : SharedObject.getInstance().getRegionOList()) {
-//            if (r == null) {
-//                continue;
-//            }
-//            drawRegion(r);
-//        }
-//        for (Region r : SharedObject.getInstance().getRegionDList()) {
-//            if (r == null) {
-//                continue;
-//            }
-//            drawRegion(r);
-//        }
-//
-//        for (ArrayList<ArrayList<Region>> regionWList : SharedObject.getInstance().getRegionWList()) {
-//            if (regionWList == null) {
-//                continue;
-//            }
-//            for (ArrayList<Region> wList : regionWList) {
-//                for (Region r : wList) {
-//                    drawRegion(r);
-//                }
-//            }
-//        }
 
         if (SharedObject.getInstance().isScreenShot()) {
             File outputDir = new File(PSC.OUTPUT_PATH);
@@ -276,8 +260,12 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawAllMapRegion(Region selectRegion) {
-        for (int i = 0; i < 4; i++) {
-            drawRegion(selectRegion.getCorresRegion(i));
+        if (!intoMaxMap) {
+            for (int i = 0; i < 4; i++) {
+                drawRegion(selectRegion.getCorresRegion(i));
+            }
+        } else {// in one map
+            drawRegion(selectRegion.getCorresRegion(4));
         }
     }
 
@@ -313,6 +301,9 @@ public class DemoInterface extends PApplet {
         }
     }
 
+    private boolean intoMaxMap = false;
+    private int maxMapId = -1;
+
     private void buttonClickListener() {
         // not in one map mode, now there are 4 map in the map
         int eleId = -1;
@@ -325,6 +316,7 @@ public class DemoInterface extends PApplet {
         }
         if (eleId != -1) {
             int mapIdx = eleId % 4;
+            maxMapId = mapIdx;
             // mentioned the init state
             if (eleId > 19) {
                 // for linked
@@ -363,8 +355,6 @@ public class DemoInterface extends PApplet {
 
                             mapList[i].zoomToLevel(mapList[mapController].getZoomLevel());
                             mapList[i].panTo(mapList[mapController].getCenter());
-
-                            //System.out.println("map " + (eleId - 12) + " moved");
                         }
                     }
                 }
@@ -372,6 +362,7 @@ public class DemoInterface extends PApplet {
                 // max the map
                 System.out.println("switch one map, mapIdx=" + mapIdx);
                 switchOneMapMode(mapIdx);
+                intoMaxMap = true;
             } else if (eleId > 7) {
                 // HideBG / ShowBG
                 System.out.println("change BG visible, mapIdx=" + mapIdx);
@@ -538,6 +529,7 @@ public class DemoInterface extends PApplet {
             case 2:
                 // MinMap
                 switchOneMapMode(oneMapIdx);
+                intoMaxMap = false;
                 break;
         }
     }
@@ -700,6 +692,8 @@ public class DemoInterface extends PApplet {
     }
 
     private int getOptIndex(int mouseX, int mouseY) {
+        if (intoMaxMap)
+            return 4;
         for (int i = 0; i < 4; i++) {
             if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
                     && mouseY >= mapYList[i] && mouseY <= mapYList[i] + mapHeight) {
@@ -710,6 +704,13 @@ public class DemoInterface extends PApplet {
     }
 
     private Region getSelectRegion(Position lastClick, int optIndex) {
+        float mapWidth = this.mapWidth;
+        float mapHeight = this.mapHeight;
+
+        if (intoMaxMap) {
+            mapWidth = screenWidth;
+            mapHeight = screenHeight;
+        }
         float mx = constrain(mouseX, mapXList[optIndex] + 3 + circleSize / 2, mapXList[optIndex] + mapWidth - 3 - circleSize / 2);
         float my = constrain(mouseY, mapYList[optIndex] + 3 + circleSize / 2, mapYList[optIndex] + mapHeight - 3 - circleSize / 2);
 
@@ -842,7 +843,6 @@ public class DemoInterface extends PApplet {
         if (r == null || r.leftTop == null || r.rightBtm == null) {
             return;
         }
-
         stroke(r.color.getRGB());
         noFill();
         strokeWeight(3);
@@ -851,9 +851,16 @@ public class DemoInterface extends PApplet {
         Position lT = r.leftTop;
         Position rB = r.rightBtm;
 
+        float mapWidth = this.mapWidth;
+        float mapHeight = this.mapHeight;
+
+        if (intoMaxMap) {
+            mapWidth = screenWidth;
+            mapHeight = screenHeight;
+        }
+
         if (lT.x < mapXList[r.mapId] || lT.y < mapYList[r.mapId] ||
                 rB.x > mapXList[r.mapId] + mapWidth || rB.y > mapYList[r.mapId] + mapHeight) {
-            //TODO part-rect draw
 
             if (lT.x > mapXList[r.mapId] + mapWidth || lT.y > mapYList[r.mapId] + mapHeight ||
                     rB.x < mapXList[r.mapId] || rB.y < mapYList[r.mapId]) {
@@ -874,7 +881,6 @@ public class DemoInterface extends PApplet {
 
             return;
         }
-
         int length = Math.abs(lT.x - rB.x);
         int high = Math.abs(lT.y - rB.y);
 
@@ -943,11 +949,6 @@ public class DemoInterface extends PApplet {
         Location center2 = mapList[m2].getCenter();
 
         return zoomLevel1 == zoomLevel2 && isLocationSame(center1, center2);
-    }
-
-    private boolean isMapSame(int m, int zoomLevel, Location center) {
-        return mapList[m].getZoomLevel() != zoomLevel
-                || !isLocationSame(mapList[m].getCenter(), center);
     }
 
     public static void main(String[] args) {

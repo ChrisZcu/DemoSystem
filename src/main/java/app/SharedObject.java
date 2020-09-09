@@ -69,12 +69,31 @@ public class SharedObject {
     private static Region regionO = null;
     private static Region regionD = null;
 
+    public ArrayList<WayPointGroup> getWayPointGroups() {
+        return wayPointGroups;
+    }
+
     private ArrayList<WayPointGroup> wayPointGroups = new ArrayList<>();
     public int curGroupNum = 0;
 //    private WayPointGroup curGroup = new WayPointGroup(curGroupNum);
 
     public void setWayPointGroupList(ArrayList<WayPointGroup>[] wayPointGroupList) {
         this.wayPointGroupList = wayPointGroupList;
+    }
+    public ArrayList<Region> getAllRegionsOneMap( ) {
+        ArrayList<Region> allRegion = new ArrayList<>();
+        if (regionO != null) {
+            allRegion.add(regionO);
+        }
+        if (regionD != null) {
+            allRegion.add(regionD);
+        }
+        if (wayPointGroups != null && wayPointGroups.size() > 0) {
+            for (WayPointGroup wayPointGroup : wayPointGroups) {//each group in each map
+                allRegion.addAll(wayPointGroup.getAllRegions());
+            }
+        }
+        return allRegion;
     }
 
     private Region[] regionOList = new Region[4];
