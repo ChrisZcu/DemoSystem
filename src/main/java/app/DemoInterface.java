@@ -129,7 +129,7 @@ public class DemoInterface extends PApplet {
 
         // Warning: the constructor of the TrajDrawManager must be called AFTER initBlockList()
         trajDrawManager = new TrajDrawManager(this, mapList, trajImgMtx, trajImgSltMtx,
-                null, mapXList, mapYList, mapWidth, mapHeight);
+                null, mapXList, mapYList);
         SharedObject.getInstance().setTrajDrawManager(trajDrawManager);
 
         SharedObject.getInstance().setViewVisibleList(viewVisibleList);

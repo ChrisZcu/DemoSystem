@@ -53,8 +53,7 @@ public class TrajDrawManager {
 
     public TrajDrawManager(DemoInterface app, UnfoldingMap[] mapList,
                            PGraphics[][] trajImageMtx, PGraphics[][] trajImageSltMtx,
-                           int[] trajCnt, float[] mapXList, float[] mapYList,
-                           int width, int height) {
+                           int[] trajCnt, float[] mapXList, float[] mapYList) {
         this.app = app;
         this.mapList = mapList;
         this.trajImageMtx = trajImageMtx;
