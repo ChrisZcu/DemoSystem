@@ -465,19 +465,6 @@ public class SharedObject {
         return info.toString();
     }
 
-    public boolean isPan() {
-        int i = 0;
-        boolean pan = false;
-        for (UnfoldingMap map : mapList) {
-            if (!map.getCenter().equals(mapCenter[i])) {
-                pan = true;
-                mapCenter[i] = map.getCenter();
-            }
-            i++;
-        }
-        return pan;
-    }
-
     public Region[] getRegionOList() {
         return regionOList;
     }
