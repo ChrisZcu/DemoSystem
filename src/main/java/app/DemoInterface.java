@@ -328,11 +328,11 @@ public class DemoInterface extends PApplet {
             drawAllMapRegion(getSelectRegion(lastClick, optIndex));
         }
         if (!intoMaxMap) {
-            for (Region r : SharedObject.getInstance().getAllRegions()) {
+            for (RectRegion r : SharedObject.getInstance().getAllRegions()) {
                 drawRegion(r);
             }
         } else {
-            for (Region r : SharedObject.getInstance().getAllRegionsOneMap()) {
+            for (RectRegion r : SharedObject.getInstance().getAllRegionsOneMap()) {
                 r.mapId = 4;
                 drawRegion(r);
             }
@@ -418,7 +418,7 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    private void drawAllMapRegion(Region selectRegion) {
+    private void drawAllMapRegion(RectRegion selectRegion) {
         if (!intoMaxMap) {
             for (int i = 0; i < 4; i++) {
                 drawRegion(selectRegion.getCorresRegion(i));
@@ -429,7 +429,7 @@ public class DemoInterface extends PApplet {
     }
 
     private void dragRectRegion() {
-        for (Region r : SharedObject.getInstance().getAllRegions()) {
+        for (RectRegion r : SharedObject.getInstance().getAllRegions()) {
             if (mouseX >= r.leftTop.x - circleSize / 2 && mouseX <= r.leftTop.x + circleSize / 2
                     && mouseY >= r.leftTop.y - circleSize / 2 && mouseY <= r.leftTop.y + circleSize / 2) {
                 dragRegionId = r.id;
@@ -684,7 +684,7 @@ public class DemoInterface extends PApplet {
     }
 
     private void addRectRegion() {
-        Region selectRegion = getSelectRegion(lastClick, optIndex);
+        RectRegion selectRegion = getSelectRegion(lastClick, optIndex);
         selectRegion.id = regionId++;
         if (SharedObject.getInstance().checkRegion(0)) {
             System.out.println(0);// O
@@ -701,10 +701,11 @@ public class DemoInterface extends PApplet {
         CircleRegion circle = getSelectCircle(lastClick, optIndex);
         circle.setId(regionId++);
         if (SharedObject.getInstance().checkRegion(0)) {
+            System.out.println(0);
             CircleRegionControl.getCircleRegionControl().setCircleO(circle);
         } else if (SharedObject.getInstance().checkRegion(1)) { // D
+            System.out.println(1);
             CircleRegionControl.getCircleRegionControl().setCircleD(circle);
-
         } else {
             CircleRegionControl.getCircleRegionControl().addWayPoint(circle);
         }
@@ -769,7 +770,7 @@ public class DemoInterface extends PApplet {
         return 0;
     }
 
-    private Region getSelectRegion(Position lastClick, int optIndex) {
+    private RectRegion getSelectRegion(Position lastClick, int optIndex) {
         float mapWidth = this.mapWidth;
         float mapHeight = this.mapHeight;
 
@@ -781,7 +782,7 @@ public class DemoInterface extends PApplet {
         float my = constrain(mouseY, mapYList[optIndex] + 3 + circleSize / 2, mapYList[optIndex] + mapHeight - 3 - circleSize / 2);
 
         Position curClick = new Position(mx, my);
-        Region selectRegion = new Region();
+        RectRegion selectRegion = new RectRegion();
         if (lastClick.x < curClick.x) {//left
             if (lastClick.y < curClick.y) {//up
                 selectRegion.leftTop = lastClick;
@@ -789,15 +790,15 @@ public class DemoInterface extends PApplet {
             } else {//left_down
                 Position left_top = new Position(lastClick.x, curClick.y);
                 Position right_btm = new Position(curClick.x, lastClick.y);
-                selectRegion = new Region(left_top, right_btm);
+                selectRegion = new RectRegion(left_top, right_btm);
             }
         } else {//right
             if (lastClick.y < curClick.y) {//up
                 Position left_top = new Position(curClick.x, lastClick.y);
                 Position right_btm = new Position(lastClick.x, curClick.y);
-                selectRegion = new Region(left_top, right_btm);
+                selectRegion = new RectRegion(left_top, right_btm);
             } else {
-                selectRegion = new Region(curClick, lastClick);
+                selectRegion = new RectRegion(curClick, lastClick);
             }
         }
 
@@ -935,7 +936,6 @@ public class DemoInterface extends PApplet {
         if (circle == null || circle.getCircleCenter() == null) {
             return;
         }
-
         stroke(circle.getColor().getRGB());
         noFill();
         strokeWeight(3);
@@ -965,6 +965,7 @@ public class DemoInterface extends PApplet {
                     mapYList[optIndex] + 3 + circleSize / 2, mapYList[optIndex] + mapHeight - 3 - radius - circleSize / 2);
 
             circle.setCircleCenter(mapList[optIndex].getLocation(mx, my));
+            circle.setRadiusLocation(mapList[optIndex].getLocation(mx + radius, my));
             circle.updateCircleScreenPosition();
 
             CircleRegionControl.getCircleRegionControl().updateMovedRegion(circle);
@@ -979,7 +980,7 @@ public class DemoInterface extends PApplet {
 
     }
 
-    private void drawRegion(Region r) {
+    private void drawRegion(RectRegion r) {
         if (r == null || r.leftTop == null || r.rightBtm == null) {
             return;
         }

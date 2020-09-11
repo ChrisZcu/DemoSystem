@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public class WayPointGroup {
     private int groupId;
     private int wayPointLayer = 0;
-    private ArrayList<ArrayList<Region>> wayPointLayerList;
+    private ArrayList<ArrayList<RectRegion>> wayPointLayerList;
 
     public WayPointGroup() {
         wayPointLayerList = new ArrayList<>();
@@ -35,11 +35,11 @@ public class WayPointGroup {
         this.wayPointLayer = wayPointLayer;
     }
 
-    public ArrayList<ArrayList<Region>> getWayPointLayerList() {
+    public ArrayList<ArrayList<RectRegion>> getWayPointLayerList() {
         return wayPointLayerList;
     }
 
-    public void setWayPointLayerList(ArrayList<ArrayList<Region>> wayPointLayerList) {
+    public void setWayPointLayerList(ArrayList<ArrayList<RectRegion>> wayPointLayerList) {
         this.wayPointLayerList = wayPointLayerList;
     }
 
@@ -53,17 +53,17 @@ public class WayPointGroup {
         }
     }
 
-    public ArrayList<Region> getAllRegions() {
-        ArrayList<Region> res = new ArrayList<>();
+    public ArrayList<RectRegion> getAllRegions() {
+        ArrayList<RectRegion> res = new ArrayList<>();
         if (wayPointLayerList != null) {
-            for (ArrayList<Region> regionList : wayPointLayerList) {
+            for (ArrayList<RectRegion> regionList : wayPointLayerList) {
                 res.addAll(regionList);
             }
         }
         return res;
     }
 
-    public void addWayPoint(Region r) {
+    public void addWayPoint(RectRegion r) {
         if (wayPointLayerList.size() <= wayPointLayer) {
             wayPointLayerList.add(new ArrayList<>());
         }
@@ -74,9 +74,9 @@ public class WayPointGroup {
     public WayPointGroup getCorrWayPointGroup(int mapId) {
         WayPointGroup wayPointGroup = new WayPointGroup(groupId);
         wayPointGroup.setWayPointLayer(wayPointLayer);
-        for (ArrayList<Region> wList : wayPointLayerList) {
-            ArrayList<Region> tmp = new ArrayList<>();
-            for (Region r : wList) {
+        for (ArrayList<RectRegion> wList : wayPointLayerList) {
+            ArrayList<RectRegion> tmp = new ArrayList<>();
+            for (RectRegion r : wList) {
                 tmp.add(r.getCorresRegion(mapId));
             }
             wayPointGroup.getWayPointLayerList().add(tmp);

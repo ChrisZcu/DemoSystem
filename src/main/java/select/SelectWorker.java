@@ -1,10 +1,7 @@
 package select;
 
-import de.fhpotsdam.unfolding.UnfoldingMap;
-import model.BlockType;
-import model.Region;
+import model.RectRegion;
 import model.RegionType;
-import app.SharedObject;
 import model.Trajectory;
 
 import java.util.ArrayList;
@@ -17,7 +14,7 @@ import static select.SelectAlg.*;
  */
 public class SelectWorker implements Callable {
     private RegionType regionType;
-    private ArrayList<Region> regionWList;
+    private ArrayList<RectRegion> regionWList;
     private int begin;
     private int end;
     private int optIndex;

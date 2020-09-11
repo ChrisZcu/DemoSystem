@@ -8,8 +8,17 @@ import de.fhpotsdam.unfolding.utils.ScreenPosition;
 
 import java.awt.*;
 
-public class CircleRegion {
+public class CircleRegion extends RegionModel {
     private Location circleCenter;
+
+    public Location getRadiusLocation() {
+        return radiusLocation;
+    }
+
+    public void setRadiusLocation(Location radiusLocation) {
+        this.radiusLocation = radiusLocation;
+    }
+
     private Location radiusLocation;
 
     private Color color;

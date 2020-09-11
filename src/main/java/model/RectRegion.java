@@ -10,7 +10,7 @@ import java.awt.*;
 /**
  * Indicates the left-top position and right-bottom position of selected region.
  */
-public class Region {
+public class RectRegion extends RegionModel {
     public Position leftTop;
     public Position rightBtm;
     public Color color;
@@ -20,7 +20,7 @@ public class Region {
     private Location leftTopLoc;
     private Location rightBtmLoc;
 
-    public Region() {
+    public RectRegion() {
 
     }
 
@@ -40,7 +40,7 @@ public class Region {
         this.rightBtmLoc = rightBtmLoc;
     }
 
-    public Region(Position lt, Position rb) {
+    public RectRegion(Position lt, Position rb) {
         this.leftTop = lt;
         this.rightBtm = rb;
     }
@@ -64,7 +64,7 @@ public class Region {
         updateScreenPosition(SharedObject.getInstance().getMapList()[mapId]);
     }
 
-    public boolean equal(Region r) {
+    public boolean equal(RectRegion r) {
         return this.leftTop.equals(r.leftTop) && this.rightBtm.equals(r.rightBtm);
     }
 
@@ -107,13 +107,13 @@ public class Region {
         return 0;
     }
 
-    public Region getCorresRegion(int mapId) {
+    public RectRegion getCorresRegion(int mapId) {
         UnfoldingMap map = SharedObject.getInstance().getMapList()[mapId];
 
         ScreenPosition leftTopScr = map.getScreenPosition(leftTopLoc);
         ScreenPosition rightBtmScr = map.getScreenPosition(rightBtmLoc);
 
-        Region reg = new Region(new Position(leftTopScr.x, leftTopScr.y), new Position(rightBtmScr.x, rightBtmScr.y));
+        RectRegion reg = new RectRegion(new Position(leftTopScr.x, leftTopScr.y), new Position(rightBtmScr.x, rightBtmScr.y));
         reg.color = color;
         reg.id = id;
         reg.initLoc(leftTopLoc, rightBtmLoc);

@@ -25,6 +25,16 @@ public class SharedObject {
         return instance;
     }
 
+    public boolean isCircleRegion() {
+        return circleRegion;
+    }
+
+    public void setCircleRegion(boolean circleRegion) {
+        this.circleRegion = circleRegion;
+    }
+
+    private boolean circleRegion = true;
+
     private static Trajectory[] trajFull;                   // total trajList
     private static Trajectory[][][] trajVfgsMtx = null;     // trajVfgs for delta X rate
     private static Trajectory[][] trajRandList = null;      // trajRand for rate
@@ -66,8 +76,8 @@ public class SharedObject {
     }
 
     // regions
-    private static Region regionO = null;
-    private static Region regionD = null;
+    private static RectRegion regionO = null;
+    private static RectRegion regionD = null;
 
     public ArrayList<WayPointGroup> getWayPointGroups() {
         return wayPointGroups;
@@ -80,8 +90,9 @@ public class SharedObject {
     public void setWayPointGroupList(ArrayList<WayPointGroup>[] wayPointGroupList) {
         this.wayPointGroupList = wayPointGroupList;
     }
-    public ArrayList<Region> getAllRegionsOneMap( ) {
-        ArrayList<Region> allRegion = new ArrayList<>();
+
+    public ArrayList<RectRegion> getAllRegionsOneMap() {
+        ArrayList<RectRegion> allRegion = new ArrayList<>();
         if (regionO != null) {
             allRegion.add(regionO);
         }
@@ -96,8 +107,8 @@ public class SharedObject {
         return allRegion;
     }
 
-    private Region[] regionOList = new Region[4];
-    private Region[] regionDList = new Region[4];
+    private RectRegion[] regionOList = new RectRegion[4];
+    private RectRegion[] regionDList = new RectRegion[4];
     private ArrayList<WayPointGroup>[] wayPointGroupList = new ArrayList[4]; // screen region for 4 map
 
     private float[][] mapLocInfo = new float[2][4];
@@ -192,23 +203,23 @@ public class SharedObject {
     }
 
     // regions
-    public void setRegionO(Region r) {
+    public void setRegionO(RectRegion r) {
         regionO = r;
         updateRegionList();
     }
 
-    public Region getRegionO() {
+    public RectRegion getRegionO() {
         return regionO;
     }
 
 
-    public void setRegionD(Region r) {
+    public void setRegionD(RectRegion r) {
         regionD = r;
         updateRegionList();
 
     }
 
-    public Region getRegionD() {
+    public RectRegion getRegionD() {
         return regionD;
     }
 
@@ -270,14 +281,17 @@ public class SharedObject {
         wayPointGroups.clear();
         wayPointGroups = new ArrayList<>();
 //        curGroup = new WayPointGroup(0);
-        regionOList = new Region[4];
-        regionDList = new Region[4];
+        regionOList = new RectRegion[4];
+        regionDList = new RectRegion[4];
         wayPointGroupList = new ArrayList[4];
         curGroupNum = 0;
     }
 
 
     public int getCurGroupNum() {
+        if (isCircleRegion()) {
+            return CircleRegionControl.getCircleRegionControl().getWayGroupId();
+        }
         return wayPointGroups.size() == 0 ? 0 : wayPointGroups.get(curGroupNum - 1).getGroupId();
     }
 
@@ -285,7 +299,7 @@ public class SharedObject {
         this.curGroupNum = curGroupNum;
     }
 
-    public void addWayPoint(Region r) {
+    public void addWayPoint(RectRegion r) {
         if (curGroupNum == 0)
             addNewGroup();
         wayPointGroups.get(curGroupNum - 1).addWayPoint(r);
@@ -294,12 +308,15 @@ public class SharedObject {
 
 
     public int getWayLayer() {
+        if (isCircleRegion()) {
+            return CircleRegionControl.getCircleRegionControl().getWayLayer();
+        }
         return wayPointGroups.size() == 0 ? 0 : wayPointGroups.get(curGroupNum - 1).getWayPointLayer();
     }
 
 
-    public ArrayList<Region> getAllRegions() {
-        ArrayList<Region> allRegion = new ArrayList<>();
+    public ArrayList<RectRegion> getAllRegions() {
+        ArrayList<RectRegion> allRegion = new ArrayList<>();
         if (regionO != null) {
             allRegion.addAll(Arrays.asList(regionOList));
         }
@@ -399,7 +416,13 @@ public class SharedObject {
     }
 
     public void calTrajSelectResList() {
-        SelectManager slm = new SelectManager(getRegionType(), mapList, blockList);
+        RegionType regionType;
+        if (isCircleRegion()) {
+            regionType = CircleRegionControl.getCircleRegionControl().getRegionType();
+        } else {
+            regionType = getRegionType();
+        }
+        SelectManager slm = new SelectManager(regionType, mapList, blockList);
         slm.startRun();
         setFinishSelectRegion(true); // finish select
     }
@@ -465,19 +488,19 @@ public class SharedObject {
         return info.toString();
     }
 
-    public Region[] getRegionOList() {
+    public RectRegion[] getRegionOList() {
         return regionOList;
     }
 
-    public void setRegionOList(Region[] regionOList) {
+    public void setRegionOList(RectRegion[] regionOList) {
         this.regionOList = regionOList;
     }
 
-    public Region[] getRegionDList() {
+    public RectRegion[] getRegionDList() {
         return regionDList;
     }
 
-    public void setRegionDList(Region[] regionDList) {
+    public void setRegionDList(RectRegion[] regionDList) {
         this.regionDList = regionDList;
     }
 
@@ -486,8 +509,8 @@ public class SharedObject {
     }
 
 
-    public void updateRegionList(Region region) {
-        for (Region r : getAllRegions()) {
+    public void updateRegionList(RectRegion region) {
+        for (RectRegion r : getAllRegions()) {
             if (r.id == region.id) {
                 r.setLeftTopLoc(region.getLeftTopLoc());
                 r.setRightBtmLoc(region.getRightBtmLoc());

@@ -22,6 +22,38 @@ public class CircleRegionControl {
         return circleRegionControl;
     }
 
+    public CircleRegion getCircleO() {
+        return circleO;
+    }
+
+    public CircleRegion getCircleD() {
+        return circleD;
+    }
+
+    public ArrayList<CircleRegionGroup> getCircleRegionGroups() {
+        return circleRegionGroups;
+    }
+
+    public CircleRegion[] getCircleOList() {
+        return circleOList;
+    }
+
+    public CircleRegion[] getCircleDList() {
+        return circleDList;
+    }
+
+    public ArrayList<CircleRegionGroup>[] getCircleWayPointList() {
+        return circleWayPointList;
+    }
+
+    public int getWayPointLayer() {
+        return wayPointLayer;
+    }
+
+    public int getWayPointGroup() {
+        return wayPointGroup;
+    }
+
     // circle modified by the front-end, and only object to update the region list.
     private CircleRegion circleO = null;
     private CircleRegion circleD = null;
@@ -81,7 +113,7 @@ public class CircleRegionControl {
         }
     }
 
-    private RegionType getRegionType() {
+    public RegionType getRegionType() {
         if (circleRegionGroups.size() > 0) {
             if (circleO == null && circleD == null) {
                 return RegionType.WAY_POINT;
@@ -97,6 +129,7 @@ public class CircleRegionControl {
         for (CircleRegion circleRegion : getAllCircleRegions()) {
             if (circle.getId() == circleRegion.getId()) {
                 circleRegion.setCircleCenter(circle.getCircleCenter());
+                circleRegion.setRadiusLocation(circle.getRadiusLocation());
             }
         }
         circleO = circleOList[0];
@@ -151,13 +184,16 @@ public class CircleRegionControl {
     }
 
     public void cleanCircleRegions() {
-        circleO = circleD = null;
+        circleO = null;
+        circleD = null;
         circleRegionGroups.clear();
         circleRegionGroups = new ArrayList<>();
 
-        circleOList = circleDList = new CircleRegion[4];
+        circleOList = new CircleRegion[4];
+        circleDList = new CircleRegion[4];
         circleWayPointList = new ArrayList[4];
 
         wayPointGroup = 0;
+        wayPointLayer = 0;
     }
 }
