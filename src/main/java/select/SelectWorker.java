@@ -1,5 +1,6 @@
 package select;
 
+import app.SharedObject;
 import model.RectRegion;
 import model.RegionType;
 import model.Trajectory;
@@ -12,24 +13,25 @@ import static select.SelectAlg.*;
 /**
  * backend for select algorithm.
  */
-public class SelectWorker implements Callable {
+public class SelectWorker extends Thread {
     private RegionType regionType;
-    private ArrayList<RectRegion> regionWList;
     private int begin;
     private int end;
     private int optIndex;
     private Trajectory[] trajectory;
+    private int trajResId;
 
-    public SelectWorker(RegionType regionType, Trajectory[] trajectory, int begin, int end, int optIndex) {
+    public SelectWorker(RegionType regionType, Trajectory[] trajectory, int begin, int end, int optIndex, int trajResId) {
         this.regionType = regionType;
         this.trajectory = trajectory;
         this.begin = begin;
         this.end = end;
         this.optIndex = optIndex;
+        this.trajResId = trajResId;
     }
 
     @Override
-    public Trajectory[] call() throws Exception {
+    public void run() {
         Trajectory[] res;
         switch (regionType) {
             case O_D:
@@ -44,7 +46,8 @@ public class SelectWorker implements Callable {
             default:
                 throw new IllegalStateException("Unexpected value: " + regionType);
         }
-        System.out.println("into thread: res number = " + res.length);
-        return res;
+
+        System.out.println("into thread" + trajResId + " : res number = " + res.length);
+        SharedObject.getInstance().getTrajSelectRes()[trajResId] = res;
     }
 }

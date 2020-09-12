@@ -35,6 +35,15 @@ public class SharedObject {
 
     private boolean circleRegion = true;
 
+    public Trajectory[][] getTrajSelectRes() {
+        return trajSelectRes;
+    }
+
+    public void setTrajSelectRes(Trajectory[][] trajSelectRes) {
+        this.trajSelectRes = trajSelectRes;
+    }
+
+    private Trajectory[][] trajSelectRes;
     private static Trajectory[] trajFull;                   // total trajList
     private static Trajectory[][][] trajVfgsMtx = null;     // trajVfgs for delta X rate
     private static Trajectory[][] trajRandList = null;      // trajRand for rate

@@ -54,29 +54,22 @@ public class SelectManager {
             segLen = totLen;
         }
 
+        for (int i = 0; i < threadNum; i++) {
+            SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), i * segLen, (i + 1) * segLen, opIndex, i);
+            threadPool.submit(sw);
+        }
+        threadPool.shutdown();
         try {
-            for (int i = 0; i < threadNum - 1; i++) {
-                SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), i * segLen, (i + 1) * segLen, opIndex);
-                Trajectory[] trajIndexAry = (Trajectory[]) threadPool.submit(sw).get();
-                resShowIndex = ArrayUtils.addAll(resShowIndex, trajIndexAry);
-            }
-            SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), (threadNum - 1) * segLen, totLen, opIndex);
-            Trajectory[] trajIndexAry = (Trajectory[]) threadPool.submit(sw).get();
-            resShowIndex = ArrayUtils.addAll(resShowIndex, trajIndexAry);
-
-            threadPool.shutdown();
-            try {
-                threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-
-        } catch (ExecutionException | InterruptedException e) {
+            threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
             System.err.println(e);
+        }
+        System.out.println("ALL Done");
+        for (int i = 0; i < threadNum; i++) {
+            resShowIndex =  ArrayUtils.addAll(resShowIndex, SharedObject.getInstance().getTrajSelectRes()[i]);
         }
         System.out.println(trajBlock.getBlockType() + " time: " + (System.currentTimeMillis() - startTime)
                 + " select size: " + resShowIndex.length);
-        System.out.println("ALL Done");
         return resShowIndex;
     }
 
@@ -84,6 +77,7 @@ public class SelectManager {
         TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
         for (int i = 0; i < 4; i++) {
             TrajBlock trajBlock = blockList[i];
+            SharedObject.getInstance().setTrajSelectRes(new Trajectory[trajBlock.getThreadNum()][]);
             Trajectory[] trajAry = startMapCal(trajBlock, i);
             trajBlock.setTrajSltList(trajAry);
 

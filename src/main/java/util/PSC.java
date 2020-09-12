@@ -19,7 +19,7 @@ public class PSC {
 
     // origin data src path
     public static String ORIGIN_PATH
-            = "data/GPS/porto_full.txt";
+            = "data/GPS/Porto5w/Porto5w.txt";
 
     public static String PATH_PREFIX
             = "data/GPS/porto5w/";
