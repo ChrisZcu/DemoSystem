@@ -28,8 +28,8 @@ public class SelectAlg {
     public static Trajectory[] getODTraj(int begin, int end, Trajectory[] trajList, int optIndex) {
         SharedObject instance = SharedObject.getInstance();
         UnfoldingMap map = instance.getMapList()[optIndex];
-        RegionModel regionO;
-        RegionModel regionD;
+        AbstractRegion regionO;
+        AbstractRegion regionD;
 
         if (instance.isCircleRegion()) {
             regionO = CircleRegionControl.getCircleRegionControl().getCircleO();

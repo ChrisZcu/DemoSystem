@@ -17,7 +17,6 @@ import java.util.concurrent.*;
 /**
  * Manage the draw workers and divide the draw task.
  * Then provide draw results (PGraph) to app interface.
- * <br> It will ask {@link app.SharedObject} for the data.
  * <p>
  * It can handle the task for both main result
  * and the double select result.

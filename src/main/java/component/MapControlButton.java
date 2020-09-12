@@ -1,5 +1,6 @@
-package model;
+package component;
 
+import model.Colour;
 import processing.core.PApplet;
 import util.PSC;
 

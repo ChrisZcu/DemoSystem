@@ -8,7 +8,7 @@ import de.fhpotsdam.unfolding.utils.ScreenPosition;
 
 import java.awt.*;
 
-public class CircleRegion extends RegionModel {
+public class CircleRegion extends AbstractRegion {
     private Location circleCenter;
 
     public Location getRadiusLocation() {

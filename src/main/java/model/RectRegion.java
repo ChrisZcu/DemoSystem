@@ -10,7 +10,7 @@ import java.awt.*;
 /**
  * Indicates the left-top position and right-bottom position of selected region.
  */
-public class RectRegion extends RegionModel {
+public class RectRegion extends AbstractRegion {
     public Position leftTop;
     public Position rightBtm;
     public Color color;

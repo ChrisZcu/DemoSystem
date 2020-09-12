@@ -3,7 +3,7 @@ package model;
 import java.util.ArrayList;
 
 /**
- * different group of way point
+ * Different group of way point for rect region
  */
 public class WayPointGroup {
     private int groupId;

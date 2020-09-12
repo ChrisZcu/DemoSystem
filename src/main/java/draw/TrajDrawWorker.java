@@ -9,7 +9,8 @@ import processing.core.PGraphics;
 import java.awt.*;
 
 /**
- * Draw the trajectory to the buffer images. Started and Managed by {@link TrajDrawManager}.
+ * Draw the trajectory to the buffer images.
+ * Started and Managed by {@link TrajDrawManager}.
  */
 public class TrajDrawWorker extends Thread {
     private final TrajDrawManager manager;

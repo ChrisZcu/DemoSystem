@@ -1,4 +1,4 @@
-package swing;
+package component;
 
 import app.SharedObject;
 import draw.TrajDrawManager;

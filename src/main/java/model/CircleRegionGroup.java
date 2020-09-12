@@ -2,6 +2,10 @@ package model;
 
 import java.util.ArrayList;
 
+
+/**
+ * Different group of way point for circle region
+ */
 public class CircleRegionGroup {
     private int groupId;
     private int wayPointLayer = 0;
