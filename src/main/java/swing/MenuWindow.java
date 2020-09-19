@@ -73,11 +73,13 @@ public class MenuWindow extends JWindow {
         ActionListener wGroupButtonActionListen = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                CircleRegionControl.getCircleRegionControl().setAddFinished(false);
                 CircleRegionControl.getCircleRegionControl().getGroupsOfCircle().add(new ArrayList<>());
                 CircleRegionControl.getCircleRegionControl().getCircleO().add(new ArrayList<>());
                 CircleRegionControl.getCircleRegionControl().getCircleD().add(new ArrayList<>());
                 CircleRegionControl.getCircleRegionControl().getWayPoint().add(new ArrayList<>());
                 CircleRegionControl.getCircleRegionControl().addCurDrawingGroupId();
+                CircleRegionControl.getCircleRegionControl().setAddFinished(true);
             }
         };
         wGroupButton.addActionListener(wGroupButtonActionListen);

@@ -21,6 +21,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 
 import static model.BlockType.NONE;
@@ -90,16 +91,6 @@ public class DemoInterface extends PApplet {
 
     private MenuWindow menuWindow;
     private SelectDataDialog selectDataDialog;
-
-    //new region logic by wsx
-//    private ArrayList<ArrayList<CircleRegion>> groupsOfCircle = new ArrayList<>();
-//    private ArrayList<ArrayList<Integer>> circleO = new ArrayList<>();
-//    private ArrayList<ArrayList<Integer>> circleD = new ArrayList<>();
-//    private ArrayList<ArrayList<Integer>> wayPoint = new ArrayList<>();
-//    public int curDrawingGroupId = 0;
-//    private CircleRegion curDrawingCircle = null;
-//    private CircleRegion curMovingCircle = null;
-
 
     @Override
     public void settings() {
@@ -172,7 +163,9 @@ public class DemoInterface extends PApplet {
         updateMap();
         updateTrajImages();
 
-        drawRegions();
+        if(CircleRegionControl.getCircleRegionControl().isAddFinished()){
+            drawRegions();
+        }
 
         handleScreenShot();
         drawCompoment();
@@ -210,7 +203,6 @@ public class DemoInterface extends PApplet {
             }
         } else if (mouseButton == LEFT) {
             //circle region reuse
-
             CircleRegion existCircle = null;
 
             for (int i = 0; i < control.getGroupsOfCircle().size(); ++i) {
@@ -232,6 +224,8 @@ public class DemoInterface extends PApplet {
                     CircleRegion circle = new CircleRegion(existCircle, control.getCurDrawingGroupId(), newId);
                     circle.setColor(PSC.COLOR_LIST[circle.getKind()]);
                     addCircle(circle);
+
+                    control.addReusedCircle(existCircle, circle);
 
                     System.out.print("add ");
                     System.out.println(existCircle + " into group " + control.getCurDrawingGroupId());
@@ -272,7 +266,6 @@ public class DemoInterface extends PApplet {
                 imgCleaned[i] = false;
             }
         }
-
         CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
 
         if (control.getCurDrawingCircle() != null) {
@@ -386,7 +379,6 @@ public class DemoInterface extends PApplet {
         } else {
             control.getWayPoint().get(curDrawingGroupId).add(id);
         }
-        //getRegionType();
 
         for (int i = 0; i < control.getGroupsOfCircle().size(); ++i) {
             System.out.println(control.getGroupsOfCircle().get(i));
@@ -457,7 +449,6 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    //rewrote by wsx
     private void drawRegions() {
         CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
 
@@ -522,6 +513,7 @@ public class DemoInterface extends PApplet {
                 circle.updateCircleScreenPosition();
             }
 
+            updateReuseCircles(circle);
         }
 
         if (intoMaxMap) {
@@ -565,6 +557,20 @@ public class DemoInterface extends PApplet {
             }
         }
 
+    }
+
+    private void updateReuseCircles(CircleRegion circle) {
+        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+
+        if (control.getReuseMap().containsKey(circle)) {
+            int pos = control.getReuseMap().get(circle);
+            ArrayList<CircleRegion> reusedCircles = control.getReusedCircles().get(pos);
+
+            for (CircleRegion reusedCircle : reusedCircles) {
+                reusedCircle.setCircleCenter(circle.getCircleCenter());
+                reusedCircle.setRadiusLocation(circle.getRadiusLocation());
+            }
+        }
     }
 
     private void drawCompoment() {

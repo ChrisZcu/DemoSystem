@@ -7,6 +7,7 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 public class CircleRegion extends RegionModel {
     private Location circleCenter;
@@ -21,17 +22,9 @@ public class CircleRegion extends RegionModel {
     private int kind; //0: O  1: D  2: W
     private Color color;
 
-    private boolean moving = false;
 
     public CircleRegion() {
 
-    }
-
-    public CircleRegion(Location circleCenter, Location radiusLocation, int mapId) {
-        this.circleCenter = circleCenter;
-        this.mapId = mapId;
-        this.radiusLocation = radiusLocation;
-        updateCircleScreenPosition();
     }
 
     public CircleRegion(Location circleCenter, Location radiusLocation, int groupId, int id, int kind) {
@@ -101,15 +94,6 @@ public class CircleRegion extends RegionModel {
         this.kind = kind;
     }
 
-    public boolean isMoving() {
-        return moving;
-    }
-
-    public void setMoving(boolean moving) {
-        this.moving = moving;
-    }
-
-
     public float getCenterX() {
         return centerX;
     }
@@ -117,7 +101,6 @@ public class CircleRegion extends RegionModel {
     public float getCenterY() {
         return centerY;
     }
-
 
     public Color getColor() {
         return color;
@@ -141,16 +124,6 @@ public class CircleRegion extends RegionModel {
 
     public void setMapId(int mapId) {
         this.mapId = mapId;
-    }
-
-    public CircleRegion getCrsRegionCircle(int mapId) {
-        UnfoldingMap map = SharedObject.getInstance().getMapList()[mapId];
-
-        CircleRegion newCricleRegion = new CircleRegion(circleCenter, radiusLocation, mapId);
-        newCricleRegion.setColor(color);
-        newCricleRegion.setId(id);
-
-        return newCricleRegion;
     }
 
     public void updateCircleScreenPosition() {

@@ -68,16 +68,16 @@ public class CircleRegionGroup {
         //TODO update the shared object
     }
 
-    public CircleRegionGroup getCorrCircleWayPointGroup(int mapId) {
-        CircleRegionGroup circleWayPointGroup = new CircleRegionGroup(groupId);
-        circleWayPointGroup.setWayPointLayer(wayPointLayer);
-        for (ArrayList<CircleRegion> wList : wayPointLayerList) {
-            ArrayList<CircleRegion> tmp = new ArrayList<>();
-            for (CircleRegion r : wList) {
-                tmp.add(r.getCrsRegionCircle(mapId));
-            }
-            circleWayPointGroup.getWayPointLayerList().add(tmp);
-        }
-        return circleWayPointGroup;
-    }
+//    public CircleRegionGroup getCorrCircleWayPointGroup(int mapId) {
+//        CircleRegionGroup circleWayPointGroup = new CircleRegionGroup(groupId);
+//        circleWayPointGroup.setWayPointLayer(wayPointLayer);
+//        for (ArrayList<CircleRegion> wList : wayPointLayerList) {
+//            ArrayList<CircleRegion> tmp = new ArrayList<>();
+//            for (CircleRegion r : wList) {
+//                tmp.add(r.getCrsRegionCircle(mapId));
+//            }
+//            circleWayPointGroup.getWayPointLayerList().add(tmp);
+//        }
+//        return circleWayPointGroup;
+//    }
 }
