@@ -26,37 +26,38 @@ public class SelectAlg {
      * @param trajList the trajList based, including Full, VFGS, Random
      */
     public static Trajectory[] getODTraj(int begin, int end, Trajectory[] trajList, int optIndex) {
-        SharedObject instance = SharedObject.getInstance();
-        UnfoldingMap map = instance.getMapList()[optIndex];
-        RegionModel regionO;
-        RegionModel regionD;
-
-        if (instance.isCircleRegion()) {
-            regionO = CircleRegionControl.getCircleRegionControl().getCircleO();
-            regionD = CircleRegionControl.getCircleRegionControl().getCircleD();
-        } else {
-            regionO = instance.getRegionOList()[optIndex];
-            regionD = instance.getRegionDList()[optIndex];
-        }
-        ArrayList<Trajectory> res = new ArrayList<>();
-        for (int i = begin; i < end; i++) {
-            Trajectory traj = trajList[i];
-            Location[] locations = traj.locations;
-            if (instance.isCircleRegion()) {
-                assert regionD instanceof CircleRegion;
-                if (inCheck((CircleRegion) regionO, locations[0], map)
-                        && inCheck((CircleRegion) regionD, locations[locations.length - 1], map)) {
-                    res.add(traj);
-                }
-            } else {
-                assert regionD instanceof RectRegion;
-                if (inCheck((RectRegion) regionO, locations[0], map)
-                        && inCheck((RectRegion) regionD, locations[locations.length - 1], map)) {
-                    res.add(traj);
-                }
-            }
-        }
-        return res.toArray(new Trajectory[0]);
+//        SharedObject instance = SharedObject.getInstance();
+//        UnfoldingMap map = instance.getMapList()[optIndex];
+//        RegionModel regionO;
+//        RegionModel regionD;
+//
+//        if (instance.isCircleRegion()) {
+//            regionO = CircleRegionControl.getCircleRegionControl().getCircleO();
+//            regionD = CircleRegionControl.getCircleRegionControl().getCircleD();
+//        } else {
+//            regionO = instance.getRegionOList()[optIndex];
+//            regionD = instance.getRegionDList()[optIndex];
+//        }
+//        ArrayList<Trajectory> res = new ArrayList<>();
+//        for (int i = begin; i < end; i++) {
+//            Trajectory traj = trajList[i];
+//            Location[] locations = traj.locations;
+//            if (instance.isCircleRegion()) {
+//                assert regionD instanceof CircleRegion;
+//                if (inCheck((CircleRegion) regionO, locations[0], map)
+//                        && inCheck((CircleRegion) regionD, locations[locations.length - 1], map)) {
+//                    res.add(traj);
+//                }
+//            } else {
+//                assert regionD instanceof RectRegion;
+//                if (inCheck((RectRegion) regionO, locations[0], map)
+//                        && inCheck((RectRegion) regionD, locations[locations.length - 1], map)) {
+//                    res.add(traj);
+//                }
+//            }
+//        }
+//        return res.toArray(new Trajectory[0]);
+        return null;
     }
 
 
@@ -146,17 +147,18 @@ public class SelectAlg {
      * This method will call {@link #getWayPointTraj} as underlying method.
      */
     public static Trajectory[] getWayPointTraj(int begin, int end, Trajectory[] trajectory, int optIndex) {
-        ArrayList<Trajectory> res = new ArrayList<>();
-        if (SharedObject.getInstance().isCircleRegion()) {
-            for (CircleRegionGroup circleRegionGroup : CircleRegionControl.getCircleRegionControl().getCircleWayPointList()[optIndex]) {
-                res.addAll(getCircleWayPointTraj(begin, end, trajectory, optIndex, circleRegionGroup.getWayPointLayerList()));
-            }
-        } else {
-            for (WayPointGroup wayPointGroup : SharedObject.getInstance().getWayPointGroupList()[optIndex]) {
-                res.addAll(getWayPointTraj(begin, end, trajectory, optIndex, wayPointGroup.getWayPointLayerList()));
-            }
-        }
-        return res.toArray(new Trajectory[0]);
+//        ArrayList<Trajectory> res = new ArrayList<>();
+//        if (SharedObject.getInstance().isCircleRegion()) {
+//            for (CircleRegionGroup circleRegionGroup : CircleRegionControl.getCircleRegionControl().getCircleWayPointList()[optIndex]) {
+//                res.addAll(getCircleWayPointTraj(begin, end, trajectory, optIndex, circleRegionGroup.getWayPointLayerList()));
+//            }
+//        } else {
+//            for (WayPointGroup wayPointGroup : SharedObject.getInstance().getWayPointGroupList()[optIndex]) {
+//                res.addAll(getWayPointTraj(begin, end, trajectory, optIndex, wayPointGroup.getWayPointLayerList()));
+//            }
+//        }
+//        return res.toArray(new Trajectory[0]);
+        return null;
     }
 
     private static ArrayList<Trajectory> getWayPointTraj(int begin, int end, Trajectory[] trajectory, int optIndex, ArrayList<ArrayList<RectRegion>> regionWList) {

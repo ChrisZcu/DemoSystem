@@ -4,6 +4,7 @@ import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
+import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManager;
 import model.*;
 import processing.core.PApplet;
@@ -18,8 +19,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+
+import static model.BlockType.NONE;
 
 
 public class DemoInterface extends PApplet {
@@ -87,6 +91,16 @@ public class DemoInterface extends PApplet {
     private MenuWindow menuWindow;
     private SelectDataDialog selectDataDialog;
 
+    //new region logic by wsx
+//    private ArrayList<ArrayList<CircleRegion>> groupsOfCircle = new ArrayList<>();
+//    private ArrayList<ArrayList<Integer>> circleO = new ArrayList<>();
+//    private ArrayList<ArrayList<Integer>> circleD = new ArrayList<>();
+//    private ArrayList<ArrayList<Integer>> wayPoint = new ArrayList<>();
+//    public int curDrawingGroupId = 0;
+//    private CircleRegion curDrawingCircle = null;
+//    private CircleRegion curMovingCircle = null;
+
+
     @Override
     public void settings() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -144,6 +158,11 @@ public class DemoInterface extends PApplet {
         textFont(createFont("宋体", 12));
 
         (new Thread(this::loadData)).start();
+
+        CircleRegionControl.getCircleRegionControl().getGroupsOfCircle().add(new ArrayList<>());
+        CircleRegionControl.getCircleRegionControl().getCircleO().add(new ArrayList<>());
+        CircleRegionControl.getCircleRegionControl().getCircleD().add(new ArrayList<>());
+        CircleRegionControl.getCircleRegionControl().getWayPoint().add(new ArrayList<>());
     }
 
     @Override
@@ -153,16 +172,14 @@ public class DemoInterface extends PApplet {
         updateMap();
         updateTrajImages();
 
-//        drawRectRegion();
-        drawCircleRegion();
+        drawRegions();
+
         handleScreenShot();
         drawCompoment();
     }
 
     @Override
     public void mousePressed() {
-        optIndex = getOptIndex(mouseX, mouseY);
-
         if (oneMapIdx == 4) {
             buttonClickListener();
         } else {
@@ -170,17 +187,81 @@ public class DemoInterface extends PApplet {
             handleOneMapBtnPressed(oneMapIdx);
         }
 
-        if (mouseButton == RIGHT) {
-            if (SharedObject.getInstance().checkSelectRegion()) {
-                regionDrawing = true;
-                lastClick = new Position(mouseX, mouseY);
+        Location mouse = SharedObject.getInstance().getMapList()[getOptIndex(mouseX, mouseY)].getLocation(mouseX, mouseY);
+        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+
+        if (SharedObject.getInstance().isDragRegion() && mouseButton == LEFT) {
+            //move exist region
+            if (control.getCurMovingCircle() != null) {
+                control.setCurMovingCircle(null);
+            } else {
+                for (int i = 0; i < control.getGroupsOfCircle().size(); ++i) {
+                    ArrayList<CircleRegion> group = control.getGroupsOfCircle().get(i);
+                    for (int j = 0; j < group.size(); ++j) {
+                        Location center = group.get(j).getCircleCenter();
+                        Location radius = group.get(j).getRadiusLocation();
+
+                        if (calLocationDist(center, mouse) < calLocationDist(center, radius)) {
+                            control.setCurMovingCircle(group.get(j));
+                            break;
+                        }
+                    }
+                }
+            }
+        } else if (mouseButton == LEFT) {
+            //circle region reuse
+
+            CircleRegion existCircle = null;
+
+            for (int i = 0; i < control.getGroupsOfCircle().size(); ++i) {
+                ArrayList<CircleRegion> group = control.getGroupsOfCircle().get(i);
+                for (int j = 0; j < group.size(); ++j) {
+                    Location center = group.get(j).getCircleCenter();
+                    Location radius = group.get(j).getRadiusLocation();
+
+                    if (calLocationDist(center, mouse) < calLocationDist(center, radius)) {
+                        existCircle = group.get(j);
+                        break;
+                    }
+                }
+            }
+
+            if (existCircle != null) {
+                if (isAddValid(existCircle.getKind())) {
+                    int newId = control.getGroupsOfCircle().get(control.getCurDrawingGroupId()).size();
+                    CircleRegion circle = new CircleRegion(existCircle, control.getCurDrawingGroupId(), newId);
+                    circle.setColor(PSC.COLOR_LIST[circle.getKind()]);
+                    addCircle(circle);
+
+                    System.out.print("add ");
+                    System.out.println(existCircle + " into group " + control.getCurDrawingGroupId());
+                }
             }
         }
-        //drag
-        if (SharedObject.getInstance().isDragRegion()) {
-//            dragRectRegion();
-            dragCircleRegion();
+
+        if (mouseButton == RIGHT && SharedObject.getInstance().checkSelectRegion()) {
+            Location center;
+            if (!intoMaxMap) {
+                optIndex = getOptIndex(mouseX, mouseY);
+                center = mapList[optIndex].getLocation(mouseX, mouseY);
+            } else {
+                center = mapList[4].getLocation(mouseX, mouseY);
+                //System.out.println(center);
+            }
+
+            int id = control.getGroupsOfCircle().get(control.getCurDrawingGroupId()).size();
+            int kind = isWhichKindOfRegion();
+
+            if (isAddValid(kind)) {
+                //System.out.println("valid");
+                CircleRegion circle = new CircleRegion(center, center, control.getCurDrawingGroupId(), id, kind);
+                circle.setColor(PSC.COLOR_LIST[kind]);
+
+                control.setCurDrawingCircle(circle);
+                //System.out.println(curDrawingCircle);
+            }
         }
+
     }
 
     @Override
@@ -192,10 +273,14 @@ public class DemoInterface extends PApplet {
             }
         }
 
-        if (regionDrawing) {
-            regionDrawing = false;
-//            addRectRegion();
-            addCircleRegion();
+        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+
+        if (control.getCurDrawingCircle() != null) {
+            if (!control.getCurDrawingCircle().getCircleCenter().equals(control.getCurDrawingCircle().getRadiusLocation())) {
+                addCircle(control.getCurDrawingCircle());
+                //System.out.println(curDrawingCircle);
+            }
+            control.setCurDrawingCircle(null);
         }
     }
 
@@ -254,7 +339,7 @@ public class DemoInterface extends PApplet {
 
     @Override
     public void mouseDragged() {
-        if (!regionDrawing && mouseButton != RIGHT) {
+        if (mouseButton != RIGHT) {
             if (oneMapIdx == 4) {
                 for (int i = 0; i < 4; ++i) {
                     if (mouseX >= mapXList[i] && mouseX <= mapXList[i] + mapWidth
@@ -279,6 +364,55 @@ public class DemoInterface extends PApplet {
                 imgCleaned[4] = true;
             }
         }
+
+
+    }
+
+    private void addCircle(CircleRegion circle) {
+        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+
+        int curDrawingGroupId = control.getCurDrawingGroupId();
+
+        control.getGroupsOfCircle().get(curDrawingGroupId).add(circle);
+
+        int kind = circle.getKind();
+        int id = circle.getId();
+        if (kind == 0) {
+            control.getCircleO().get(curDrawingGroupId).add(id);
+        } else if (kind == 1) {
+            if (control.getCircleD().get(curDrawingGroupId).size() != 1) {
+                control.getCircleD().get(curDrawingGroupId).add(id);
+            }
+        } else {
+            control.getWayPoint().get(curDrawingGroupId).add(id);
+        }
+        //getRegionType();
+
+        for (int i = 0; i < control.getGroupsOfCircle().size(); ++i) {
+            System.out.println(control.getGroupsOfCircle().get(i));
+        }
+        for (int i = 0; i < control.getCircleO().size(); ++i) {
+            System.out.println(control.getCircleO().get(i));
+            System.out.println(control.getCircleD().get(i));
+            System.out.println(control.getWayPoint().get(i));
+        }
+        System.out.println();
+    }
+
+    private boolean isAddValid(int kind) {
+        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+
+        boolean isValid = true;
+        if (kind == 0) {
+            if (control.getCircleO().get(control.getCurDrawingGroupId()).size() == 1) {
+                isValid = false;
+            }
+        } else if (kind == 1) {
+            if (control.getCircleD().get(control.getCurDrawingGroupId()).size() == 1) {
+                isValid = false;
+            }
+        }
+        return isValid;
     }
 
     private void loadData() {
@@ -323,36 +457,114 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    private void drawRectRegion() {
-        if (regionDrawing) {//draw but not finish
-            drawAllMapRegion(getSelectRegion(lastClick, optIndex));
-        }
+    //rewrote by wsx
+    private void drawRegions() {
+        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+
         if (!intoMaxMap) {
-            for (RectRegion r : SharedObject.getInstance().getAllRegions()) {
-                drawRegion(r);
+            for (ArrayList<CircleRegion> group : control.getGroupsOfCircle()) {
+                for (CircleRegion circle : group) {
+                    drawRegion(circle);
+                }
             }
         } else {
-            for (RectRegion r : SharedObject.getInstance().getAllRegionsOneMap()) {
-                r.mapId = 4;
-                drawRegion(r);
+            for (ArrayList<CircleRegion> group : control.getGroupsOfCircle()) {
+                for (CircleRegion circle : group) {
+                    drawRegion(circle);
+                }
             }
+        }
+
+        if (control.getCurDrawingCircle() != null) {
+            drawRegion(control.getCurDrawingCircle());
         }
     }
 
-    private void drawCircleRegion() {
-        if (regionDrawing) {
-            drawAllMapRegion(getSelectCircle(lastClick, optIndex));
-        }
-        if (!intoMaxMap) {
-            for (CircleRegion circleRegion : CircleRegionControl.getCircleRegionControl().getAllCircleRegions()) {
-                drawRegion(circleRegion);
+    private void drawRegion(CircleRegion circle) {
+        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+
+        if (circle.equals(control.getCurDrawingCircle())) {
+            if (intoMaxMap) {
+                circle.setRadiusLocation(mapList[4].getLocation(mouseX, mouseY));
+            } else {
+                optIndex = getOptIndex(mouseX, mouseY);
+                circle.setRadiusLocation(mapList[optIndex].getLocation(mouseX, mouseY));
             }
+        }
+
+        if (circle.equals(control.getCurMovingCircle())) {
+            int mapId;
+            if (intoMaxMap) {
+                mapId = 4;
+            } else {
+                mapId = getOptIndex(mouseX, mouseY);
+            }
+
+            UnfoldingMap map = SharedObject.getInstance().getMapList()[mapId];
+            ScreenPosition pos = map.getScreenPosition(circle.getCircleCenter());
+            float x = pos.x;
+            float y = pos.y;
+            ScreenPosition lastClick = SharedObject.getInstance().getMapList()[mapId].getScreenPosition(circle.getRadiusLocation());
+            float radius = (float) Math.pow((Math.pow(x - lastClick.x, 2) + Math.pow(y - lastClick.y, 2)), 0.5);
+
+            if (intoMaxMap) {
+                circle.setCircleCenter(mapList[mapId].getLocation(mouseX, mouseY));
+                circle.setRadiusLocation(mapList[mapId].getLocation(mouseX + radius, mouseY));
+                circle.updateCircleScreenPosition();
+            } else {
+                float mx = constrain(mouseX,
+                        mapXList[mapId] + 3 + circleSize / 2, mapXList[mapId] + mapWidth - 3 - radius - circleSize / 2);
+                float my = constrain(mouseY,
+                        mapYList[mapId] + 3 + circleSize / 2, mapYList[mapId] + mapHeight - 3 - radius - circleSize / 2);
+
+                circle.setCircleCenter(mapList[mapId].getLocation(mx, my));
+                circle.setRadiusLocation(mapList[mapId].getLocation(mx + radius, my));
+                circle.updateCircleScreenPosition();
+            }
+
+        }
+
+        if (intoMaxMap) {
+            UnfoldingMap map = SharedObject.getInstance().getMapList()[4];
+            ScreenPosition pos = map.getScreenPosition(circle.getCircleCenter());
+            float x = pos.x;
+            float y = pos.y;
+
+            ScreenPosition radiusPosition = SharedObject.getInstance().getMapList()[4].getScreenPosition(circle.getRadiusLocation());
+            float radius = (float) Math.pow((Math.pow(x - radiusPosition.x, 2) + Math.pow(y - radiusPosition.y, 2)), 0.5);
+
+            stroke(circle.getColor().getRGB());
+            strokeWeight(3);
+            noFill();
+            ellipseMode(RADIUS);
+            ellipse(x, y, radius, radius);
+
+            strokeWeight(circleSize);
+            point(x, y);
         } else {
-            for (CircleRegion circleRegion : CircleRegionControl.getCircleRegionControl().getAllRegionsInOneMap()) {
-                circleRegion.setMapId(4);
-                drawRegion(circleRegion);
+            for (int i = 0; i < 4; ++i) {
+                if (i == 3 && SharedObject.getInstance().getBlockList()[3].getBlockType().equals(NONE)) {
+                    continue;
+                }
+                UnfoldingMap map = SharedObject.getInstance().getMapList()[i];
+                ScreenPosition pos = map.getScreenPosition(circle.getCircleCenter());
+                float x = pos.x;
+                float y = pos.y;
+
+                ScreenPosition lastClick = SharedObject.getInstance().getMapList()[i].getScreenPosition(circle.getRadiusLocation());
+                float radius = (float) Math.pow((Math.pow(x - lastClick.x, 2) + Math.pow(y - lastClick.y, 2)), 0.5);
+
+                stroke(circle.getColor().getRGB());
+                strokeWeight(3);
+                noFill();
+                ellipseMode(RADIUS);
+                ellipse(x, y, radius, radius);
+
+                strokeWeight(circleSize);
+                point(x, y);
             }
         }
+
     }
 
     private void drawCompoment() {
@@ -404,51 +616,6 @@ public class DemoInterface extends PApplet {
                     continue nextMap;
                 }
                 image(pg, mapXList[mapIdx], mapYList[mapIdx]);
-            }
-        }
-    }
-
-    private void drawAllMapRegion(CircleRegion circle) {
-        if (!intoMaxMap) {
-            for (int i = 0; i < 4; i++) {
-                drawRegion(circle.getCrsRegionCircle(i));
-            }
-        } else {
-            drawRegion(circle.getCrsRegionCircle(4));
-        }
-    }
-
-    private void drawAllMapRegion(RectRegion selectRegion) {
-        if (!intoMaxMap) {
-            for (int i = 0; i < 4; i++) {
-                drawRegion(selectRegion.getCorresRegion(i));
-            }
-        } else {// in one map
-            drawRegion(selectRegion.getCorresRegion(4));
-        }
-    }
-
-    private void dragRectRegion() {
-        for (RectRegion r : SharedObject.getInstance().getAllRegions()) {
-            if (mouseX >= r.leftTop.x - circleSize / 2 && mouseX <= r.leftTop.x + circleSize / 2
-                    && mouseY >= r.leftTop.y - circleSize / 2 && mouseY <= r.leftTop.y + circleSize / 2) {
-                dragRegionId = r.id;
-                dragRegionIntoMapId = r.mapId;
-                mouseMove = !mouseMove;
-                System.out.println(dragRegionId + "," + r.id + ", " + mouseMove);
-                break;
-            }
-        }
-    }
-
-    private void dragCircleRegion() {
-        for (CircleRegion circle : CircleRegionControl.getCircleRegionControl().getAllCircleRegions()) {
-            if (mouseX >= circle.getCenterX() - circleSize / 2 && mouseX <= circle.getCenterX() + circleSize / 2
-                    && mouseY >= circle.getCenterY() - circleSize / 2 && mouseY <= circle.getCenterY() + circleSize / 2) {
-                dragRegionId = circle.getId();
-                dragRegionIntoMapId = circle.getMapId();
-                mouseMove = !mouseMove;
-                break;
             }
         }
     }
@@ -683,34 +850,6 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    private void addRectRegion() {
-        RectRegion selectRegion = getSelectRegion(lastClick, optIndex);
-        selectRegion.id = regionId++;
-        if (SharedObject.getInstance().checkRegion(0)) {
-            System.out.println(0);// O
-            SharedObject.getInstance().setRegionO(selectRegion);
-        } else if (SharedObject.getInstance().checkRegion(1)) { // D
-            System.out.println(1);
-            SharedObject.getInstance().setRegionD(selectRegion);
-        } else {
-            SharedObject.getInstance().addWayPoint(selectRegion);
-        }
-    }
-
-    private void addCircleRegion() {
-        CircleRegion circle = getSelectCircle(lastClick, optIndex);
-        circle.setId(regionId++);
-        if (SharedObject.getInstance().checkRegion(0)) {
-            System.out.println(0);
-            CircleRegionControl.getCircleRegionControl().setCircleO(circle);
-        } else if (SharedObject.getInstance().checkRegion(1)) { // D
-            System.out.println(1);
-            CircleRegionControl.getCircleRegionControl().setCircleD(circle);
-        } else {
-            CircleRegionControl.getCircleRegionControl().addWayPoint(circle);
-        }
-    }
-
     private void updateMap() {
         if (oneMapIdx < 0) {
             // switch to extraMap mode
@@ -768,80 +907,6 @@ public class DemoInterface extends PApplet {
             }
         }
         return 0;
-    }
-
-    private RectRegion getSelectRegion(Position lastClick, int optIndex) {
-        float mapWidth = this.mapWidth;
-        float mapHeight = this.mapHeight;
-
-        if (intoMaxMap) {
-            mapWidth = screenWidth;
-            mapHeight = screenHeight;
-        }
-        float mx = constrain(mouseX, mapXList[optIndex] + 3 + circleSize / 2, mapXList[optIndex] + mapWidth - 3 - circleSize / 2);
-        float my = constrain(mouseY, mapYList[optIndex] + 3 + circleSize / 2, mapYList[optIndex] + mapHeight - 3 - circleSize / 2);
-
-        Position curClick = new Position(mx, my);
-        RectRegion selectRegion = new RectRegion();
-        if (lastClick.x < curClick.x) {//left
-            if (lastClick.y < curClick.y) {//up
-                selectRegion.leftTop = lastClick;
-                selectRegion.rightBtm = curClick;
-            } else {//left_down
-                Position left_top = new Position(lastClick.x, curClick.y);
-                Position right_btm = new Position(curClick.x, lastClick.y);
-                selectRegion = new RectRegion(left_top, right_btm);
-            }
-        } else {//right
-            if (lastClick.y < curClick.y) {//up
-                Position left_top = new Position(curClick.x, lastClick.y);
-                Position right_btm = new Position(lastClick.x, curClick.y);
-                selectRegion = new RectRegion(left_top, right_btm);
-            } else {
-                selectRegion = new RectRegion(curClick, lastClick);
-            }
-        }
-
-        if (SharedObject.getInstance().checkRegion(0)) {    // O
-            selectRegion.color = PSC.COLOR_LIST[0];
-        } else if (SharedObject.getInstance().checkRegion(1)) {     // D
-            selectRegion.color = PSC.COLOR_LIST[1];
-        } else {
-            int groupId = SharedObject.getInstance().getCurGroupNum();
-            int nextColorIdx = SharedObject.getInstance().getWayLayer();
-            selectRegion.color = PSC.COLOT_TOTAL_LIST[groupId][nextColorIdx];
-        }
-
-        selectRegion.initLoc(mapList[optIndex].getLocation(selectRegion.leftTop.x, selectRegion.leftTop.y),
-                mapList[optIndex].getLocation(selectRegion.rightBtm.x, selectRegion.rightBtm.y));
-
-        return selectRegion;
-    }
-
-    private CircleRegion getSelectCircle(Position lastClick, int optIndex) {
-        float mapWidth = this.mapWidth;
-        float mapHeight = this.mapHeight;
-
-        if (intoMaxMap) {
-            mapWidth = screenWidth;
-            mapHeight = screenHeight;
-        }
-        float mx = constrain(mouseX, mapXList[optIndex] + 3 + circleSize / 2, mapXList[optIndex] + mapWidth - 3 - circleSize / 2);
-        float my = constrain(mouseY, mapYList[optIndex] + 3 + circleSize / 2, mapYList[optIndex] + mapHeight - 3 - circleSize / 2);
-
-        CircleRegion selectCircle = new CircleRegion(mapList[optIndex].getLocation(lastClick.x, lastClick.y),
-                mapList[optIndex].getLocation(mx, my), optIndex);
-
-        if (SharedObject.getInstance().checkRegion(0)) {   // O
-            selectCircle.setColor(PSC.COLOR_LIST[0]);
-        } else if (SharedObject.getInstance().checkRegion(1)) {    // D
-            selectCircle.setColor(PSC.COLOR_LIST[1]);
-        } else {
-            int groupId = SharedObject.getInstance().getCurGroupNum();
-            int nextColorIdx = SharedObject.getInstance().getWayLayer();
-            selectCircle.setColor(PSC.COLOT_TOTAL_LIST[groupId][nextColorIdx]);
-        }
-        return selectCircle;
     }
 
     private void initMapSurface() {
@@ -932,127 +997,6 @@ public class DemoInterface extends PApplet {
                 dataButtonYOff + mapDownOff + 70, 70, 20, 2, "MinMap");
     }
 
-    private void drawRegion(CircleRegion circle) {
-        if (circle == null || circle.getCircleCenter() == null) {
-            return;
-        }
-        stroke(circle.getColor().getRGB());
-        noFill();
-        strokeWeight(3);
-
-        float mapWidth = this.mapWidth;
-        float mapHeight = this.mapHeight;
-
-        if (intoMaxMap) {
-            mapWidth = screenWidth;
-            mapHeight = screenHeight;
-        }
-
-        circle.updateCircleScreenPosition();
-        float x = circle.getCenterX();
-        float y = circle.getCenterY();
-        float radius = circle.getRadius();
-
-        int mapId = circle.getMapId();
-        if (x + radius > mapXList[mapId] + mapWidth || x - radius < mapXList[mapId]
-                || y + radius > mapYList[mapId] + mapHeight || y - radius < mapYList[mapId]) {
-            return;
-        }
-        if (mouseMove && circle.getId() == dragRegionId && circle.getMapId() == dragRegionIntoMapId) {
-            float mx = constrain(mouseX,
-                    mapXList[optIndex] + 3 + circleSize / 2, mapXList[optIndex] + mapWidth - 3 - radius - circleSize / 2);
-            float my = constrain(mouseY,
-                    mapYList[optIndex] + 3 + circleSize / 2, mapYList[optIndex] + mapHeight - 3 - radius - circleSize / 2);
-
-            circle.setCircleCenter(mapList[optIndex].getLocation(mx, my));
-            circle.setRadiusLocation(mapList[optIndex].getLocation(mx + radius, my));
-            circle.updateCircleScreenPosition();
-
-            CircleRegionControl.getCircleRegionControl().updateMovedRegion(circle);
-        }
-        x = circle.getCenterX();
-        y = circle.getCenterY();
-        ellipseMode(RADIUS);
-        ellipse(x, y, radius, radius);
-
-        strokeWeight(circleSize);
-        point(x, y);
-
-    }
-
-    private void drawRegion(RectRegion r) {
-        if (r == null || r.leftTop == null || r.rightBtm == null) {
-            return;
-        }
-        stroke(r.color.getRGB());
-        noFill();
-        strokeWeight(3);
-
-        r.updateScreenPosition();
-        Position lT = r.leftTop;
-        Position rB = r.rightBtm;
-
-        float mapWidth = this.mapWidth;
-        float mapHeight = this.mapHeight;
-
-        if (intoMaxMap) {
-            mapWidth = screenWidth;
-            mapHeight = screenHeight;
-        }
-
-        if (lT.x < mapXList[r.mapId] || lT.y < mapYList[r.mapId] ||
-                rB.x > mapXList[r.mapId] + mapWidth || rB.y > mapYList[r.mapId] + mapHeight) {
-
-            if (lT.x > mapXList[r.mapId] + mapWidth || lT.y > mapYList[r.mapId] + mapHeight ||
-                    rB.x < mapXList[r.mapId] || rB.y < mapYList[r.mapId]) {
-                return;
-            }
-
-            float tmpLTX = Math.max(lT.x, mapXList[r.mapId]);
-            float tmpLTY = Math.max(lT.y, mapYList[r.mapId]);
-
-            float tmpRBX = Math.min(rB.x, mapXList[r.mapId] + mapWidth);
-            float tmpRBY = Math.min(rB.y, mapYList[r.mapId] + mapHeight);
-
-
-            line(tmpLTX, tmpLTY, tmpRBX, tmpLTY);
-            line(tmpRBX, tmpLTY, tmpRBX, tmpRBY);
-            line(tmpRBX, tmpRBY, tmpLTX, tmpRBY);
-            line(tmpLTX, tmpRBY, tmpLTX, tmpLTY);
-
-            return;
-        }
-        int length = Math.abs(lT.x - rB.x);
-        int high = Math.abs(lT.y - rB.y);
-
-        if (mouseMove && r.id == dragRegionId && r.mapId == dragRegionIntoMapId) {
-            float mx = constrain(mouseX, mapXList[optIndex] + 3 + circleSize / 2, mapXList[optIndex] + mapWidth - 3 - length - circleSize / 2);
-            float my = constrain(mouseY, mapYList[optIndex] + 3 + circleSize / 2, mapYList[optIndex] + mapHeight - 3 - high - circleSize / 2);
-
-            r.setLeftTopLoc(mapList[dragRegionIntoMapId].getLocation(mx, my));
-            r.setRightBtmLoc(mapList[dragRegionIntoMapId].getLocation(mx + length, my + high));
-
-            SharedObject.getInstance().updateRegionList(r);
-
-            r.leftTop = new Position(mx, my);
-            r.rightBtm = new Position(mx + length, my + high);
-
-
-        }
-
-        lT = r.leftTop;
-        rB = r.rightBtm;
-
-        length = Math.abs(lT.x - rB.x);
-        high = Math.abs(lT.y - rB.y);
-
-        lT = r.leftTop;
-        rect(lT.x, lT.y, length, high);
-
-        strokeWeight(circleSize);
-        point(r.leftTop.x, r.leftTop.y);
-    }
-
     private void drawInfoTextBox(int i, int x, int y, int width, int height) {
         boolean visible = i == 4 || viewVisibleList[i];
         if (!visible) {
@@ -1090,6 +1034,22 @@ public class DemoInterface extends PApplet {
         Location center2 = mapList[m2].getCenter();
 
         return zoomLevel1 == zoomLevel2 && isLocationSame(center1, center2);
+    }
+
+    private int isWhichKindOfRegion() {
+        if (SharedObject.getInstance().checkRegion(0)) {   // O
+            return 0;
+        } else if (SharedObject.getInstance().checkRegion(1)) {    // D
+            return 1;
+        } else if (SharedObject.getInstance().checkRegion(2)) {
+            return 2;
+        } else {
+            return -1;
+        }
+    }
+
+    private double calLocationDist(Location Loc1, Location Loc2) {
+        return Math.pow((Math.pow(Loc1.x - Loc2.x, 2) + Math.pow(Loc1.y - Loc2.y, 2)), 0.5);
     }
 
     public static void main(String[] args) {

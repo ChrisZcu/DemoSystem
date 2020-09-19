@@ -11,31 +11,17 @@ import java.awt.*;
 public class CircleRegion extends RegionModel {
     private Location circleCenter;
 
-    public Location getRadiusLocation() {
-        return radiusLocation;
-    }
-
-    public void setRadiusLocation(Location radiusLocation) {
-        this.radiusLocation = radiusLocation;
-    }
-
+    private float centerX;
+    private float centerY;
     private Location radiusLocation;
 
-    private Color color;
     private int id; // click judge
+    private int groupId;
     private int mapId; // map update
+    private int kind; //0: O  1: D  2: W
+    private Color color;
 
-    private float centerX;
-
-    public float getCenterX() {
-        return centerX;
-    }
-
-    public float getCenterY() {
-        return centerY;
-    }
-
-    private float centerY;
+    private boolean moving = false;
 
     public CircleRegion() {
 
@@ -48,6 +34,41 @@ public class CircleRegion extends RegionModel {
         updateCircleScreenPosition();
     }
 
+    public CircleRegion(Location circleCenter, Location radiusLocation, int groupId, int id, int kind) {
+        this.circleCenter = circleCenter;
+
+        this.radiusLocation = radiusLocation;
+        this.groupId = groupId;
+        this.id = id;
+        this.kind = kind;
+
+        updateCircleScreenPosition();
+    }
+
+    public CircleRegion(CircleRegion circle, int groupId, int id) {
+        this.circleCenter = circle.getCircleCenter();
+
+        this.radiusLocation = circle.getRadiusLocation();
+        this.groupId = groupId;
+        this.id = id;
+        this.kind = circle.getKind();
+
+        updateCircleScreenPosition();
+    }
+
+    public float getRadius() {
+        updateCircleScreenPosition();
+        ScreenPosition lastClick = SharedObject.getInstance().getMapList()[mapId].getScreenPosition(radiusLocation);
+        return (float) Math.pow((Math.pow(centerX - lastClick.x, 2) + Math.pow(centerY - lastClick.y, 2)), 0.5);
+    }
+
+    public float getRadius(int mouseX, int mouseY) {
+        UnfoldingMap map = SharedObject.getInstance().getMapList()[mapId];
+        ScreenPosition posCenter = map.getScreenPosition(circleCenter);
+
+        return (float) Math.pow((Math.pow(posCenter.x - mouseX, 2) + Math.pow(posCenter.y - mouseY, 2)), 0.5);
+    }
+
     public Location getCircleCenter() {
         return circleCenter;
     }
@@ -56,10 +77,45 @@ public class CircleRegion extends RegionModel {
         this.circleCenter = circleCenter;
     }
 
-    public float getRadius() {
-        updateCircleScreenPosition();
-        ScreenPosition lastClick = SharedObject.getInstance().getMapList()[mapId].getScreenPosition(radiusLocation);
-        return (float) Math.pow((Math.pow(centerX - lastClick.x, 2) + Math.pow(centerY - lastClick.y, 2)), 0.5);
+    public Location getRadiusLocation() {
+        return radiusLocation;
+    }
+
+    public void setRadiusLocation(Location radiusLocation) {
+        this.radiusLocation = radiusLocation;
+    }
+
+    public int getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(int groupId) {
+        this.groupId = groupId;
+    }
+
+    public int getKind() {
+        return kind;
+    }
+
+    public void setKind(int kind) {
+        this.kind = kind;
+    }
+
+    public boolean isMoving() {
+        return moving;
+    }
+
+    public void setMoving(boolean moving) {
+        this.moving = moving;
+    }
+
+
+    public float getCenterX() {
+        return centerX;
+    }
+
+    public float getCenterY() {
+        return centerY;
     }
 
 
@@ -108,9 +164,12 @@ public class CircleRegion extends RegionModel {
     public String toString() {
         return "RegionCircle{" +
                 "circleCenter=" + circleCenter +
+                ", radiusLocation=" + radiusLocation +
                 ", color=" + color +
                 ", id=" + id +
+                ", groupId=" + groupId +
                 ", mapId=" + mapId +
+                ", kind=" + kind +
                 '}';
     }
 

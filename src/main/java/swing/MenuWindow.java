@@ -10,6 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 public class MenuWindow extends JWindow {
     private final JLabel tipsLabel;
@@ -58,11 +59,11 @@ public class MenuWindow extends JWindow {
         ActionListener wLayerButtonActionListen = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (SharedObject.getInstance().isCircleRegion()) {
-                    CircleRegionControl.getCircleRegionControl().updateLayer();
-                } else {
-                    SharedObject.getInstance().updateWLayer();
-                }
+//                if (SharedObject.getInstance().isCircleRegion()) {
+//                    CircleRegionControl.getCircleRegionControl().updateLayer();
+//                } else {
+//                    SharedObject.getInstance().updateWLayer();
+//                }
             }
         };
         wLayerButton.addActionListener(wLayerButtonActionListen);
@@ -72,11 +73,11 @@ public class MenuWindow extends JWindow {
         ActionListener wGroupButtonActionListen = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (SharedObject.getInstance().isCircleRegion()) {
-                    CircleRegionControl.getCircleRegionControl().addNewGroup();
-                } else {
-                    SharedObject.getInstance().addNewGroup();
-                }
+                CircleRegionControl.getCircleRegionControl().getGroupsOfCircle().add(new ArrayList<>());
+                CircleRegionControl.getCircleRegionControl().getCircleO().add(new ArrayList<>());
+                CircleRegionControl.getCircleRegionControl().getCircleD().add(new ArrayList<>());
+                CircleRegionControl.getCircleRegionControl().getWayPoint().add(new ArrayList<>());
+                CircleRegionControl.getCircleRegionControl().addCurDrawingGroupId();
             }
         };
         wGroupButton.addActionListener(wGroupButtonActionListen);

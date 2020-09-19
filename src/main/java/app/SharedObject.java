@@ -297,12 +297,12 @@ public class SharedObject {
     }
 
 
-    public int getCurGroupNum() {
-        if (isCircleRegion()) {
-            return CircleRegionControl.getCircleRegionControl().getWayGroupId();
-        }
-        return wayPointGroups.size() == 0 ? 0 : wayPointGroups.get(curGroupNum - 1).getGroupId();
-    }
+//    public int getCurGroupNum() {
+//        if (isCircleRegion()) {
+//            return CircleRegionControl.getCircleRegionControl().getWayGroupId();
+//        }
+//        return wayPointGroups.size() == 0 ? 0 : wayPointGroups.get(curGroupNum - 1).getGroupId();
+//    }
 
     public void setCurGroupNum(int curGroupNum) {
         this.curGroupNum = curGroupNum;
@@ -316,12 +316,12 @@ public class SharedObject {
     }
 
 
-    public int getWayLayer() {
-        if (isCircleRegion()) {
-            return CircleRegionControl.getCircleRegionControl().getWayLayer();
-        }
-        return wayPointGroups.size() == 0 ? 0 : wayPointGroups.get(curGroupNum - 1).getWayPointLayer();
-    }
+//    public int getWayLayer() {
+//        if (isCircleRegion()) {
+//            return CircleRegionControl.getCircleRegionControl().getWayLayer();
+//        }
+//        return wayPointGroups.size() == 0 ? 0 : wayPointGroups.get(curGroupNum - 1).getWayPointLayer();
+//    }
 
 
     public ArrayList<RectRegion> getAllRegions() {
@@ -425,13 +425,14 @@ public class SharedObject {
     }
 
     public void calTrajSelectResList() {
-        RegionType regionType;
-        if (isCircleRegion()) {
-            regionType = CircleRegionControl.getCircleRegionControl().getRegionType();
-        } else {
-            regionType = getRegionType();
-        }
-        SelectManager slm = new SelectManager(regionType, mapList, blockList);
+
+//        if (isCircleRegion()) {
+//            regionType = CircleRegionControl.getCircleRegionControl().getRegionType();
+//        } else {
+//            regionType = getRegionType();
+//        }
+
+        SelectManager slm = new SelectManager(getRegionType(), mapList, blockList);
         slm.startRun();
         setFinishSelectRegion(true); // finish select
     }
@@ -456,17 +457,32 @@ public class SharedObject {
         }
     }
 
-    private RegionType getRegionType() {
-        if (wayPointGroups.size() > 0) {
-            if (regionO == null && regionD == null) {
-                return RegionType.WAY_POINT;
-            } else {
+    public RegionType getRegionType() {
+        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+
+        if (control.getCircleO().get(0).size() > 0 && control.getCircleD().get(0).size() > 0) {
+            if (control.getWayPoint().get(0).size() > 0) {
                 return RegionType.O_D_W;
+            } else {
+                return RegionType.O_D;
             }
         } else {
-            return RegionType.O_D;
+            return RegionType.WAY_POINT;
         }
+
     }
+
+//    private RegionType getRegionType() {
+//        if (wayPointGroups.size() > 0) {
+//            if (regionO == null && regionD == null) {
+//                return RegionType.WAY_POINT;
+//            } else {
+//                return RegionType.O_D_W;
+//            }
+//        } else {
+//            return RegionType.O_D;
+//        }
+//    }
 
     public String getBlockInfo() {
         //TODO add store info
@@ -545,7 +561,17 @@ public class SharedObject {
 //        curGroup = wayPointGroups.get(curGroupNum - 1);
     }
 
+    public boolean isAddCurDrawingGroupId() {
+        return addCurDrawingGroupId;
+    }
+
+    public void setAddCurDrawingGroupId(boolean addCurDrawingGroupId) {
+        this.addCurDrawingGroupId = addCurDrawingGroupId;
+    }
+
     public void updateWLayer() {
         wayPointGroups.get(curGroupNum - 1).updateWayPointLayer();
     }
+
+    private boolean addCurDrawingGroupId = false;
 }
