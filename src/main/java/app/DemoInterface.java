@@ -163,9 +163,9 @@ public class DemoInterface extends PApplet {
         updateMap();
         updateTrajImages();
 
-        if(CircleRegionControl.getCircleRegionControl().isAddFinished()){
+        //if(CircleRegionControl.getCircleRegionControl().isAddFinished()){
             drawRegions();
-        }
+
 
         handleScreenShot();
         drawCompoment();
@@ -451,6 +451,15 @@ public class DemoInterface extends PApplet {
 
     private void drawRegions() {
         CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+
+        if(!CircleRegionControl.getCircleRegionControl().isAddFinished()){
+            CircleRegionControl.getCircleRegionControl().getGroupsOfCircle().add(new ArrayList<>());
+            CircleRegionControl.getCircleRegionControl().getCircleO().add(new ArrayList<>());
+            CircleRegionControl.getCircleRegionControl().getCircleD().add(new ArrayList<>());
+            CircleRegionControl.getCircleRegionControl().getWayPoint().add(new ArrayList<>());
+            CircleRegionControl.getCircleRegionControl().addCurDrawingGroupId();
+            CircleRegionControl.getCircleRegionControl().setAddFinished(true);
+        }
 
         if (!intoMaxMap) {
             for (ArrayList<CircleRegion> group : control.getGroupsOfCircle()) {

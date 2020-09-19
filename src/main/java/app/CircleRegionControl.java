@@ -26,7 +26,7 @@ public class CircleRegionControl {
     private CircleRegion curMovingCircle = null;
 
     private Map<CircleRegion, Integer> reuseMap = new HashMap<>();
-    private boolean addFinished = true;
+    private volatile boolean addFinished = true;
 
     private ArrayList<ArrayList<CircleRegion>> reusedCircles = new ArrayList<>();
 
