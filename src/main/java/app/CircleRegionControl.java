@@ -151,6 +151,8 @@ public class CircleRegionControl {
         reusedCircles.clear();
         reusedCircles = new ArrayList<>();
 
+        curDrawingGroupId = 0;
+
         isCleaning = false;
     }
 }
