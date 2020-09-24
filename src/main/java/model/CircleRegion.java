@@ -133,6 +133,12 @@ public class CircleRegion extends RegionModel {
         centerY = pos.y;
     }
 
+    public CircleRegion getCopyCircleRegion(int mapId) {
+        CircleRegion circleRegion = new CircleRegion(circleCenter, radiusLocation, groupId, id, kind);
+        circleRegion.setMapId(mapId);
+        return circleRegion;
+    }
+
     @Override
     public String toString() {
         return "RegionCircle{" +

@@ -30,6 +30,16 @@ public class CircleRegionControl {
 
     private ArrayList<ArrayList<CircleRegion>> reusedCircles = new ArrayList<>();
 
+    public boolean isClean() {
+        return isCleaning;
+    }
+
+    public void setClean(boolean isCleaning) {
+        this.isCleaning = isCleaning;
+    }
+
+    private boolean isCleaning = false;
+
     public ArrayList<ArrayList<CircleRegion>> getGroupsOfCircle() {
         return groupsOfCircle;
     }
@@ -132,11 +142,6 @@ public class CircleRegionControl {
         circleD.clear();
         wayPoint.clear();
 
-        groupsOfCircle = new ArrayList<>();
-        circleO = new ArrayList<>();
-        circleD = new ArrayList<>();
-        wayPoint = new ArrayList<>();
-
         groupsOfCircle.add(new ArrayList<>());
         circleO.add(new ArrayList<>());
         circleD.add(new ArrayList<>());
@@ -146,14 +151,6 @@ public class CircleRegionControl {
         reusedCircles.clear();
         reusedCircles = new ArrayList<>();
 
-        for (int i = 0; i < groupsOfCircle.size(); ++i) {
-            System.out.println(groupsOfCircle.get(i));
-        }
-        for (int i = 0; i < circleO.size(); ++i) {
-            System.out.println(circleO.get(i));
-            System.out.println(circleD.get(i));
-            System.out.println(wayPoint.get(i));
-        }
-        System.out.println();
+        isCleaning = false;
     }
 }

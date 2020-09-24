@@ -164,7 +164,7 @@ public class DemoInterface extends PApplet {
         updateTrajImages();
 
         //if(CircleRegionControl.getCircleRegionControl().isAddFinished()){
-            drawRegions();
+        drawRegions();
 
 
         handleScreenShot();
@@ -227,8 +227,8 @@ public class DemoInterface extends PApplet {
 
                     control.addReusedCircle(existCircle, circle);
 
-                    System.out.print("add ");
-                    System.out.println(existCircle + " into group " + control.getCurDrawingGroupId());
+//                    System.out.print("add ");
+//                    System.out.println(existCircle + " into group " + control.getCurDrawingGroupId());
                 }
             }
         }
@@ -240,19 +240,16 @@ public class DemoInterface extends PApplet {
                 center = mapList[optIndex].getLocation(mouseX, mouseY);
             } else {
                 center = mapList[4].getLocation(mouseX, mouseY);
-                //System.out.println(center);
             }
 
             int id = control.getGroupsOfCircle().get(control.getCurDrawingGroupId()).size();
             int kind = isWhichKindOfRegion();
 
             if (isAddValid(kind)) {
-                //System.out.println("valid");
                 CircleRegion circle = new CircleRegion(center, center, control.getCurDrawingGroupId(), id, kind);
                 circle.setColor(PSC.COLOR_LIST[kind]);
 
                 control.setCurDrawingCircle(circle);
-                //System.out.println(curDrawingCircle);
             }
         }
 
@@ -380,15 +377,15 @@ public class DemoInterface extends PApplet {
             control.getWayPoint().get(curDrawingGroupId).add(id);
         }
 
-        for (int i = 0; i < control.getGroupsOfCircle().size(); ++i) {
-            System.out.println(control.getGroupsOfCircle().get(i));
-        }
-        for (int i = 0; i < control.getCircleO().size(); ++i) {
-            System.out.println(control.getCircleO().get(i));
-            System.out.println(control.getCircleD().get(i));
-            System.out.println(control.getWayPoint().get(i));
-        }
-        System.out.println();
+//        for (int i = 0; i < control.getGroupsOfCircle().size(); ++i) {
+//            System.out.println(control.getGroupsOfCircle().get(i));
+//        }
+//        for (int i = 0; i < control.getCircleO().size(); ++i) {
+//            System.out.println(control.getCircleO().get(i));
+//            System.out.println(control.getCircleD().get(i));
+//            System.out.println(control.getWayPoint().get(i));
+//        }
+//        System.out.println();
     }
 
     private boolean isAddValid(int kind) {
@@ -452,13 +449,17 @@ public class DemoInterface extends PApplet {
     private void drawRegions() {
         CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
 
-        if(!CircleRegionControl.getCircleRegionControl().isAddFinished()){
-            CircleRegionControl.getCircleRegionControl().getGroupsOfCircle().add(new ArrayList<>());
-            CircleRegionControl.getCircleRegionControl().getCircleO().add(new ArrayList<>());
-            CircleRegionControl.getCircleRegionControl().getCircleD().add(new ArrayList<>());
-            CircleRegionControl.getCircleRegionControl().getWayPoint().add(new ArrayList<>());
-            CircleRegionControl.getCircleRegionControl().addCurDrawingGroupId();
-            CircleRegionControl.getCircleRegionControl().setAddFinished(true);
+        if (control.isClean()) {
+            control.cleanCircleRegions();
+        }
+
+        if (!control.isAddFinished()) {
+            control.getGroupsOfCircle().add(new ArrayList<>());
+            control.getCircleO().add(new ArrayList<>());
+            control.getCircleD().add(new ArrayList<>());
+            control.getWayPoint().add(new ArrayList<>());
+            control.addCurDrawingGroupId();
+            control.setAddFinished(true);
         }
 
         if (!intoMaxMap) {

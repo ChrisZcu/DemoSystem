@@ -3,6 +3,7 @@ package swing;
 import app.CircleRegionControl;
 import app.SharedObject;
 import draw.TrajDrawManager;
+import model.CircleRegion;
 import processing.core.PApplet;
 import util.PSC;
 
@@ -55,26 +56,11 @@ public class MenuWindow extends JWindow {
         wButton.addActionListener(wButtonActionListen);
         wButton.setSize(buttonWidth, height);
 
-        JButton wLayerButton = new JButton("NextLayer");
-        ActionListener wLayerButtonActionListen = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-//                if (SharedObject.getInstance().isCircleRegion()) {
-//                    CircleRegionControl.getCircleRegionControl().updateLayer();
-//                } else {
-//                    SharedObject.getInstance().updateWLayer();
-//                }
-            }
-        };
-        wLayerButton.addActionListener(wLayerButtonActionListen);
-        wLayerButton.setSize(buttonWidth, height);
-
         JButton wGroupButton = new JButton("NextGroup");
         ActionListener wGroupButtonActionListen = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 CircleRegionControl.getCircleRegionControl().setAddFinished(false);
-                //CircleRegionControl.getCircleRegionControl().setAddFinished(true);
             }
         };
         wGroupButton.addActionListener(wGroupButtonActionListen);
@@ -124,14 +110,16 @@ public class MenuWindow extends JWindow {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println("clear all!");
+                CircleRegionControl.getCircleRegionControl().setClean(true);
+//                CircleRegionControl.getCircleRegionControl().cleanCircleRegions();
+                // clear old select res deeply
+                SharedObject.getInstance().dropAllSelectRes();
                 SharedObject.getInstance().setAllMainColor(PSC.RED);
                 TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
                 tdm.cleanAllImg(TrajDrawManager.SLT);
                 tdm.startAllNewRenderTask(TrajDrawManager.MAIN);
 //                SharedObject.getInstance().cleanRegions();
-                CircleRegionControl.getCircleRegionControl().cleanCircleRegions();
-                // clear old select res deeply
-                SharedObject.getInstance().dropAllSelectRes();
+
             }
         };
         clearRegionButton.addActionListener(clearRegionActionListen);
@@ -148,7 +136,6 @@ public class MenuWindow extends JWindow {
         oButton.setBackground(Color.GRAY);
         dButton.setBackground(Color.GRAY);
         wButton.setBackground(Color.GRAY);
-        wLayerButton.setBackground(Color.GRAY);
         wGroupButton.setBackground(Color.GRAY);
         dragButton.setBackground(Color.GRAY);
         finishSelectButton.setBackground(Color.GRAY);
@@ -169,7 +156,6 @@ public class MenuWindow extends JWindow {
         panel.add(oButton);
         panel.add(dButton);
         panel.add(wButton);
-        panel.add(wLayerButton);
         panel.add(wGroupButton);
         panel.add(dragButton);
         panel.add(finishSelectButton);

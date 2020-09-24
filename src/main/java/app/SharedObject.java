@@ -432,7 +432,7 @@ public class SharedObject {
 //            regionType = getRegionType();
 //        }
 
-        SelectManager slm = new SelectManager(getRegionType(), mapList, blockList);
+        SelectManager slm = new SelectManager(  mapList, blockList);
         slm.startRun();
         setFinishSelectRegion(true); // finish select
     }
@@ -455,21 +455,6 @@ public class SharedObject {
                 wayPointGroupList[i] = wayPointGroupTmp;
             }
         }
-    }
-
-    public RegionType getRegionType() {
-        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
-
-        if (control.getCircleO().get(0).size() > 0 && control.getCircleD().get(0).size() > 0) {
-            if (control.getWayPoint().get(0).size() > 0) {
-                return RegionType.O_D_W;
-            } else {
-                return RegionType.O_D;
-            }
-        } else {
-            return RegionType.WAY_POINT;
-        }
-
     }
 
 //    private RegionType getRegionType() {

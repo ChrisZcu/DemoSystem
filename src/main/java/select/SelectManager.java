@@ -17,16 +17,13 @@ import java.util.concurrent.*;
  * select thread pool manager, return the traj index array.
  */
 public class SelectManager {
-    private RegionType regionType; // ODW
     private UnfoldingMap[] mapList;
     private TrajBlock[] blockList;
 
-    public SelectManager(RegionType regionType, UnfoldingMap[] mapList, TrajBlock[] blockList) {
-        this.regionType = regionType;
+    public SelectManager(UnfoldingMap[] mapList, TrajBlock[] blockList) {
         this.mapList = mapList;
         this.blockList = blockList;
 
-        System.out.println(regionType);
     }
 
 
@@ -34,9 +31,7 @@ public class SelectManager {
         if (trajBlock.getBlockType() == BlockType.NONE) {
             return new Trajectory[0];
         }
-
         int threadNum = trajBlock.getThreadNum();
-
         // TODO Recreate thread pool? Create once may be a better choice.
         ExecutorService threadPool = new ThreadPoolExecutor(threadNum, threadNum, 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>());
@@ -53,9 +48,10 @@ public class SelectManager {
             threadNum = 1;
             segLen = totLen;
         }
+        System.out.println("threadNum: " + threadNum);
 
         for (int i = 0; i < threadNum; i++) {
-            SelectWorker sw = new SelectWorker(regionType, trajBlock.getTrajList(), i * segLen, (i + 1) * segLen, opIndex, i);
+            SelectWorker sw = new SelectWorker(trajBlock.getTrajList(), i * segLen, (i + 1) * segLen, opIndex, i);
             threadPool.submit(sw);
         }
         threadPool.shutdown();
@@ -66,7 +62,7 @@ public class SelectManager {
         }
         System.out.println("ALL Done");
         for (int i = 0; i < threadNum; i++) {
-            resShowIndex =  ArrayUtils.addAll(resShowIndex, SharedObject.getInstance().getTrajSelectRes()[i]);
+            resShowIndex = ArrayUtils.addAll(resShowIndex, SharedObject.getInstance().getTrajSelectRes()[i]);
         }
         System.out.println(trajBlock.getBlockType() + " time: " + (System.currentTimeMillis() - startTime)
                 + " select size: " + resShowIndex.length);

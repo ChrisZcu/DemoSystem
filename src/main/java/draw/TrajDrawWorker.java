@@ -73,7 +73,7 @@ public class TrajDrawWorker extends Thread {
 
                 // stop the thread if it is interrupted
                 if (this.stop) {
-                    System.out.println(this.getName() + " cancel");
+//                    System.out.println(this.getName() + " cancel");
                     pg.endShape();
                     pg.endDraw();
                     return;
@@ -87,7 +87,7 @@ public class TrajDrawWorker extends Thread {
 //            trajCnt[index] ++;
         }
 
-        System.out.println(this.getName() + " finished");
+//        System.out.println(this.getName() + " finished");
         manager.setTrajImageResult(mapIdx, index, layer, pg, id);
     }
 }

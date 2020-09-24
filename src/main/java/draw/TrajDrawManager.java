@@ -129,7 +129,7 @@ public class TrajDrawManager {
             Trajectory[] trajList = layerType == 0 ?
                     tb.getTrajList() : tb.getTrajSltList();
             int totLen = trajList.length;
-            System.out.println(">>>> " + getName() + " trajList len = " + totLen);
+//            System.out.println(">>>> " + getName() + " trajList len = " + totLen);
 
             int threadNum = tb.getThreadNum();
             int segLen = totLen / threadNum;
