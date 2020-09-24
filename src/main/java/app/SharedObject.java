@@ -35,6 +35,8 @@ public class SharedObject {
 
     private boolean circleRegion = true;
 
+    private boolean intoMaxMap;
+
     public Trajectory[][] getTrajSelectRes() {
         return trajSelectRes;
     }
@@ -82,6 +84,14 @@ public class SharedObject {
 
     public void setMapHeight(int mapHeight) {
         this.mapHeight = mapHeight;
+    }
+
+    public boolean isIntoMaxMap() {
+        return intoMaxMap;
+    }
+
+    public void setIntoMaxMap(boolean intoMaxMap) {
+        this.intoMaxMap = intoMaxMap;
     }
 
     // regions

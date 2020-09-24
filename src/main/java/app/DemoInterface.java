@@ -694,6 +694,7 @@ public class DemoInterface extends PApplet {
                 System.out.println("switch one map, mapIdx=" + mapIdx);
                 switchOneMapMode(mapIdx);
                 intoMaxMap = true;
+                SharedObject.getInstance().setIntoMaxMap(true);
             } else if (eleId > 7) {
                 // HideBG / ShowBG
                 System.out.println("change BG visible, mapIdx=" + mapIdx);
@@ -862,6 +863,7 @@ public class DemoInterface extends PApplet {
                 // MinMap
                 switchOneMapMode(oneMapIdx);
                 intoMaxMap = false;
+                SharedObject.getInstance().setIntoMaxMap(false);
                 break;
         }
     }

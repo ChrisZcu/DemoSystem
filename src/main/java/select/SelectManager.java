@@ -70,22 +70,33 @@ public class SelectManager {
     }
 
     public void startRun() {
-        TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
         for (int i = 0; i < 4; i++) {
             TrajBlock trajBlock = blockList[i];
             SharedObject.getInstance().setTrajSelectRes(new Trajectory[trajBlock.getThreadNum()][]);
             Trajectory[] trajAry = startMapCal(trajBlock, i);
             trajBlock.setTrajSltList(trajAry);
-
-            if (trajBlock.getMainColor() != PSC.GRAY) {
-                // need to repaint
-                trajBlock.setMainColor(PSC.GRAY);
-                tdm.cleanImgFor(i, TrajDrawManager.MAIN);
-                tdm.startNewRenderTaskFor(i, TrajDrawManager.MAIN);
-            }
-
-            tdm.cleanImgFor(i, TrajDrawManager.SLT);
-            tdm.startNewRenderTaskFor(i, TrajDrawManager.SLT);
         }
+
+        TrajDrawManager tdm = SharedObject.getInstance().getTrajDrawManager();
+        if (SharedObject.getInstance().isIntoMaxMap()) {
+            checkAndRedraw(tdm, 4);
+        } else {
+            for (int i = 0; i < 4; i++) {
+                checkAndRedraw(tdm, i);
+            }
+        }
+    }
+
+    private void checkAndRedraw(TrajDrawManager tdm, int mapIdx) {
+        TrajBlock trajBlock = blockList[mapIdx];
+        if (trajBlock.getMainColor() != PSC.GRAY) {
+            // need to repaint
+            trajBlock.setMainColor(PSC.GRAY);
+            tdm.cleanImgFor(mapIdx, TrajDrawManager.MAIN);
+            tdm.startNewRenderTaskFor(mapIdx, TrajDrawManager.MAIN);
+        }
+
+        tdm.cleanImgFor(mapIdx, TrajDrawManager.SLT);
+        tdm.startNewRenderTaskFor(mapIdx, TrajDrawManager.SLT);
     }
 }
