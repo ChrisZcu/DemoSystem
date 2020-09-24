@@ -426,11 +426,7 @@ public class SharedObject {
 
     public void calTrajSelectResList() {
 
-//        if (isCircleRegion()) {
-//            regionType = CircleRegionControl.getCircleRegionControl().getRegionType();
-//        } else {
-//            regionType = getRegionType();
-//        }
+        CircleRegionControl.getCircleRegionControl().finishOpera();
 
         SelectManager slm = new SelectManager(  mapList, blockList);
         slm.startRun();

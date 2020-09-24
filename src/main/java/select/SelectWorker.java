@@ -46,11 +46,11 @@ public class SelectWorker extends Thread {
         for (int i = 0; i < circleRegionGroupList.size(); i++) {
             ArrayList<CircleRegion> curGroupList = circleRegionGroupList.get(i);
             RegionType regionType = getRegionType(i);
+            System.out.println(regionType);
             switch (regionType) {
                 case O_D:
-
-                    circleO = curGroupList.get(circleOIdList.get(i).get(0));
-                    circleD = curGroupList.get(circleDIdList.get(i).get(0));
+                    circleO = circleOIdList.size() > i && circleOIdList.get(i).size() > 0 ? curGroupList.get(circleOIdList.get(i).get(0)) : null;
+                    circleD = circleDIdList.size() > i && circleDIdList.get(i).size() > 0 ? curGroupList.get(circleDIdList.get(i).get(0)) : null;
 
                     tmpRes = getODTraj(circleO, circleD, begin, end, trajectory, optIndex);
                     break;
@@ -66,8 +66,8 @@ public class SelectWorker extends Thread {
                     tmpRes = getWayPointTraj(circleO, circleD, wayPointCircle, begin, end, trajectory, optIndex);
                     break;
                 case O_D_W:
-                    circleO = curGroupList.get(circleOIdList.get(i).get(0));
-                    circleD = curGroupList.get(circleDIdList.get(i).get(0));
+                    circleO = circleOIdList.size() > i && circleOIdList.get(i).size() > 0 ? curGroupList.get(circleOIdList.get(i).get(0)) : null;
+                    circleD = circleDIdList.size() > i && circleDIdList.get(i).size() > 0 ? curGroupList.get(circleDIdList.get(i).get(0)) : null;
 
                     wayPointCircle = new ArrayList<>();
                     for (Integer e : circleWIdList.get(i)) {
@@ -94,7 +94,7 @@ public class SelectWorker extends Thread {
         ArrayList<Integer> circleWIdList = CircleRegionControl.getCircleRegionControl().getWayPoint().get(circleGroupId);
 
 
-        if (circleOIdList.size() > 0 && circleDIdList.size() > 0) {
+        if (circleOIdList.size() > 0 || circleDIdList.size() > 0) {
             if (circleWIdList.size() > 0) {
                 return RegionType.O_D_W;
             } else {

@@ -328,6 +328,13 @@ public class DemoInterface extends PApplet {
     }
 
     @Override
+    public void keyPressed() {
+        if (key == 'q') {
+            printCircleInfo();
+        }
+    }
+
+    @Override
     public void mouseDragged() {
         if (mouseButton != RIGHT) {
             if (oneMapIdx == 4) {
@@ -376,16 +383,20 @@ public class DemoInterface extends PApplet {
         } else {
             control.getWayPoint().get(curDrawingGroupId).add(id);
         }
+    }
 
-//        for (int i = 0; i < control.getGroupsOfCircle().size(); ++i) {
-//            System.out.println(control.getGroupsOfCircle().get(i));
-//        }
-//        for (int i = 0; i < control.getCircleO().size(); ++i) {
-//            System.out.println(control.getCircleO().get(i));
-//            System.out.println(control.getCircleD().get(i));
-//            System.out.println(control.getWayPoint().get(i));
-//        }
-//        System.out.println();
+    private void printCircleInfo() {
+        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+        System.out.println("group size: " + control.getGroupsOfCircle().size());
+        for (int i = 0; i < control.getGroupsOfCircle().size(); ++i) {
+            System.out.println(control.getGroupsOfCircle().get(i));
+        }
+        for (int i = 0; i < control.getCircleO().size(); ++i) {
+            System.out.println(control.getCircleO().get(i));
+            System.out.println(control.getCircleD().get(i));
+            System.out.println(control.getWayPoint().get(i));
+        }
+        System.out.println();
     }
 
     private boolean isAddValid(int kind) {
@@ -454,6 +465,11 @@ public class DemoInterface extends PApplet {
         }
 
         if (!control.isAddFinished()) {
+            ArrayList<ArrayList<CircleRegion>> tmpCirGList = CircleRegionControl.getCircleRegionControl().getGroupsOfCircle();
+            if (tmpCirGList.get(tmpCirGList.size() - 1).size() == 0) {
+                control.setAddFinished(true);
+                return;
+            }
             control.getGroupsOfCircle().add(new ArrayList<>());
             control.getCircleO().add(new ArrayList<>());
             control.getCircleD().add(new ArrayList<>());
@@ -511,7 +527,7 @@ public class DemoInterface extends PApplet {
             if (intoMaxMap) {
                 circle.setCircleCenter(mapList[mapId].getLocation(mouseX, mouseY));
                 circle.setRadiusLocation(mapList[mapId].getLocation(mouseX + radius, mouseY));
-                circle.updateCircleScreenPosition();
+                circle.updateCircleScreenPosition(mapId);
             } else {
                 float mx = constrain(mouseX,
                         mapXList[mapId] + 3 + circleSize / 2, mapXList[mapId] + mapWidth - 3 - radius - circleSize / 2);
@@ -520,7 +536,7 @@ public class DemoInterface extends PApplet {
 
                 circle.setCircleCenter(mapList[mapId].getLocation(mx, my));
                 circle.setRadiusLocation(mapList[mapId].getLocation(mx + radius, my));
-                circle.updateCircleScreenPosition();
+                circle.updateCircleScreenPosition(mapId);
             }
 
             updateReuseCircles(circle);

@@ -153,4 +153,15 @@ public class CircleRegionControl {
 
         isCleaning = false;
     }
+
+    public void finishOpera() {
+        if (groupsOfCircle.size() > 0 &&
+                (groupsOfCircle.get(groupsOfCircle.size() - 1) == null || groupsOfCircle.get(groupsOfCircle.size() - 1).size() == 0)) {
+            groupsOfCircle.remove(groupsOfCircle.size() - 1);
+            circleO.remove(circleO.size() - 1);
+            circleD.remove(circleD.size() - 1);
+            wayPoint.remove(wayPoint.size() - 1);
+            curDrawingGroupId--;
+        }
+    }
 }

@@ -34,6 +34,13 @@ public class SelectAlg {
         SharedObject instance = SharedObject.getInstance();
         UnfoldingMap map = instance.getMapList()[optIndex];
         ArrayList<Trajectory> trajResSet = new ArrayList<>();
+        if (circleO != null) {
+            circleO.updateCircleScreenPosition(optIndex);
+        }
+        if (circleD != null) {
+            circleD.updateCircleScreenPosition(optIndex);
+        }
+
         for (int i = begin; i < end; i++) {
             Trajectory traj = trajList[i];
             Location[] locations = traj.locations;
@@ -57,15 +64,24 @@ public class SelectAlg {
                                                            int begin, int end, Trajectory[] trajectory, int optIndex) {
         ArrayList<Trajectory> trajIdSet = new ArrayList<>();
         UnfoldingMap map = SharedObject.getInstance().getMapList()[optIndex];
+        if (circleO != null) {
+            circleO.updateCircleScreenPosition(optIndex);
+        }
+        if (circleD != null) {
+            circleD.updateCircleScreenPosition(optIndex);
+        }
         for (int i = begin; i < end; i++) {
+
             Trajectory traj = trajectory[i];
             boolean crsAll = true;
-
             if (inCheck(circleO, traj.locations[0], map) && inCheck(circleD, traj.locations[traj.locations.length - 1], map)) {
-                for (CircleRegion circleRegion : wayPointList) {
-                    if (!isSingleRegionWCrs(traj, circleRegion, map)) {
-                        crsAll = false;
-                        break;
+                if (wayPointList != null && wayPointList.size() > 0) {
+                    for (CircleRegion circleRegion : wayPointList) {
+                        circleRegion.updateCircleScreenPosition(optIndex);
+                        if (!isSingleRegionWCrs(traj, circleRegion, map)) {
+                            crsAll = false;
+                            break;
+                        }
                     }
                 }
                 if (crsAll) {
@@ -103,7 +119,6 @@ public class SelectAlg {
             return true;
         }
 
-        circleRegion.updateCircleScreenPosition();    // TODO How about run it before the whole alg ?
 
         ScreenPosition sp = map.getScreenPosition(loc);
 
