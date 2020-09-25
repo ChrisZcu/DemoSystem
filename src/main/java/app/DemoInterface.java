@@ -187,6 +187,7 @@ public class DemoInterface extends PApplet {
             //move exist region
             if (control.getCurMovingCircle() != null) {
                 control.setCurMovingCircle(null);
+                control.setMapOfCurMovingCircle(-1);
             } else {
                 for (int i = 0; i < control.getGroupsOfCircle().size(); ++i) {
                     ArrayList<CircleRegion> group = control.getGroupsOfCircle().get(i);
@@ -196,6 +197,7 @@ public class DemoInterface extends PApplet {
 
                         if (calLocationDist(center, mouse) < calLocationDist(center, radius)) {
                             control.setCurMovingCircle(group.get(j));
+                            control.setMapOfCurMovingCircle(getOptIndex(mouseX,mouseY));
                             break;
                         }
                     }
@@ -514,7 +516,8 @@ public class DemoInterface extends PApplet {
             if (intoMaxMap) {
                 mapId = 4;
             } else {
-                mapId = getOptIndex(mouseX, mouseY);
+                //mapId = getOptIndex(mouseX, mouseY);
+                mapId = control.getMapOfCurMovingCircle();
             }
 
             UnfoldingMap map = SharedObject.getInstance().getMapList()[mapId];

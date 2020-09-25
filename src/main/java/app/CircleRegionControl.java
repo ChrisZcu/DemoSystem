@@ -21,24 +21,20 @@ public class CircleRegionControl {
     private ArrayList<ArrayList<Integer>> circleO = new ArrayList<>();
     private ArrayList<ArrayList<Integer>> circleD = new ArrayList<>();
     private ArrayList<ArrayList<Integer>> wayPoint = new ArrayList<>();
+
+    private Map<CircleRegion, Integer> reuseMap = new HashMap<>();
+    private ArrayList<ArrayList<CircleRegion>> reusedCircles = new ArrayList<>();
+
     private int curDrawingGroupId = 0;
     private CircleRegion curDrawingCircle = null;
     private CircleRegion curMovingCircle = null;
-
-    private Map<CircleRegion, Integer> reuseMap = new HashMap<>();
-    private volatile boolean addFinished = true;
-
-    private ArrayList<ArrayList<CircleRegion>> reusedCircles = new ArrayList<>();
-
-    public boolean isClean() {
-        return isCleaning;
-    }
-
-    public void setClean(boolean isCleaning) {
-        this.isCleaning = isCleaning;
-    }
+    private int mapOfCurMovingCircle = -1;
 
     private boolean isCleaning = false;
+    private volatile boolean addFinished = true;
+
+    private CircleRegionControl() {
+    }
 
     public ArrayList<ArrayList<CircleRegion>> getGroupsOfCircle() {
         return groupsOfCircle;
@@ -96,9 +92,6 @@ public class CircleRegionControl {
         this.curMovingCircle = curMovingCircle;
     }
 
-    private CircleRegionControl() {
-    }
-
     public static CircleRegionControl getCircleRegionControl() {
         return circleRegionControl;
     }
@@ -117,6 +110,22 @@ public class CircleRegionControl {
 
     public void setAddFinished(boolean addFinished) {
         this.addFinished = addFinished;
+    }
+
+    public boolean isClean() {
+        return isCleaning;
+    }
+
+    public void setClean(boolean isCleaning) {
+        this.isCleaning = isCleaning;
+    }
+
+    public int getMapOfCurMovingCircle() {
+        return mapOfCurMovingCircle;
+    }
+
+    public void setMapOfCurMovingCircle(int mapOfCurMovingCircle) {
+        this.mapOfCurMovingCircle = mapOfCurMovingCircle;
     }
 
     public void addReusedCircle(CircleRegion circle, CircleRegion newCircle) {
