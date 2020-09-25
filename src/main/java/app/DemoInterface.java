@@ -197,7 +197,7 @@ public class DemoInterface extends PApplet {
 
                         if (calLocationDist(center, mouse) < calLocationDist(center, radius)) {
                             control.setCurMovingCircle(group.get(j));
-                            control.setMapOfCurMovingCircle(getOptIndex(mouseX,mouseY));
+                            control.setMapOfCurMovingCircle(getOptIndex(mouseX, mouseY));
                             break;
                         }
                     }
@@ -837,9 +837,10 @@ public class DemoInterface extends PApplet {
         boolean visibleNow = !trajBgVisibleList[mapIdx];
         trajBgVisibleList[mapIdx] = visibleNow;
         String str = visibleNow ? "HideBG" : "ShowBG";
-        for (int i = 8; i < 12; i++) {
-            dataButtonList[i].setEleName(str);
-        }
+        dataButtonList[mapIdx + 8].setEleName(str);
+//        for (int i = 8; i < 12; i++) {
+//            dataButtonList[i].setEleName(str);
+//        }
     }
 
     /**
