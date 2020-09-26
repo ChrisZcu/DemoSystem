@@ -21,6 +21,7 @@ public class CircleRegion extends RegionModel {
     private int mapId; // map update
     private int kind; //0: O  1: D  2: W
     private Color color;
+    private boolean isVisible=true;
 
 
     public CircleRegion() {
@@ -124,6 +125,14 @@ public class CircleRegion extends RegionModel {
 
     public void setMapId(int mapId) {
         this.mapId = mapId;
+    }
+
+    public boolean isVisible() {
+        return isVisible;
+    }
+
+    public void setVisible(boolean visible) {
+        isVisible = visible;
     }
 
     public void updateCircleScreenPosition(int mapId) {

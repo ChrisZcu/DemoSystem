@@ -9,6 +9,7 @@ import draw.TrajDrawManager;
 import model.*;
 import processing.core.PApplet;
 import processing.core.PGraphics;
+import processing.event.MouseEvent;
 import swing.MenuWindow;
 import swing.SelectDataDialog;
 import util.PSC;
@@ -198,6 +199,7 @@ public class DemoInterface extends PApplet {
                         if (calLocationDist(center, mouse) < calLocationDist(center, radius)) {
                             control.setCurMovingCircle(group.get(j));
                             control.setMapOfCurMovingCircle(getOptIndex(mouseX, mouseY));
+                            setVisibleCircle(group.get(j));
                             break;
                         }
                     }
@@ -255,6 +257,13 @@ public class DemoInterface extends PApplet {
             }
         }
 
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent event){
+        if(event.getCount()==2){
+            mouseWheel();
+        }
     }
 
     @Override
@@ -500,6 +509,9 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawRegion(CircleRegion circle) {
+        if(!circle.isVisible()){
+            return;
+        }
         CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
 
         if (circle.equals(control.getCurDrawingCircle())) {
@@ -599,6 +611,20 @@ public class DemoInterface extends PApplet {
                 reusedCircle.setCircleCenter(circle.getCircleCenter());
                 reusedCircle.setRadiusLocation(circle.getRadiusLocation());
             }
+        }
+    }
+
+    private void setVisibleCircle(CircleRegion circle){
+        CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
+
+        if (control.getReuseMap().containsKey(circle)) {
+            int pos = control.getReuseMap().get(circle);
+            ArrayList<CircleRegion> reusedCircles = control.getReusedCircles().get(pos);
+
+            for (CircleRegion reusedCircle : reusedCircles) {
+                reusedCircle.setVisible(false);
+            }
+            circle.setVisible(true);
         }
     }
 
