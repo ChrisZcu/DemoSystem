@@ -208,7 +208,12 @@ public class SelectDataDialog extends JDialog {
             // not changed, do nothing.
             return;
         }
+
         SharedObject.getInstance().setBlockAt(optMapIdx, newType, newRIdx, newDIdx);
+
+        // reselect
+        SharedObject.getInstance().calTrajSelectResList();
+
 
         boolean[] viewVisibleList = SharedObject.getInstance().getViewVisibleList();
         if (!viewVisibleList[optMapIdx]) {

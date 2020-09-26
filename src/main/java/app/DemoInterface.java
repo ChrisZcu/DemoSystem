@@ -260,8 +260,8 @@ public class DemoInterface extends PApplet {
     }
 
     @Override
-    public void mouseClicked(MouseEvent event){
-        if(event.getCount()==2){
+    public void mouseClicked(MouseEvent event) {
+        if (event.getCount() == 2) {
             mouseWheel();
         }
     }
@@ -509,9 +509,10 @@ public class DemoInterface extends PApplet {
     }
 
     private void drawRegion(CircleRegion circle) {
-        if(!circle.isVisible()){
+        if (!circle.isVisible()) {
             return;
         }
+
         CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
 
         if (circle.equals(control.getCurDrawingCircle())) {
@@ -528,7 +529,6 @@ public class DemoInterface extends PApplet {
             if (intoMaxMap) {
                 mapId = 4;
             } else {
-                //mapId = getOptIndex(mouseX, mouseY);
                 mapId = control.getMapOfCurMovingCircle();
             }
 
@@ -566,6 +566,11 @@ public class DemoInterface extends PApplet {
             ScreenPosition radiusPosition = SharedObject.getInstance().getMapList()[4].getScreenPosition(circle.getRadiusLocation());
             float radius = (float) Math.pow((Math.pow(x - radiusPosition.x, 2) + Math.pow(y - radiusPosition.y, 2)), 0.5);
 
+            if (x + radius > mapXList[4] + mapWidth || x - radius < mapXList[4]
+                    || y + radius > mapYList[4] + mapHeight || y - radius < mapYList[4]) {
+                return;
+            }
+
             stroke(circle.getColor().getRGB());
             strokeWeight(3);
             noFill();
@@ -586,6 +591,11 @@ public class DemoInterface extends PApplet {
 
                 ScreenPosition lastClick = SharedObject.getInstance().getMapList()[i].getScreenPosition(circle.getRadiusLocation());
                 float radius = (float) Math.pow((Math.pow(x - lastClick.x, 2) + Math.pow(y - lastClick.y, 2)), 0.5);
+
+                if (x + radius > mapXList[i] + mapWidth || x - radius < mapXList[i]
+                        || y + radius > mapYList[i] + mapHeight || y - radius < mapYList[i]) {
+                    continue;
+                }
 
                 stroke(circle.getColor().getRGB());
                 strokeWeight(3);
@@ -614,7 +624,7 @@ public class DemoInterface extends PApplet {
         }
     }
 
-    private void setVisibleCircle(CircleRegion circle){
+    private void setVisibleCircle(CircleRegion circle) {
         CircleRegionControl control = CircleRegionControl.getCircleRegionControl();
 
         if (control.getReuseMap().containsKey(circle)) {
