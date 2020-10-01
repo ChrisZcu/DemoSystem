@@ -75,7 +75,7 @@ public class PSC {
     private int groupNum = 5;
 
     public static void initRegionColorList() {
-        COLOT_TOTAL_LIST = new Color[3][4];
+        COLOT_TOTAL_LIST = new Color[6][4];
         Color[] pinkColor = new Color[4];
         for (int i = 0; i < 120; i += 30) {//pink list
             pinkColor[i / 30] = new Color(115, 120 - i, 115);
@@ -93,5 +93,14 @@ public class PSC {
             blueColor[(i - 80) / 40] = new Color(65, 65, 240 - i);
         }
         COLOT_TOTAL_LIST[2] = blueColor;
+
+        COLOT_TOTAL_LIST[3] = new Color[]{new Color(235, 200, 68), new Color(235, 200, 68),
+                new Color(235, 200, 68), new Color(235, 200, 68)};
+
+        COLOT_TOTAL_LIST[4] = new Color[]{new Color(162, 184, 108), new Color(162, 184, 108),
+                new Color(162, 184, 108), new Color(162, 184, 108),};
+
+        COLOT_TOTAL_LIST[5] = new Color[]{new Color(241, 108, 32), new Color(241, 108, 32),
+                new Color(241, 108, 32), new Color(241, 108, 32),};
     }
 }

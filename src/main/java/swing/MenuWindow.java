@@ -49,6 +49,7 @@ public class MenuWindow extends JWindow {
             @Override
             public void actionPerformed(ActionEvent e) {
                 SharedObject.getInstance().updateRegionPreList(2);
+
             }
         };
         wButton.addActionListener(wButtonActionListen);

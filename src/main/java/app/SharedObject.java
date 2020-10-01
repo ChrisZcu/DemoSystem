@@ -15,7 +15,7 @@ import java.util.Arrays;
 import static util.Util.*;
 
 public class SharedObject {
-
+//public boolean drawingDone = false;
     private static final SharedObject instance = new SharedObject();
 
     private SharedObject() {

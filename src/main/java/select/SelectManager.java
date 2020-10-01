@@ -66,7 +66,7 @@ public class SelectManager {
         }
         System.out.println("ALL Done");
         for (int i = 0; i < threadNum; i++) {
-            resShowIndex =  ArrayUtils.addAll(resShowIndex, SharedObject.getInstance().getTrajSelectRes()[i]);
+            resShowIndex = ArrayUtils.addAll(resShowIndex, SharedObject.getInstance().getTrajSelectRes()[i]);
         }
         System.out.println(trajBlock.getBlockType() + " time: " + (System.currentTimeMillis() - startTime)
                 + " select size: " + resShowIndex.length);

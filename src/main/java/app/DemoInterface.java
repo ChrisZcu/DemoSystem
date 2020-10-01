@@ -160,6 +160,15 @@ public class DemoInterface extends PApplet {
     }
 
     @Override
+    public void keyPressed() {
+        if (key == 'q') {
+            for (int i = 0; i < 5; i++) {
+
+            }
+        }
+    }
+
+    @Override
     public void mousePressed() {
         optIndex = getOptIndex(mouseX, mouseY);
 
