@@ -81,6 +81,7 @@ public class TimeProfileWorker extends Thread {
                     loc = traj.locations[i++];
                 }
                 trajTmp.locations = locTmp.toArray(new Location[0]);
+                trajTmp.setScore(locTmp.size());
                 res.add(trajTmp);
             }
         }

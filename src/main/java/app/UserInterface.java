@@ -7,7 +7,6 @@ import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManager;
 import draw.TrajDrawManagerSingleMap;
-import javafx.geometry.Pos;
 import model.*;
 import org.lwjgl.Sys;
 import processing.core.PApplet;

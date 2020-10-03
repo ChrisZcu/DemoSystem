@@ -8,7 +8,6 @@ import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawWorkerSingleMap;
-import javafx.geometry.Pos;
 import model.Position;
 import model.RectRegion;
 import model.Trajectory;
@@ -27,6 +26,7 @@ import java.util.*;
 
 public class TimeProfileGPU extends PApplet {
     UnfoldingMap map;
+    UnfoldingMap mapClone;
 
     @Override
     public void settings() {
@@ -42,7 +42,10 @@ public class TimeProfileGPU extends PApplet {
         map.setBackgroundColor(255);
         MapUtils.createDefaultEventDispatcher(this, map);
 
-        loadData("data/GPS/porto_full.txt");
+        mapClone = new UnfoldingMap(this, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
+        mapClone.setZoomRange(0, 20);
+
+        loadData("C:\\Users\\Administrator\\Desktop\\zhengxin\\vfgs_origin_data\\porto\\porto_full.txt");
 //        loadData("data/GPS/Porto5w/Porto5w.txt");
 
 //        initRandomIdList();
@@ -108,7 +111,7 @@ public class TimeProfileGPU extends PApplet {
             if (alg == 0) {//ran
                 tmpRes = getRan(trajShows.toArray(new Trajectory[0]), rate[rateId]);
             } else if (alg == 1) {//vfgs
-                tmpRes = util.VFGS.getCellCover(trajShows.toArray(new Trajectory[0]), map, rate[rateId], deltaList[deltaId]);
+                tmpRes = util.VFGS.getCellCover(trajShows.toArray(new Trajectory[0]), mapClone, rate[rateId], deltaList[deltaId]);
             }
             long algCost = (System.currentTimeMillis() - algBegin);
 

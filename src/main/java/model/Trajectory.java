@@ -9,6 +9,7 @@ import java.util.HashSet;
 public class Trajectory {
     public Location[] locations;
     private double score;
+    private double metaScore;
     private int trajId;
     private double greedyScore;
     private double cellScore;
@@ -40,6 +41,7 @@ public class Trajectory {
 
     public void setScore(double score) {
         this.score = score;
+        metaScore = score;
     }
 
     public double getScore() {
@@ -169,5 +171,7 @@ public class Trajectory {
         return res.substring(1);
     }
 
-
+    public void scoreInit() {
+        score = metaScore;
+    }
 }
