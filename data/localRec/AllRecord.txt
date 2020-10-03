@@ -1,0 +1,1 @@
+zoomlevel,regionId,regionSize,algorithm,rate,delta,waypointCost,computionCost,mappingCost,renderingCost,quality,qualityCost

@@ -7,6 +7,9 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
+import draw.TrajDrawWorkerSingleMap;
+import javafx.geometry.Pos;
+import model.Position;
 import model.RectRegion;
 import model.Trajectory;
 import org.lwjgl.Sys;
@@ -24,14 +27,11 @@ import java.util.*;
 
 public class TimeProfileGPU extends PApplet {
     UnfoldingMap map;
-    private int ZOOMLEVEL = 11;
-    private Location PRESENT = new Location(41.151, -8.634)/*new Location(41.206, -8.627)*/;
 
     @Override
     public void settings() {
         size(1000, 800, P2D);
         PJOGL.profile = 3;
-
     }
 
     @Override
@@ -54,48 +54,73 @@ public class TimeProfileGPU extends PApplet {
         endPGL();//?
     }
 
-    int rateId = 0;
+    private int ZOOMLEVEL = 11;
+    private int rectRegionID = 0;
+    private double recNumId = 1.0 / 64;
+    private Location[] rectRegionLoc = {new Location(41.315205, -8.629877), new Location(41.275997, -8.365519),
+            new Location(41.198544, -8.677942), new Location(41.213013, -8.54542),
+            new Location(41.1882, -8.35178), new Location(41.137554, -8.596918),
+            new Location(41.044403, -8.470575), new Location(40.971338, -8.591425)};
+    private Location PRESENT = rectRegionLoc[rectRegionID]/*new Location(41.206, -8.627)*/;
+    private int alg = 0;
+    private double[] rate = {0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001};
+    private int rateId = 0;
+    private int[] deltaList = {0, 4, 8, 16, 32, 64};
+    private int deltaId = 0;
+
+    private RectRegion rectRegion = new RectRegion();
+
 
     @Override
     public void draw() {
         if (!map.allTilesLoaded()) {
             map.draw();
         } else {
-//            map.draw();
+            map.zoomAndPanTo(ZOOMLEVEL, rectRegionLoc[rectRegionID]);
+            map.draw();
 
+            if (alg == 0) {
+                deltaList = new int[]{0};
+            } else {
+                deltaList = new int[]{0, 4, 8, 16, 32, 64};
+            }
             float x = (float) (500 * recNumId);
             float y = (float) (400 * recNumId);
             rectRegion.setLeftTopLoc(map.getLocation(500 - x, 400 - y));
             rectRegion.setRightBtmLoc(map.getLocation(500 + x, 400 + y));
 
-            System.out.println("using: " + recNumId);
-            recNumId *= 2;
 
-            startCalWayPoint();
+            long wayPointBegin = System.currentTimeMillis();
+            startCalWayPoint(); //waypoint
+            long wayPointCost = (System.currentTimeMillis() - wayPointBegin);
 
             trajShow.clear();
-            noLoop = true;
-            thread = true;
-            loop();
 
             ArrayList<Trajectory> trajShows = new ArrayList<>();
-            if (thread) {
-                for (Trajectory[] trajList : TimeProfileSharedObject.getInstance().trajRes) {
-                    Collections.addAll(trajShows, trajList);
-                }
+            for (Trajectory[] trajList : TimeProfileSharedObject.getInstance().trajRes) {
+                Collections.addAll(trajShows, trajList);
             }
 
-            long t00 = System.currentTimeMillis();
-            Trajectory[] tmpRes = getRan(trajShows.toArray(new Trajectory[0]), rate[VFGS]);
-//            Trajectory[] tmpRes = util.VFGS.getCellCover(trajShows.toArray(new Trajectory[0]), map, rate[VFGS]);
-            long VfgsTime = (System.currentTimeMillis() - t00);
+//            Trajectory[] tmpRes = getRan(trajShows.toArray(new Trajectory[0]), rate[VFGS]);
+
+            long algBegin = System.currentTimeMillis();
+            Trajectory[] tmpRes = {};
+            if (alg == 0) {//ran
+                tmpRes = getRan(trajShows.toArray(new Trajectory[0]), rate[rateId]);
+            } else if (alg == 1) {//vfgs
+                tmpRes = util.VFGS.getCellCover(trajShows.toArray(new Trajectory[0]), map, rate[rateId], deltaList[deltaId]);
+            }
+            long algCost = (System.currentTimeMillis() - algBegin);
+
+            long qualityBegin = System.currentTimeMillis();
+
+            double quality = util.VFGS.getQuality(trajShows.toArray(new Trajectory[0]), tmpRes, map, deltaList[deltaId]);
+
+            long qualityCost = (System.currentTimeMillis() - qualityBegin);
+
             this.trajShow.addAll(Arrays.asList(tmpRes));
 
-            System.out.println();
-            System.out.println(trajShows.size() + ", " + this.trajShow.size());
-            System.out.println();
 
-            System.out.println("VFGS time for rate : " + rate[VFGS] + " of VFGS: " + VfgsTime + "ms");
 /*
             long t0 = System.currentTimeMillis();
             vertexInit();
@@ -106,30 +131,71 @@ public class TimeProfileGPU extends PApplet {
             long renderTime = (System.currentTimeMillis() - t1);
             System.out.println("GPU draw time for rate : " + rate[VFGS] + " of VFGS: " + renderTime + "ms");
             */
+
             noFill();
             strokeWeight(1);
             stroke(new Color(190, 46, 29).getRGB());
-            long t0 = System.currentTimeMillis();
-            drawCPU();
-            long time = (System.currentTimeMillis() - t0);
-            System.out.println("CPU draw time for rate " + rate[VFGS] + " of VFGS: " + time + "ms");
-            try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter("data/CPU_ran_record_rate_" + rate[VFGS] + ".csv", true));
-                writer.write(VfgsTime + "," + time  + "\n");
-//                writer.write(VfgsTime + "," + dataTime + "," + renderTime + "\n");
+            long[] timeRender = drawCPU();
+            drawRect();
 
+            //info
+            StringBuilder info = new StringBuilder();
+            info.append(ZOOMLEVEL).append(",").append(rectRegionID).append(",").append(recNumId).append(",").append(alg).append(",")
+                    .append(rate[rateId]).append(",").append(deltaList[deltaId]).append(",")
+                    .append(wayPointCost).append(",").append(algCost).append(",").append(timeRender[0]).append(",")
+                    .append(timeRender[1]).append(",").append(quality).append(",").append(qualityCost);
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter("data/localRec/AllRecord.txt", true));
+                writer.write(info.toString());
+                writer.newLine();
                 writer.close();
+                System.out.println(trajShows.size() + "-->" + tmpRes.length);
+                String[] infoList = info.toString().split(",");
+                String[] titleList = "zoomlevel,regionId,regionSize,algorithm,rate,delta,waypointCost,computionCost,mappingCost,renderingCost,quality,qualityCost".split(",");
+                for (int i = 0; i < titleList.length; i++) {
+                    System.out.print(titleList[i] + " = " + infoList[i] + ", ");
+                }
+                System.out.println();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-//            saveFrame("data/picture/rate" + rate[VFGS] + "/region_" + recNumId / 2 + ".png");
-
-            if (recNumId > 1.1) {
-                recNumId = 1.0 / 128;
-                VFGS++;
+//            try {
+//                Thread.sleep(2000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+            if (deltaId == deltaList.length - 1) {//delta full
+                deltaId = 0;
+                if (rateId == rate.length - 1) {//rate full
+                    rateId = 0;
+                    if (alg == 1) {//alg full
+                        alg = 0;
+                        if (recNumId == 0.5) {
+                            recNumId = 1.0 / 128;
+                            if (rectRegionID == rectRegionLoc.length - 1) {
+                                rectRegionID = 0;
+                                if (ZOOMLEVEL == 16) {
+                                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>done>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                                    noLoop();
+                                    exit();
+                                } else {
+                                    ZOOMLEVEL++;
+                                }
+                            } else {
+                                rectRegionID++;
+                            }
+                        } else {
+                            recNumId *= 2;
+                        }
+                    } else {
+                        alg++;
+                    }
+                } else {
+                    rateId++;
+                }
+            } else {
+                deltaId++;
             }
-            if (VFGS == rate.length)
-                noLoop();
         }
     }
 
@@ -159,9 +225,6 @@ public class TimeProfileGPU extends PApplet {
         gl3.glDrawArrays(GL3.GL_LINES, 0, vertexData.length / 2);
         gl3.glDisableVertexAttribArray(0);
         gl3.glDisableVertexAttribArray(1);
-
-        if (thread)
-            drawRect();
     }
 
     private void drawRect() {
@@ -175,7 +238,6 @@ public class TimeProfileGPU extends PApplet {
     }
 
     boolean noLoop = false;
-    double recNumId = 1.0 / 128;
     boolean thread = false;
 
     @Override
@@ -227,16 +289,19 @@ public class TimeProfileGPU extends PApplet {
             trajFull = new Trajectory[trajStr.size()];
 
             for (String trajM : trajStr) {
-                String[] data = trajM.split(";")[1].split(",");
-
+                String[] item = trajM.split(";");
+                String[] data = item[1].split(",");
                 Trajectory traj = new Trajectory(j);
                 ArrayList<Location> locations = new ArrayList<>();
+//                Position[] metaGPS = new Position[data.length / 2 - 1];
                 for (int i = 0; i < data.length - 2; i = i + 2) {
                     locations.add(new Location(Float.parseFloat(data[i + 1]),
                             Float.parseFloat(data[i])));
+//                    metaGPS[i / 2] = new Position(Float.parseFloat(data[i + 1]), Float.parseFloat(data[i]));
                 }
                 traj.setLocations(locations.toArray(new Location[0]));
-
+                traj.setScore(Integer.parseInt(item[0]));
+//                traj.setMetaGPS(metaGPS);
                 trajFull[j++] = traj;
             }
             trajStr.clear();
@@ -247,7 +312,6 @@ public class TimeProfileGPU extends PApplet {
         }
     }
 
-    RectRegion rectRegion = new RectRegion();
 
     Trajectory[] selectTrajList;
 
@@ -256,10 +320,9 @@ public class TimeProfileGPU extends PApplet {
         tm.startRun();
     }
 
-
     int[][] VFGSIdList;
     int VFGS = 0;
-    double[] rate = {0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001};
+
 
     private int[][] loadVfgs(String filePath) {
         int[][] resId = new int[8][];
@@ -405,17 +468,30 @@ public class TimeProfileGPU extends PApplet {
 
     }
 
-    private void drawCPU() {
+    private long[] drawCPU() {
+        long[] timeList = new long[2];
+        ArrayList<ArrayList<Point>> trajPointList = new ArrayList<>();
+        long t0 = System.currentTimeMillis();
+
         for (Trajectory traj : trajShow) {
+            ArrayList<Point> pointList = new ArrayList<>();
+            for (Location loc : traj.getLocations()) {
+                ScreenPosition pos = map.getScreenPosition(loc);
+                pointList.add(new Point(pos.x, pos.y));
+            }
+            trajPointList.add(pointList);
+        }
+        timeList[0] = (System.currentTimeMillis() - t0);
+        long t1 = System.currentTimeMillis();
+        for (ArrayList<Point> traj : trajPointList) {
             beginShape();
-            for (Location loc : traj.locations) {
-                ScreenPosition src = map.getScreenPosition(loc);
-                vertex(src.x, src.y);
+            for (Point pos : traj) {
+                vertex(pos.x, pos.y);
             }
             endShape();
         }
-        if (thread)
-            drawRect();
+        timeList[1] = (System.currentTimeMillis() - t1);
+        return timeList;
     }
 
     private Trajectory[] getRan(Trajectory[] trajectories, double rate) {
@@ -435,5 +511,15 @@ public class TimeProfileGPU extends PApplet {
 
     public static void main(String[] args) {
         PApplet.main(new String[]{TimeProfileGPU.class.getName()});
+    }
+
+    class Point {
+        float x;
+        float y;
+
+        public Point(float x, float y) {
+            this.x = x;
+            this.y = y;
+        }
     }
 }

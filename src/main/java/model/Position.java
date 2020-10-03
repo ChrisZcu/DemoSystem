@@ -1,14 +1,22 @@
 package model;
 
-public class Position {
+public class Position implements Comparable<Position> {
     public int x;
     public int y;
-    int code;
+
+    int timeOrder;
+    float lat;
+    float lon;
+
+    public Position(float x, float y, int t) {
+        lat = x;
+        lon = y;
+        timeOrder = t;
+    }
 
     public Position(double x, double y) {
         this.x = (int) x;
         this.y = (int) y;
-        code = hashCode();
     }
 
     public Position(int x, int y) {
@@ -41,5 +49,10 @@ public class Position {
     @Override
     public String toString() {
         return "(" + x + ", " + y + ")";
+    }
+
+    @Override
+    public int compareTo(Position o) {
+        return timeOrder - o.timeOrder;
     }
 }

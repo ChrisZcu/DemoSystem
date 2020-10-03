@@ -23,6 +23,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.jar.JarOutputStream;
 
 public class UserInterface extends PApplet {
@@ -60,7 +62,19 @@ public class UserInterface extends PApplet {
             @Override
             public void run() {
                 loadTotalData(filePath);
+/*
+                Vfgs = loadVfgs("data/GPS/vfgs_0.txt");
+                Trajectory[] totalTrajectorTmp = new Trajectory[Vfgs.size()];
+                System.out.println(Vfgs.size());
+                int i = 0;
+                for (Integer e : Vfgs) {
+                    totalTrajectorTmp[i++] = totalTrajector[e];
+                }
+                totalTrajector = totalTrajectorTmp;
+
+ */
                 loadDone = true;
+                System.out.println("data done " + totalTrajector.length);
             }
         }.start();
     }
@@ -86,8 +100,8 @@ public class UserInterface extends PApplet {
                 TrajDrawManagerSingleMap trajManager = new TrajDrawManagerSingleMap(trajShow, 1, this, map);
                 trajManager.startDraw();
                 TimeProfileSharedObject.getInstance().calDone = false;
-                System.out.println(">>>>way point time: " + wayPointCalTime  +
-                        " ms\n" + ">>>>vfgs cal time: " + vfgsTime  + " ms");
+                System.out.println(">>>>way point time: " + wayPointCalTime +
+                        " ms\n" + ">>>>vfgs cal time: " + vfgsTime + " ms");
             }
             //draw traj
             long t3 = System.currentTimeMillis();
@@ -111,6 +125,8 @@ public class UserInterface extends PApplet {
             TimeProfileSharedObject.getInstance().trajImageMtx = new PGraphics[0];
             lastClick = new Position(mouseX, mouseY);
         } else {
+            Location loc = map.getLocation(mouseX, mouseY);
+            System.out.println(loc);
             buttonClickListener();
         }
     }
@@ -175,7 +191,7 @@ public class UserInterface extends PApplet {
                 for (Trajectory[] trajList : TimeProfileSharedObject.getInstance().trajRes) {
                     Collections.addAll(trajShows, trajList);
                 }
-                TimeProfileSharedObject.getInstance().trajShow = VFGS.getCellCover(trajShows.toArray(new Trajectory[0]), map, 0.01, rectRegion);
+                TimeProfileSharedObject.getInstance().trajShow = VFGS.getCellCover(trajShows.toArray(new Trajectory[0]), map, 0.01, 0);
                 TimeProfileSharedObject.getInstance().calDone = true;
                 vfgsTime = System.currentTimeMillis() - t1;
             }
@@ -324,9 +340,27 @@ public class UserInterface extends PApplet {
         System.out.println("data preprocess done");
     }
 
+    private static HashSet<Integer> Vfgs = new HashSet<>();
+
+    private HashSet<Integer> loadVfgs(String filePath) {
+        HashSet<Integer> Vfgs = new HashSet<>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            String line;
+            int total = 2389863;
+            int num = (int) (total * 0.01);
+            while ((line = reader.readLine()) != null && num-- > 0) {
+                Vfgs.add(Integer.valueOf(line.split(",")[0]));
+            }
+        } catch (
+                IOException e) {
+            e.printStackTrace();
+        }
+        return Vfgs;
+    }
+
     public static void main(String[] args) {
 
         PApplet.main(new String[]{UserInterface.class.getName()});
     }
 }
-

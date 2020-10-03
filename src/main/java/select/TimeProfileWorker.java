@@ -26,6 +26,7 @@ public class TimeProfileWorker extends Thread {
         leftLon = region.getLeftTopLoc().getLon();
         rightLon = region.getRightBtmLoc().getLon();
         rightLat = region.getRightBtmLoc().getLat();
+
     }
 
     @Override
@@ -40,6 +41,7 @@ public class TimeProfileWorker extends Thread {
 
     private Trajectory[] getWayPoint() {
         ArrayList<Trajectory> res = new ArrayList<>();
+
         for (int i = begin; i < end; i++) {
             Trajectory traj = trajectory[i];
             for (Location loc : traj.locations) {
@@ -49,21 +51,40 @@ public class TimeProfileWorker extends Thread {
                 }
             }
         }
+//        return res.toArray(new Trajectory[0]);
+        System.out.println(res.size());
+        return cutTrajs(res.toArray(new Trajectory[0]));
+    }
 
+    private boolean inCheck(Location loc) {
+        return loc.getLat() >= Math.min(leftLat, rightLat) && loc.getLat() <= Math.max(leftLat, rightLat)
+                && loc.getLon() >= Math.min(leftLon, rightLon) && loc.getLon() <= Math.max(leftLon, rightLon);
+    }
+
+    private Trajectory[] cutTrajs(Trajectory[] trajectories) {
+        ArrayList<Trajectory> res = new ArrayList<>();
+        for (Trajectory traj : trajectories) {
+            res.addAll(getRegionInTraj(traj));
+        }
         return res.toArray(new Trajectory[0]);
     }
 
-
-    private boolean inCheck(Location loc) {
-//        System.out.println(loc.getLat() +", " + loc.getLon());
-//        System.out.println(leftLat + "," +
-//                leftLon + "," +
-//                rightLon + "," +
-//                rightLat);
-        return loc.getLat() >= Math.min(leftLat, rightLat) && loc.getLat() <= Math.max(leftLat, rightLat)
-                && loc.getLon() >= Math.min(leftLon, rightLon) && loc.getLon() <= Math.max(leftLon, rightLon);
-
+    private ArrayList<Trajectory> getRegionInTraj(Trajectory traj) {
+        ArrayList<Trajectory> res = new ArrayList<>();
+        for (int i = 0; i < traj.locations.length; i++) {
+            if (inCheck(traj.locations[i])) {
+                Trajectory trajTmp = new Trajectory(-1);
+                Location loc = traj.locations[i++];
+                ArrayList<Location> locTmp = new ArrayList<>();
+                while (inCheck(loc) && i < traj.locations.length) {
+                    locTmp.add(loc);
+                    loc = traj.locations[i++];
+                }
+                trajTmp.locations = locTmp.toArray(new Location[0]);
+                res.add(trajTmp);
+            }
+        }
+        return res;
     }
-
 
 }

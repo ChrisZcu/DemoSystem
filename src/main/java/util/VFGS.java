@@ -2,6 +2,8 @@ package util;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
+import de.fhpotsdam.unfolding.utils.ScreenPosition;
+import javafx.geometry.Pos;
 import model.Position;
 import model.RectRegion;
 import model.Trajectory;
@@ -54,7 +56,7 @@ public class VFGS {
 
     private static HashSet<Position> trajSet = new HashSet<>();    // R+
 
-    public static Trajectory[] getCellCover(Trajectory[] trajFull, UnfoldingMap maps, double rate) {//record cal
+    public static Trajectory[] getCellCover(Trajectory[] trajFull, UnfoldingMap maps, double rate, int delta) {//record cal
         GreedyChoose = new GreedyChoose(trajFull.length);
         map = maps;
         initTrajFull(trajFull);
@@ -64,7 +66,6 @@ public class VFGS {
 
         int TRAJNUM = trajFull.length;
         for (int j = 0; j < 1; j++) {
-            int DELTA = 0;
             trajSet.clear();
             scoreInit();
             int n = 1;
@@ -74,13 +75,13 @@ public class VFGS {
                 int trajNum = (int) (rate * TRAJNUM);
                 for (; i < trajNum; i++) {
                     while (true) {
-                        Traj2CellScore(GreedyChoose.getHeapHead(), DELTA);
+                        Traj2CellScore(GreedyChoose.getHeapHead());
                         if (GreedyChoose.GreetOrder()) {
                             Trajectory traj = GreedyChoose.getMaxScoreTraj();   // deleteMax
                             for (int num = 0; num <= n; num++) {
                                 cellList.add(traj);    // take this, add to R
                             }
-                            CellGridUpdate(traj, DELTA);        // update R+
+                            CellGridUpdate(traj, delta);        // update R+
                             break;
                         } else {
                             GreedyChoose.orderAdjust();
@@ -92,45 +93,6 @@ public class VFGS {
 
         trajSet.clear();
         return cellList.toArray(new Trajectory[0]);
-    }
-
-    public static Trajectory[] getCellCover(Trajectory[] trajFull, UnfoldingMap maps, double rate, RectRegion region) {
-        Trajectory[] resTmp = getCellCover(trajFull, maps, rate);
-        ArrayList<Trajectory> res = new ArrayList<>();
-        for (Trajectory traj : resTmp) {
-            res.addAll(getRegionInTraj(traj, region));
-        }
-        System.out.println("rate = " + rate + "," + trajFull.length + " --> " + res.size());
-        return res.toArray(new Trajectory[0]);
-    }
-
-    private static ArrayList<Trajectory> getRegionInTraj(Trajectory traj, RectRegion region) {
-        ArrayList<Trajectory> res = new ArrayList<>();
-        //TODO, move method
-        for (int i = 0; i < traj.locations.length; i++) {
-            if (inCheck(traj.locations[i], region)) {
-                Trajectory trajTmp = new Trajectory(-1);
-                Location loc = traj.locations[i++];
-                ArrayList<Location> locTmp = new ArrayList<>();
-                while (inCheck(loc, region) && i < traj.locations.length) {
-                    locTmp.add(loc);
-                    loc = traj.locations[i++];
-                }
-                trajTmp.locations = locTmp.toArray(new Location[0]);
-                res.add(trajTmp);
-            }
-        }
-        return res;
-    }
-
-    private static boolean inCheck(Location loc, RectRegion region) {
-        float leftLat = region.getLeftTopLoc().getLat();
-        float leftLon = region.getLeftTopLoc().getLon();
-        float rightLon = region.getRightBtmLoc().getLon();
-        float rightLat = region.getRightBtmLoc().getLat();
-
-        return loc.getLat() >= Math.min(leftLat, rightLat) && loc.getLat() <= Math.max(leftLat, rightLat)
-                && loc.getLon() >= Math.min(leftLon, rightLon) && loc.getLon() <= Math.max(leftLon, rightLon);
     }
 
     private static double[] initScore;
@@ -151,14 +113,14 @@ public class VFGS {
             for (int i = -DELTA; i <= DELTA; i++) {
                 for (int j = -DELTA; j <= DELTA; j++) {
                     Position pos = new Position(px + i, py + j);
-                    if (!totalTrajPos.contains(pos))
+                    if (totalTrajPos.contains(pos))
                         trajSet.add(pos);
                 }
             }
         }
     }
 
-    private static void Traj2CellScore(Trajectory traj, int DELTA) {
+    private static void Traj2CellScore(Trajectory traj) {
         traj.setScore(0);
         HashSet<Location> set = new HashSet<>();
         for (Location p : traj.locations) {
@@ -169,7 +131,7 @@ public class VFGS {
                 continue;
             // not in R+ or self point set
             set.add(p);
-            int score = InScoreCheck(px, py, DELTA);
+            int score = InScoreCheck(px, py);
             if (score == 0) {
                 continue;
             }
@@ -177,16 +139,48 @@ public class VFGS {
         }
     }
 
-    private static int InScoreCheck(double px, double py, int DELTA) {
+    private static int InScoreCheck(double px, double py) {
         int score = 1;
-        for (int i = -DELTA; i <= DELTA; i++) {
-            for (int j = -DELTA; j <= DELTA; j++) {
-                if (trajSet.contains(new Position(px + i, py + j))) {
-                    return 0;
-                }
-            }
+        if (trajSet.contains(new Position(px, py))) {
+            return 0;
         }
         return score;
     }
+
+    public static double getQuality(Trajectory[] origin, Trajectory[] res, UnfoldingMap map, int delta) {
+        HashSet<Position> totalPositionSet = getPositionSet(origin, map);
+        HashSet<Position> trajSet = new HashSet<>();
+
+        double totalScore = 0;
+        for (Trajectory traj : res) {
+            for (Location loc : traj.locations) {
+                ScreenPosition pos = map.getScreenPosition(loc);
+                for (int i = -delta; i < delta + 1; i++) {
+                    for (int j = -delta; j < delta + 1; j++) {
+                        Position position = new Position(pos.x + i, pos.y + j);
+                        if (!trajSet.contains(position) && totalPositionSet.contains(position)) {
+                            trajSet.add(position);
+                            totalScore++;
+                        }
+                    }
+                }
+            }
+        }
+        if (totalPositionSet.size() == 0)
+            return 0;
+        return totalScore / totalPositionSet.size();
+    }
+
+    private static HashSet<Position> getPositionSet(Trajectory[] trajectories, UnfoldingMap map) {
+        HashSet<Position> totalSet = new HashSet<>();
+        for (Trajectory traj : trajectories) {
+            for (Location loc : traj.locations) {
+                ScreenPosition pos = map.getScreenPosition(loc);
+                totalSet.add(new Position(pos.x, pos.y));
+            }
+        }
+        return totalSet;
+    }
+
 
 }
