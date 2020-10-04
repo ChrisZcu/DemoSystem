@@ -6,8 +6,8 @@ import model.Trajectory;
  * Max Heap
  */
 public class GreedyChoose {
-    public static int KSIZE;
-    public static Trajectory[] MaxHeap; //所有的k个轨迹
+    public int KSIZE;
+    public Trajectory[] MaxHeap; //所有的k个轨迹
     public static int index = 1; //当前的末尾index,下一个index
 
     public GreedyChoose(int KSize) {
@@ -19,15 +19,23 @@ public class GreedyChoose {
         index = 1;
     }
 
-    public static void clean() {
+    public void clean() {
         index = 1;
     }
 
-    static boolean GreetOrder() {
+    public boolean GreetOrder() {
+        if (index <= 3) {
+            if (index == 3)
+                return MaxHeap[1].getScore() >= MaxHeap[2].getScore();
+            else if (index == 2) {
+                return true;
+            }
+
+        }
         return MaxHeap[1].getScore() >= Math.max(MaxHeap[2].getScore(), MaxHeap[3].getScore());
     }
 
-    static void addNewTraj(Trajectory traj) {
+    public void addNewTraj(Trajectory traj) {
         MaxHeap[index] = traj;
         orderAdjust(index);
         index++;
@@ -35,7 +43,7 @@ public class GreedyChoose {
 
 
     //新增加调整
-    private static void orderAdjust(int index) {
+    private void orderAdjust(int index) {
         while (true) {
             if (MaxHeap[index].getScore() > MaxHeap[index / 2].getScore()) { //父节点
                 swag(index, index / 2);
@@ -47,7 +55,7 @@ public class GreedyChoose {
     }
 
     //删除调整
-    static void orderAdjust() { //从定向下调整
+    public void orderAdjust() { //从定向下调整
         int indexs = 1;
         while (true) {
             if (indexs * 2 >= index)
@@ -69,17 +77,17 @@ public class GreedyChoose {
     }
 
 
-    private static void swag(int index1, int index2) {
+    private void swag(int index1, int index2) {
         Trajectory temp = MaxHeap[index1];
         MaxHeap[index1] = MaxHeap[index2];
         MaxHeap[index2] = temp;
     }
 
-    static Trajectory getHeapHead() {
+    public Trajectory getHeapHead() {
         return MaxHeap[1];
     }
 
-    static Trajectory getMaxScoreTraj() {
+    public Trajectory getMaxScoreTraj() {
         index--;
         Trajectory temp = MaxHeap[1];
         MaxHeap[1] = MaxHeap[index];

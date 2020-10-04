@@ -1,6 +1,7 @@
 package model;
 
 import de.fhpotsdam.unfolding.geo.Location;
+import javafx.geometry.Pos;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +45,9 @@ public class Trajectory {
         metaScore = score;
     }
 
+    public void updateScore(double score){
+        this.score = score;
+    }
     public double getScore() {
         return score;
     }
@@ -162,6 +166,13 @@ public class Trajectory {
         return loc;
     }
 
+    private Position[] positions;
+    public void setPositions(Position[] posi){
+        positions = posi;
+    }
+    public Position[] getPositions(){
+        return positions;
+    }
     @Override
     public String toString() {
         StringBuilder res = new StringBuilder();

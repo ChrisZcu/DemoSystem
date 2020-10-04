@@ -5,10 +5,11 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import model.Position;
 import model.Trajectory;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class VFGS {
+public class VFGSGps {
     private static HashSet<Position> totalTrajPos = new HashSet<>();
     public static UnfoldingMap map;
     public static Trajectory[] trajFull;
@@ -20,22 +21,11 @@ public class VFGS {
         }
     }
 
-    private VFGS() {
-    }
-
-    private static VFGS instance = new VFGS();
-
-    public static VFGS getInstance() {
-        return instance;
-    }
-
-    private static void totalTrajPosInit(Trajectory[] TrajTotal) {
+    public static void totalTrajPosInit(Trajectory[] TrajTotal, float delta) {
         totalTrajPos.clear();
         for (Trajectory traj : TrajTotal) {
-            for (Location p : traj.locations) {
-                double px = map.getScreenPosition(p).x;
-                double py = map.getScreenPosition(p).y;
-                totalTrajPos.add(new Position(px, py));
+            for (Position p : traj.getPositions()) {
+                totalTrajPos.add(new Position(p.lat, p.y, delta));
             }
         }
     }
@@ -44,13 +34,11 @@ public class VFGS {
 
     private static HashSet<Position> trajSet = new HashSet<>();    // R+
 
-    public static Trajectory[] getCellCover(Trajectory[] trajFull, UnfoldingMap maps, double rate, int delta) {//record cal
+    public static Trajectory[] getCellCover(Trajectory[] trajFull, double rate, int delta, float deltaDis) {//record cal
         GreedyChoose = new GreedyChoose(trajFull.length);
-        map = maps;
-        map.zoomTo(20);
 
         initTrajFull(trajFull);
-        totalTrajPosInit(trajFull);
+        totalTrajPosInit(trajFull, delta);
 
         ArrayList<Trajectory> cellList = new ArrayList<>();
 
@@ -66,11 +54,11 @@ public class VFGS {
                 if (GreedyChoose.GreetOrder()) {
                     Trajectory traj = GreedyChoose.getMaxScoreTraj();   // deleteMax
                     cellList.add(traj);    // take this, add to R
-                    CellGridUpdate(traj, delta);        // update R+
+                    CellGridUpdate(traj, delta, deltaDis);        // update R+
+                    break;
                 } else {
                     GreedyChoose.orderAdjust();
                 }
-                break;
             }
         }
 
@@ -86,13 +74,11 @@ public class VFGS {
         }
     }
 
-    private static void CellGridUpdate(Trajectory traj, int DELTA) {
-        for (Location p : traj.locations) {
-            double px = map.getScreenPosition(p).x;
-            double py = map.getScreenPosition(p).y;
-            for (int i = -DELTA; i <= DELTA; i++) {
-                for (int j = -DELTA; j <= DELTA; j++) {
-                    Position pos = new Position(px + i, py + j);
+    private static void CellGridUpdate(Trajectory traj, int delta, float deltaDis) {
+        for (Position p : traj.getPositions()) {
+            for (int i = -delta; i <= delta; i++) {
+                for (int j = -delta; j <= delta; j++) {
+                    Position pos = new Position(p.lat + i * deltaDis, p.lon + j * deltaDis, deltaDis * 32);
                     if (totalTrajPos.contains(pos))
                         trajSet.add(pos);
                 }
@@ -102,10 +88,8 @@ public class VFGS {
 
     private static void Traj2CellScore(Trajectory traj) {
         traj.setScore(0);
-        for (Location p : traj.locations) {
-            double px = map.getScreenPosition(p).x;
-            double py = map.getScreenPosition(p).y;
-            if (trajSet.contains(new Position(px, py)))  // R+
+        for (Position p : traj.getPositions()) {
+            if (trajSet.contains(new Position(p.lat, p.lon)))  // R+
                 continue;
             // not in R+ or self point set
             traj.setScore(traj.getScore() + 1);

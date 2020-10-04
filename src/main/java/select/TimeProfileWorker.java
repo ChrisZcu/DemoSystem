@@ -2,6 +2,7 @@ package select;
 
 import app.TimeProfileSharedObject;
 import de.fhpotsdam.unfolding.geo.Location;
+import model.Position;
 import model.RectRegion;
 import model.Trajectory;
 
@@ -32,13 +33,29 @@ public class TimeProfileWorker extends Thread {
     @Override
     public void run() {
         try {
-            Trajectory[] res = getWayPoint();
+            Trajectory[] res = getWayPointPos();
             TimeProfileSharedObject.getInstance().trajRes[id] = res;
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private Trajectory[] getWayPointPos() {
+        ArrayList<Trajectory> res = new ArrayList<>();
+        for (int i = begin; i < end; i++) {
+            Trajectory traj = trajectory[i];
+            for (Position position : traj.getPositions()) {
+                if (inCheck(position)) {
+                    res.add(traj);
+                    break;
+                }
+            }
+        }
+//        return res.toArray(new Trajectory[0]);
+        return cutTrajsPos(res.toArray(new Trajectory[0]));
+    }
+
+    //
     private Trajectory[] getWayPoint() {
         ArrayList<Trajectory> res = new ArrayList<>();
 
@@ -52,8 +69,13 @@ public class TimeProfileWorker extends Thread {
             }
         }
 //        return res.toArray(new Trajectory[0]);
-        System.out.println(res.size());
+//        System.out.println(res.size());
         return cutTrajs(res.toArray(new Trajectory[0]));
+    }
+
+    private boolean inCheck(Position position) {
+        return position.x >= Math.min(leftLat, rightLat) && position.x <= Math.max(leftLat, rightLat)
+                && position.y >= Math.min(leftLon, rightLon) && position.y <= Math.max(leftLon, rightLon);
     }
 
     private boolean inCheck(Location loc) {
@@ -65,6 +87,14 @@ public class TimeProfileWorker extends Thread {
         ArrayList<Trajectory> res = new ArrayList<>();
         for (Trajectory traj : trajectories) {
             res.addAll(getRegionInTraj(traj));
+        }
+        return res.toArray(new Trajectory[0]);
+    }
+
+    private Trajectory[] cutTrajsPos(Trajectory[] trajectories) {
+        ArrayList<Trajectory> res = new ArrayList<>();
+        for (Trajectory traj : trajectories) {
+            res.addAll(getRegionInTrajPos(traj));
         }
         return res.toArray(new Trajectory[0]);
     }
@@ -81,6 +111,25 @@ public class TimeProfileWorker extends Thread {
                     loc = traj.locations[i++];
                 }
                 trajTmp.locations = locTmp.toArray(new Location[0]);
+                trajTmp.setScore(locTmp.size());
+                res.add(trajTmp);
+            }
+        }
+        return res;
+    }
+
+    private ArrayList<Trajectory> getRegionInTrajPos(Trajectory traj) {
+        ArrayList<Trajectory> res = new ArrayList<>();
+        for (int i = 0; i < traj.getPositions().length; i++) {
+            if (inCheck(traj.getPositions()[i])) {
+                Trajectory trajTmp = new Trajectory(-1);
+                Position position = traj.getPositions()[i++];
+                ArrayList<Position> locTmp = new ArrayList<>();
+                while (inCheck(position) && i < traj.locations.length) {
+                    locTmp.add(position);
+                    position = traj.getPositions()[i++];
+                }
+                trajTmp.setPositions(locTmp.toArray(new Position[0]));
                 trajTmp.setScore(locTmp.size());
                 res.add(trajTmp);
             }

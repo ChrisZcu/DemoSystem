@@ -4,12 +4,15 @@ import app.TimeProfileSharedObject;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
+import model.Position;
 import model.Trajectory;
 import org.lwjgl.Sys;
 import processing.core.PGraphics;
 
 import java.awt.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class TrajDrawWorkerSingleMap extends Thread {
     private PGraphics pg;
@@ -34,14 +37,28 @@ public class TrajDrawWorkerSingleMap extends Thread {
 
     @Override
     public void run() {
-        long t0 = System.currentTimeMillis();
+        try {
+            long t0 = System.currentTimeMillis();
 
-        pg.beginDraw();
-        pg.noFill();
-        pg.strokeWeight(1);
-        pg.stroke(new Color(190, 46, 29).getRGB());
-
-        ArrayList<ArrayList<Point>> trajPointList = new ArrayList<>();
+            pg.beginDraw();
+            pg.noFill();
+            pg.strokeWeight(1);
+            pg.stroke(new Color(190, 46, 29).getRGB());
+            ArrayList<ArrayList<Point>> trajPointList = new ArrayList<>();
+            for (int i = begin; i < end; i++) {
+                ArrayList<Point> pointList = new ArrayList<>();
+                for (Position position : trajList[i].getPositions()) {
+                    if (this.stop) {
+                        System.out.println(this.getName() + " cancel");
+                        return;
+                    }
+                    Location loc = new Location(position.lat, position.lon);
+                    ScreenPosition pos = map.getScreenPosition(loc);
+                    pointList.add(new Point(pos.x, pos.y));
+                }
+                trajPointList.add(pointList);
+            }
+/*
         for (int i = begin; i < end; i++) {
             ArrayList<Point> pointList = new ArrayList<>();
             for (Location loc : trajList[i].getLocations()) {
@@ -55,23 +72,27 @@ public class TrajDrawWorkerSingleMap extends Thread {
             trajPointList.add(pointList);
         }
 
-        for (ArrayList<Point> traj : trajPointList) {
-            pg.beginShape();
 
-            for (Point pos : traj) {
-                if (this.stop) {
-                    System.out.println(this.getName() + " cancel");
-                    pg.endShape();
-                    pg.endDraw();
-                    return;
+ */
+            for (ArrayList<Point> traj : trajPointList) {
+                pg.beginShape();
+                for (Point pos : traj) {
+                    if (this.stop) {
+                        System.out.println(this.getName() + " cancel");
+                        pg.endShape();
+                        pg.endDraw();
+                        return;
+                    }
+                    pg.vertex(pos.x, pos.y);
                 }
-                pg.vertex(pos.x, pos.y);
+                pg.endShape();
             }
-            pg.endShape();
-        }
-        System.out.println(">>>>render time: " + (System.currentTimeMillis() - t0)  + " ms");
+            System.out.println(">>>>render time: " + (System.currentTimeMillis() - t0) + " ms");
 
-        TimeProfileSharedObject.getInstance().setTrajMatrix(pg, id);
+            TimeProfileSharedObject.getInstance().setTrajMatrix(pg, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     class Point {
@@ -81,6 +102,11 @@ public class TrajDrawWorkerSingleMap extends Thread {
         public Point(float x, float y) {
             this.x = x;
             this.y = y;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + x + ", " + y + ")";
         }
     }
 }
