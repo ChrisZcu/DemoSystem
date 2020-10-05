@@ -1,20 +1,20 @@
 package model;
 
 public class TrajToQuality {
-    Trajectory trajectory;
+    TrajectoryMeta trajectoryMeta;
     double quality;
 
-    public TrajToQuality(Trajectory trajectory, double quality){
-        this.trajectory = trajectory;
+    public TrajToQuality(TrajectoryMeta trajectoryMeta, double quality){
+        this.trajectoryMeta = trajectoryMeta;
         this.quality = quality;
     }
 
-    public Trajectory getTrajectory() {
-        return trajectory;
+    public TrajectoryMeta getTrajectory() {
+        return trajectoryMeta;
     }
 
-    public void setTrajectory(Trajectory trajectory) {
-        this.trajectory = trajectory;
+    public void setTrajectory(TrajectoryMeta trajectoryMeta) {
+        this.trajectoryMeta = trajectoryMeta;
     }
 
     public double getQuality() {

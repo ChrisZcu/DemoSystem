@@ -2,16 +2,16 @@ package index;
 
 import model.QuadRegion;
 import model.TrajToQuality;
-import model.Trajectory;
+import model.TrajectoryMeta;
 import processing.core.PApplet;
 
 import java.util.ArrayList;
 import java.util.Stack;
 
 public class SearchRegion extends PApplet {
-    public static Trajectory[] searchRegion(double minLat, double maxLat, double minLon, double maxLon,
+    public static TrajectoryMeta[] searchRegion(double minLat, double maxLat, double minLon, double maxLon,
                                             QuadRegion quadRegion, double quality) {
-        ArrayList<Trajectory> trajectories = new ArrayList<>();
+        ArrayList<TrajectoryMeta> trajectories = new ArrayList<>();
         Stack<QuadRegion> regionStack = new Stack<QuadRegion>();
         regionStack.push(quadRegion);
         while (!regionStack.isEmpty()) {
@@ -49,7 +49,7 @@ public class SearchRegion extends PApplet {
                 }
             }
         }
-        return trajectories.toArray(new Trajectory[0]);
+        return trajectories.toArray(new TrajectoryMeta[0]);
     }
 
     private static boolean isContained(double minLat, double maxLat, double minLon, double maxLon, QuadRegion quadRegion) {//quadregion is large
@@ -80,7 +80,7 @@ public class SearchRegion extends PApplet {
 
         double minLat = 41.137554, maxLat = 41.198544, minLon = -8.596918, maxLon = -8.677942;
 
-        Trajectory[] trajectories = searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, 1);
+        TrajectoryMeta[] trajectories = searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, 1);
 
         PApplet.main(new String[]{SearchRegion.class.getName()});
     }

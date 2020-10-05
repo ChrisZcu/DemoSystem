@@ -6,9 +6,11 @@ import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManagerSingleMap;
+import index.IndexStructManager;
 import index.QuadTree;
 import index.SearchRegion;
 import model.*;
+import org.apache.lucene.util.RamUsageEstimator;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
@@ -20,6 +22,7 @@ import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Scanner;
 
 import static java.util.Arrays.*;
 
@@ -27,10 +30,10 @@ import static java.util.Arrays.*;
 public class RegionSearchApp extends PApplet {
 
     UnfoldingMap map;
-    private int ZOOMLEVEL = 8;
-    private Location PRESENT = new Location(40.435, -8.293); /*new Location(41.151, -8.616);*/
+    private int ZOOMLEVEL = 11;
+    private Location PRESENT = new Location(41.151, -8.523); /*new Location(41.151, -8.616);*/
     private double[] latLon = new double[4];
-    private Trajectory[] trajFull;
+    private TrajectoryMeta[] trajFull;
 
     @Override
     public void settings() {
@@ -39,6 +42,7 @@ public class RegionSearchApp extends PApplet {
 
     private String partFilePath = "data/GPS/Porto5w/Porto5w.txt";
     private String fullFilePath = "data/GPS/porto_full.txt";
+    private String filePath = fullFilePath;
     private QuadRegion quadRegionRoot;
     private boolean indexDone = false;
 
@@ -55,12 +59,19 @@ public class RegionSearchApp extends PApplet {
         new Thread() {
             @Override
             public void run() {
-                trajFull = QuadTree.loadData(latLon, fullFilePath);
-                long t0 = System.currentTimeMillis();
-                quadRegionRoot = QuadTree.getQuadIndex(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
-                System.out.println("index time: " + (System.currentTimeMillis() - t0) + " ms");
+                trajFull = QuadTree.loadData(latLon, filePath);
+//                long t0 = System.currentTimeMillis();
+//                IndexStructManager indexStructManager = new IndexStructManager(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 5);
+//                quadRegionRoot = indexStructManager.startIndexStructure();
+//                System.out.println("index time: " + (System.currentTimeMillis() - t0) + " ms");
+//                quadRegionRoot = null;
+
+                long t1 = System.currentTimeMillis();
+                quadRegionRoot = QuadTree.getQuadIndex(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 8);
+//                System.out.println("index time for single thread: " + (System.currentTimeMillis() - t1));
                 loadDone = true;
                 indexDone = true;
+
             }
         }.start();
     }
@@ -68,7 +79,7 @@ public class RegionSearchApp extends PApplet {
     private boolean regionDrawing = false;
     Position lastClick;
     RectRegion rectRegion;
-    Trajectory[] trajShow = new Trajectory[0];
+    TrajectoryMeta[] trajShow = new TrajectoryMeta[0];
 
     @Override
     public void draw() {
@@ -81,23 +92,26 @@ public class RegionSearchApp extends PApplet {
 
             }
             if (TimeProfileSharedObject.getInstance().calDone) {
-                trajShow = TimeProfileSharedObject.getInstance().trajShow;
+                trajShow = TimeProfileSharedObject.getInstance().trajectoryMetas;
                 System.out.println("trajshow number>>>>" + trajShow.length);
                 TrajDrawManagerSingleMap trajManager = new TrajDrawManagerSingleMap(trajShow, 1, this, map);
                 trajManager.startDraw();
                 TimeProfileSharedObject.getInstance().calDone = false;
             }
+
+            if (indexDone) {
+                for (RectRegion rectRegion : TimeProfileSharedObject.getInstance().getQudaRegion()) {
+                    drawRecRegion(rectRegion);
+                }
+            }
+
             drawTrajCPU();
 
             drawRecRegion();
 
             drawComponent();
             //draw lines
-            if (indexDone) {
-                for (RectRegion rectRegion : TimeProfileSharedObject.getInstance().getQudaRegion()) {
-                    drawRecRegion(rectRegion);
-                }
-            }
+
         }
     }
 
@@ -145,6 +159,17 @@ public class RegionSearchApp extends PApplet {
     public void mouseWheel() {
         zoom = true;
         TimeProfileSharedObject.getInstance().trajImageMtx = new PGraphics[0];
+    }
+
+    double quality = 0.7;
+
+    @Override
+    public void keyPressed() {
+        if (key == 'q') {
+            Scanner scanner = new Scanner(System.in);
+            quality = scanner.nextDouble();
+            System.out.println("quality selected now: " + quality);
+        }
     }
 
     private EleButton[] dataButtonList = new EleButton[0];
@@ -270,7 +295,7 @@ public class RegionSearchApp extends PApplet {
             return;
         }
         if (rectRegion == null) {
-            TimeProfileSharedObject.getInstance().trajShow = trajFull;
+            TimeProfileSharedObject.getInstance().trajectoryMetas = trajFull;
             TimeProfileSharedObject.getInstance().calDone = true;
             return;
         }
@@ -289,7 +314,8 @@ public class RegionSearchApp extends PApplet {
                 double minLon = Math.min(leftLon, rightLon);
                 double maxLon = Math.max(leftLon, rightLon);
                 System.out.println(minLat + ", " + maxLat + ", " + minLon + ", " + maxLon);
-                TimeProfileSharedObject.getInstance().trajShow = SearchRegion.searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, 1);
+
+                TimeProfileSharedObject.getInstance().trajectoryMetas = SearchRegion.searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, quality);
                 TimeProfileSharedObject.getInstance().calDone = true;
                 System.out.println("Calculate done!");
             }

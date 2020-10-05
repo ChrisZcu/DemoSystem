@@ -2,6 +2,7 @@ package app;
 
 import model.RectRegion;
 import model.Trajectory;
+import model.TrajectoryMeta;
 import org.w3c.dom.css.Rect;
 import processing.core.PGraphics;
 
@@ -30,6 +31,7 @@ public class TimeProfileSharedObject {
     public Trajectory[][] trajRes;
 
     public Trajectory[] trajShow;
+    public TrajectoryMeta[] trajectoryMetas;
     boolean calDone = false;
 
     public void setTrajMatrix(PGraphics pg, int id) {

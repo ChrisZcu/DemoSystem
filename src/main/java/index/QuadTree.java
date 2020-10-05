@@ -24,8 +24,8 @@ public class QuadTree {
     public QuadTree() {
     }
 
-    public static Trajectory[] loadData(double[] latLon, String filePath) {
-        Trajectory[] trajFull;
+    public static TrajectoryMeta[] loadData(double[] latLon, String filePath) {
+        TrajectoryMeta[] trajFull;
         ArrayList<String> trajFullStr = new ArrayList<>();
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
@@ -38,8 +38,8 @@ public class QuadTree {
         } catch (IOException e) {
             e.printStackTrace();
         }
-//        trajFull = new Trajectory[trajFullStr.size()];
-        ArrayList<Trajectory> res = new ArrayList<>();
+//        trajFull = new TrajectoryMeta[trajFullStr.size()];
+        ArrayList<TrajectoryMeta> res = new ArrayList<>();
         int i = 0;
         for (String line : trajFullStr) {
             String[] metaData = line.split(";");
@@ -51,11 +51,12 @@ public class QuadTree {
                 float lat = Float.parseFloat(item[j + 1]);
                 float lon = Float.parseFloat(item[j]);
                 //debug
-//                if (lat > 41.345 || lat < 40.953 || lon < -8.86 || lon > -8.280) {
-//                    j = item.length;
-//                    next = true;
-//                    continue;
-//                }
+//                if (lat >41.345 || lat < 40.953 || lon < -8.86 || lon > -8.280) {
+                if (lat < 38.429 || lon > -6.595) {
+                    j = item.length;
+                    next = true;
+                    continue;
+                }
                 //debug done
 
                 positions[j / 2] = new Position((int) (lat * 1000000), (int) (lon * 1000000));
@@ -67,29 +68,30 @@ public class QuadTree {
 
             }
 //
-//            if (next)
-//                continue;
-            Trajectory traj = new Trajectory(i);
+            if (next)
+                continue;
+            TrajectoryMeta traj = new TrajectoryMeta(i);
             traj.setScore(score);
             traj.setPositions(positions);
 //            trajFull[i] = traj;
             i++;
             res.add(traj);
         }
-        trajFull = res.toArray(new Trajectory[0]);
+        trajFull = res.toArray(new TrajectoryMeta[0]);
         System.out.println("Transfer done " + trajFull.length);
         System.out.println(minGLat + ", " + maxGLat + ", " + minGLon + ", " + maxGLon);
         latLon[0] = minGLat;
         latLon[1] = maxGLat;
         latLon[2] = minGLon;
         latLon[3] = maxGLon;
+        trajFullStr.clear();
 
         return trajFull;
     }
 
 
     private static QuadRegion local(double minLat, double maxLat, double minLon, double maxLon, int H,
-                                    Trajectory[] trajFull) {
+                                    TrajectoryMeta[] trajFull) {
         RectRegion rectRegion = new RectRegion();
         rectRegion.initLoc(new Location(minLat, minLon), new Location(maxLat, maxLon));
 //        System.out.println(H + " :(" + minLat + ", " + maxLat + ", " + minLon + ", " + maxLon + ")");
@@ -106,7 +108,7 @@ public class QuadTree {
                 int lonId = i % 2;
                 double tmpLatMin = minLat + latOff * laxId;
                 double tmpLonMin = minLon + lonOff * lonId;
-                Trajectory[] wayPoint = getWayPointPos(trajFull, tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff);
+                TrajectoryMeta[] wayPoint = getWayPointPos(trajFull, tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff);
                 quadChildren[i] = local(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint);
             }
             quadRegion.setQuadRegionChildren(quadChildren);
@@ -115,9 +117,9 @@ public class QuadTree {
     }
 
 
-    private static Trajectory[] getWayPointPos(Trajectory[] trajFull, double minLat, double maxLat, double minLon, double maxLon) {
-        ArrayList<Trajectory> res = new ArrayList<>();
-        for (Trajectory traj : trajFull) {
+    public static TrajectoryMeta[] getWayPointPos(TrajectoryMeta[] trajFull, double minLat, double maxLat, double minLon, double maxLon) {
+        ArrayList<TrajectoryMeta> res = new ArrayList<>();
+        for (TrajectoryMeta traj : trajFull) {
             for (Position position : traj.getPositions()) {
                 if (inCheck(position, minLat, maxLat, minLon, maxLon)) {
                     res.add(traj);
@@ -125,27 +127,27 @@ public class QuadTree {
                 }
             }
         }
-        return cutTrajsPos(res.toArray(new Trajectory[0]), minLat, maxLat, minLon, maxLon);
+        return cutTrajsPos(res.toArray(new TrajectoryMeta[0]), minLat, maxLat, minLon, maxLon);
     }
 
     private static boolean inCheck(Position position, double minLat, double maxLat, double minLon, double maxLon) {
-        return position.lat >= minLat && position.lat <= maxLat
-                && position.lon >= minLon && position.lon <= maxLon;
+        return position.x / 1000000.0 >= minLat && position.x / 1000000.0 <= maxLat
+                && position.y / 1000000.0 >= minLon && position.y / 1000000.0 <= maxLon;
     }
 
-    private static Trajectory[] cutTrajsPos(Trajectory[] trajectories, double minLat, double maxLat, double minLon, double maxLon) {
-        ArrayList<Trajectory> res = new ArrayList<>();
-        for (Trajectory traj : trajectories) {
+    private static TrajectoryMeta[] cutTrajsPos(TrajectoryMeta[] trajectories, double minLat, double maxLat, double minLon, double maxLon) {
+        ArrayList<TrajectoryMeta> res = new ArrayList<>();
+        for (TrajectoryMeta traj : trajectories) {
             res.addAll(getRegionInTrajPos(traj, minLat, maxLat, minLon, maxLon));
         }
-        return res.toArray(new Trajectory[0]);
+        return res.toArray(new TrajectoryMeta[0]);
     }
 
-    private static ArrayList<Trajectory> getRegionInTrajPos(Trajectory traj, double minLat, double maxLat, double minLon, double maxLon) {
-        ArrayList<Trajectory> res = new ArrayList<>();
+    private static ArrayList<TrajectoryMeta> getRegionInTrajPos(TrajectoryMeta traj, double minLat, double maxLat, double minLon, double maxLon) {
+        ArrayList<TrajectoryMeta> res = new ArrayList<>();
         for (int i = 0; i < traj.getPositions().length; i++) {
             if (inCheck(traj.getPositions()[i], minLat, maxLat, minLon, maxLon)) {
-                Trajectory trajTmp = new Trajectory(-1);
+                TrajectoryMeta trajTmp = new TrajectoryMeta(-1);
                 Position position = traj.getPositions()[i++];
                 ArrayList<Position> locTmp = new ArrayList<>();
                 while (inCheck(position, minLat, maxLat, minLon, maxLon) && i < traj.getPositions().length) {
@@ -161,19 +163,19 @@ public class QuadTree {
     }
 
     public static QuadRegion getQuadIndex(String filePath, int height) {
-        Trajectory[] trajectories = loadData(new double[4], filePath);
+        TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
         return local(minGLat, maxGLat, minGLon, maxGLon, height, trajectories);
     }
 
     public static QuadRegion getQuadIndex(double minLat, double maxLat, double minLon, double maxLon,
-                                          Trajectory[] trajectories, int height) {
+                                          TrajectoryMeta[] trajectories, int height) {
         return local(minLat, maxLat, minLon, maxLon, height, trajectories);
     }
 
     //lat41 lon8
     public static void main(String[] args) {
-//        Trajectory[] trajectories = loadData("data/GPS/Porto5w/Porto5w.txt");
-        Trajectory[] trajectories = loadData(new double[4], "data/GPS/porto_full.txt");
+//        TrajectoryMeta[] trajectories = loadData("data/GPS/Porto5w/Porto5w.txt");
+        TrajectoryMeta[] trajectories = loadData(new double[4], "data/GPS/porto_full.txt");
 
         long t0 = System.currentTimeMillis();
         QuadRegion quadRegion = local(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories);

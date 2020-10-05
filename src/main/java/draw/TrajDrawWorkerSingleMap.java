@@ -6,6 +6,7 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import model.Position;
 import model.Trajectory;
+import model.TrajectoryMeta;
 import org.lwjgl.Sys;
 import processing.core.PGraphics;
 
@@ -20,6 +21,7 @@ public class TrajDrawWorkerSingleMap extends Thread {
     private int begin;
     private int end;
     private Trajectory[] trajList;
+    private TrajectoryMeta[] trajMetaList;
     private int id;
 
     public volatile boolean stop = false;
@@ -35,6 +37,17 @@ public class TrajDrawWorkerSingleMap extends Thread {
         this.setPriority(9);
     }
 
+    public TrajDrawWorkerSingleMap(PGraphics pg, UnfoldingMap map, int begin, int end, TrajectoryMeta[] trajMetaList) {
+        this.pg = pg;
+        this.map = map;
+        this.begin = begin;
+        this.end = end;
+        this.trajMetaList = trajMetaList;
+        this.stop = stop;
+
+        this.setPriority(9);
+    }
+
     @Override
     public void run() {
         try {
@@ -44,6 +57,7 @@ public class TrajDrawWorkerSingleMap extends Thread {
             pg.noFill();
             pg.strokeWeight(1);
             pg.stroke(new Color(190, 46, 29).getRGB());
+            /*
             ArrayList<ArrayList<Point>> trajPointList = new ArrayList<>();
             for (int i = begin; i < end; i++) {
                 ArrayList<Point> pointList = new ArrayList<>();
@@ -52,12 +66,14 @@ public class TrajDrawWorkerSingleMap extends Thread {
                         System.out.println(this.getName() + " cancel");
                         return;
                     }
-                    Location loc = new Location(position.lat, position.lon);
+                    Location loc = new Location(position.x / 1000000.0, position.y / 1000000.0);
+//                    System.out.println(loc);
                     ScreenPosition pos = map.getScreenPosition(loc);
                     pointList.add(new Point(pos.x, pos.y));
                 }
                 trajPointList.add(pointList);
             }
+            */
 /*
         for (int i = begin; i < end; i++) {
             ArrayList<Point> pointList = new ArrayList<>();
@@ -74,6 +90,7 @@ public class TrajDrawWorkerSingleMap extends Thread {
 
 
  */
+/*
             for (ArrayList<Point> traj : trajPointList) {
                 pg.beginShape();
                 for (Point pos : traj) {
@@ -83,6 +100,32 @@ public class TrajDrawWorkerSingleMap extends Thread {
                         pg.endDraw();
                         return;
                     }
+                    pg.vertex(pos.x, pos.y);
+                }
+                pg.endShape();
+            }
+            */
+/*
+            for (int i = begin; i < end; i++) {
+                Trajectory traj = trajList[i];
+
+                pg.beginShape();
+                for (Position position : traj.getPositions()) {
+                    Location loc = new Location(position.x / 1000000.0, position.y / 1000000.0);
+                    ScreenPosition pos = map.getScreenPosition(loc);
+                    pg.vertex(pos.x, pos.y);
+                }
+                pg.endShape();
+            }
+
+ */
+            for (int i = begin; i < end; i++) {
+                TrajectoryMeta traj = trajMetaList[i];
+
+                pg.beginShape();
+                for (Position position : traj.getPositions()) {
+                    Location loc = new Location(position.x / 1000000.0, position.y / 1000000.0);
+                    ScreenPosition pos = map.getScreenPosition(loc);
                     pg.vertex(pos.x, pos.y);
                 }
                 pg.endShape();
