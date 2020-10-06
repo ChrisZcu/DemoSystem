@@ -1,6 +1,7 @@
 package draw;
 
 import app.TimeProfileSharedObject;
+import app.UserInterface;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
@@ -42,6 +43,7 @@ public class TrajDrawWorkerSingleMap extends Thread {
         pg.stroke(new Color(190, 46, 29).getRGB());
 
         ArrayList<ArrayList<Point>> trajPointList = new ArrayList<>();
+        long t1 = System.currentTimeMillis();
         for (int i = begin; i < end; i++) {
             ArrayList<Point> pointList = new ArrayList<>();
             for (Location loc : trajList[i].getLocations()) {
@@ -54,6 +56,8 @@ public class TrajDrawWorkerSingleMap extends Thread {
             }
             trajPointList.add(pointList);
         }
+        long t2 = System.currentTimeMillis();
+        System.out.println(">>>>GPS to screen time: "+(t2-t1));
 
         for (ArrayList<Point> traj : trajPointList) {
             pg.beginShape();
@@ -70,6 +74,9 @@ public class TrajDrawWorkerSingleMap extends Thread {
             pg.endShape();
         }
         System.out.println(">>>>render time: " + (System.currentTimeMillis() - t0)  + " ms");
+        //UserInterface obj=new UserInterface();
+        //obj.savePic();
+        //obj.nextPic();
 
         TimeProfileSharedObject.getInstance().setTrajMatrix(pg, id);
     }

@@ -11,6 +11,11 @@ public class Position {
         code = hashCode();
     }
 
+    public Position(float x, float y) {
+        this.x = (int) (x * 1000000);
+        this.y = (int) (y * 1000000);
+    }
+
     public Position(int x, int y) {
         this.x = x;
         this.y = y;

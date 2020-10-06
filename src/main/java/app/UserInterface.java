@@ -5,25 +5,20 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
-import draw.TrajDrawManager;
 import draw.TrajDrawManagerSingleMap;
-import javafx.geometry.Pos;
 import model.*;
-import org.lwjgl.Sys;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import select.TimeProfileManager;
 import util.PSC;
 import util.VFGS;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.jar.JarOutputStream;
 
 public class UserInterface extends PApplet {
 
@@ -32,24 +27,76 @@ public class UserInterface extends PApplet {
 
     String filePath = totalFilePath;
     UnfoldingMap map;
+    UnfoldingMap mapClone;
+    long t1, t2, t4;
+
     private boolean regionDrawing = false;
+    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+    String[] tasks = new String[]{"Global - FULL", "Global - Random (rate=0.01)", "Global - VFGS (rate=0.01, delta=0)",
+            "Global - VFGS+ (rate=0.01, delta=32)", "Local – Full", "Local – Random (rate=0.01)",
+            "Local – VFGS (rate=0.01, delta=0)", "Local – VFGS+ (rate=0.01, delta=32)"};
+
+    //    Location[] regions = new Location[]{
+//            new Location(41.315205, -8.629877),
+//            new Location(41.275997, -8.365519),
+//            new Location(41.1882, -8.35178),
+//            new Location(41.044403, -8.470575),
+//            new Location(40.971338, -8.591425),
+//
+//            new Location(41.198544, -8.677942),
+//            new Location(41.213013, -8.54542),
+//            new Location(41.137554, -8.596918)
+//    };
+//    Location[] regions = new Location[]{
+//            new Location(41.39543, -8.469396),
+//            new Location(41.371895, -8.264764),
+//            new Location(41.450687, -8.4920435),
+//            new Location(41.25237, -8.38321),
+//            new Location(41.265537, -8.276437),
+//            new Location(41.21856, -8.155588)
+//    };
+    Location[] regions = new Location[]{
+            //new Location(41.2005, -8.310094),
+            new Location(41.143646, -8.63213),
+            new Location(41.191044, -8.522085)
+    };
+
+    double[] rates = new double[]{0.01, 0.05, 0.1, 0.2, 0.4};
+
+    int progress = 2;
+    int regionNum = 0;
+    int rateNum = 0;
+
+    boolean capture = false;
 
     @Override
     public void settings() {
-        size(1000, 800, P2D);
+        //size(1000, 800, P2D);
+        fullScreen(P2D);
     }
+    //15
 
     private int ZOOMLEVEL = 11;
     private Location PRESENT = new Location(41.151, -8.634)/*new Location(41.206, -8.627)*/;
     private boolean loadDone = false;
 
+    RectRegion[] r = new RectRegion[6];
+
     @Override
     public void setup() {
-
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        System.out.println((int) screenSize.getWidth());//2560
+        System.out.println((int) screenSize.getHeight());//1440
         map = new UnfoldingMap(this, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
         map.setZoomRange(0, 20);
         map.setBackgroundColor(255);
         map.zoomAndPanTo(ZOOMLEVEL, PRESENT);
+        map.setTweening(true);
+
+        mapClone = new UnfoldingMap(this, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
+        mapClone.setZoomRange(0, 20);
+        mapClone.zoomAndPanTo(ZOOMLEVEL, PRESENT);
 
         MapUtils.createDefaultEventDispatcher(this, map);
 
@@ -63,6 +110,22 @@ public class UserInterface extends PApplet {
                 loadDone = true;
             }
         }.start();
+
+//        for (int i = 0; i < 6; ++i) {
+//            ScreenPosition center = map.getScreenPosition(regions[i]);
+//
+//            double lenth = 79.9, width = 44.9;
+//            Position lt = new Position(center.x - lenth, center.y - width);
+//            Position rb = new Position(center.x + lenth, center.y + width);
+//
+//            RectRegion selectRegion = new RectRegion(lt, rb);
+//            selectRegion.color = PSC.COLOR_LIST[1];
+//
+//
+//            selectRegion.initLoc(map.getLocation(selectRegion.leftTop.x, selectRegion.leftTop.y),
+//                    map.getLocation(selectRegion.rightBtm.x, selectRegion.rightBtm.y));
+//            r[i] = selectRegion;
+//        }
     }
 
     boolean cleanTime = true;
@@ -86,19 +149,26 @@ public class UserInterface extends PApplet {
                 TrajDrawManagerSingleMap trajManager = new TrajDrawManagerSingleMap(trajShow, 1, this, map);
                 trajManager.startDraw();
                 TimeProfileSharedObject.getInstance().calDone = false;
-                System.out.println(">>>>way point time: " + wayPointCalTime  +
-                        " ms\n" + ">>>>vfgs cal time: " + vfgsTime  + " ms");
+                System.out.println(">>>>way point time: " + wayPointCalTime +
+                        " ms\n" + ">>>>VFGS time: " + algTime + " ms");
             }
             //draw traj
             long t3 = System.currentTimeMillis();
             drawTrajCPU();
             drawTime = System.currentTimeMillis() - t3;
 
-
-            drawComponent();
+            //drawComponent();
         }
+//        for(int i = 0;i<6;++i){
+//            noFill();
+//            strokeWeight(2);
+//            stroke(new Color(19, 149, 186).getRGB());
+//
+//            ScreenPosition src1 = map.getScreenPosition(r[i].getLeftTopLoc());
+//            ScreenPosition src2 = map.getScreenPosition(r[i].getRightBtmLoc());
+//            rect(src1.x, src1.y, src2.x - src1.x, src2.y - src1.y);
+//        }
     }
-
 
     Trajectory[] trajShow = new Trajectory[0];
     RectRegion rectRegion;
@@ -120,11 +190,12 @@ public class UserInterface extends PApplet {
         if (regionDrawing) {
             regionDrawing = false;
             rectRegion = getSelectRegion(lastClick);
+            //System.out.println(rectRegion);
         }
         if (panning || zoom) {
             panning = false;
             zoom = false;
-            finishClick();
+            finishClick(4);
         }
 
     }
@@ -148,11 +219,17 @@ public class UserInterface extends PApplet {
         TimeProfileSharedObject.getInstance().trajImageMtx = new PGraphics[0];
     }
 
+    @Override
+    public void keyReleased() {
+        consumeChangeDataSetOpt();
+    }
+
     private long wayPointCalTime = 0L;
-    private long vfgsTime = 0L;
+    public static long algTime = 0L;
+
     private long drawTime = 0L;
 
-    private void finishClick() {
+    private void finishClick(int kind) {
         if (!loadDone) {
             System.out.println("!!!!!!Data not done, wait....");
             return;
@@ -162,24 +239,89 @@ public class UserInterface extends PApplet {
             TimeProfileSharedObject.getInstance().calDone = true;
             return;
         }
+        //changeMap();
         new Thread() {
             @Override
             public void run() {
                 System.out.println("calculating....");
-                long t0 = System.currentTimeMillis();
-                startCalWayPoint();
-                wayPointCalTime = System.currentTimeMillis() - t0;
+                long tt1 = System.currentTimeMillis();
+                long tt2;
 
-                long t1 = System.currentTimeMillis();
-                ArrayList<Trajectory> trajShows = new ArrayList<>();
-                for (Trajectory[] trajList : TimeProfileSharedObject.getInstance().trajRes) {
-                    Collections.addAll(trajShows, trajList);
+                switch (kind) {
+                    case 1:
+                        //Global - FULL – Region
+                        TimeProfileSharedObject.getInstance().trajShow = VFGS.cut(totalTrajector, rectRegion);
+                        tt2 = System.currentTimeMillis();
+                        algTime = tt2 - tt1;
+                        wayPointCalTime = 0;
+                        System.out.println("waypoint traj num>>>" + trajShow.length);
+                        break;
+                    case 2:
+                        //Global - Random – Region
+                        TimeProfileSharedObject.getInstance().trajShow = VFGS.cut(VFGS.getCellCover(totalTrajector, 0.01), rectRegion);
+                        tt2 = System.currentTimeMillis();
+                        algTime = tt2 - tt1;
+                        break;
+                    case 3:
+                        //Global - VFGS – Region
+                        TimeProfileSharedObject.getInstance().trajShow = VFGS.cut(VFGS.getCellCover(totalTrajector, mapClone, 0.01, 0), rectRegion);
+                        tt2 = System.currentTimeMillis();
+                        algTime = tt2 - tt1;
+                        break;
+                    case 4:
+                        //Global - VFGS+ – Region
+                        TimeProfileSharedObject.getInstance().trajShow = VFGS.cut(VFGS.getCellCover(totalTrajector, mapClone, 0.005, 64), rectRegion);
+                        tt2 = System.currentTimeMillis();
+                        algTime = tt2 - tt1;
+                        break;
+                    case 5:
+                        //Local – Full – Region
+                        TimeProfileSharedObject.getInstance().trajShow = VFGS.cut(getWayPoint().toArray(new Trajectory[0]), rectRegion);
+                        tt2 = System.currentTimeMillis();
+                        algTime = tt2 - tt1;
+                        break;
+                    case 6:
+                        //Local – Random – Region
+                        TimeProfileSharedObject.getInstance().trajShow = VFGS.cut(VFGS.getCellCover(getWayPoint().toArray(new Trajectory[0]), 0.01), rectRegion);
+                        tt2 = System.currentTimeMillis();
+                        algTime = tt2 - tt1;
+                        break;
+                    case 7:
+                        //Local – VFGS – Region
+//                        Trajectory[] trajFull = getWayPoint().toArray(new Trajectory[0]);
+//                        double rate = (double) 2312 / trajFull.length;
+//                        System.out.println((regionNum + 1) + " " + progress + " " + rate);
+                        TimeProfileSharedObject.getInstance().trajShow = VFGS.cut(VFGS.getCellCover(getWayPoint().toArray(new Trajectory[0]), mapClone, 0.01, 0), rectRegion);
+                        tt2 = System.currentTimeMillis();
+                        algTime = tt2 - tt1;
+                        break;
+                    case 8:
+                        //Local – VFGS+ – Region
+//                        Trajectory[] trajFull1 = getWayPoint().toArray(new Trajectory[0]);
+//                        double rate1 = (double) 2312 / trajFull1.length;
+//                        System.out.println((regionNum + 1) + " " + progress + " " + rate1);
+                        TimeProfileSharedObject.getInstance().trajShow = VFGS.cut(VFGS.getCellCover(getWayPoint().toArray(new Trajectory[0]), mapClone, 0.005, 64), rectRegion);
+                        tt2 = System.currentTimeMillis();
+                        algTime = tt2 - tt1;
+                        break;
                 }
-                TimeProfileSharedObject.getInstance().trajShow = VFGS.getCellCover(trajShows.toArray(new Trajectory[0]), map, 0.01, rectRegion);
+
                 TimeProfileSharedObject.getInstance().calDone = true;
-                vfgsTime = System.currentTimeMillis() - t1;
             }
         }.start();
+    }
+
+    private ArrayList<Trajectory> getWayPoint() {
+        long t1 = System.currentTimeMillis();
+        startCalWayPoint();
+        long t2 = System.currentTimeMillis();
+        wayPointCalTime = t2 - t1;
+
+        ArrayList<Trajectory> trajShows = new ArrayList<>();
+        for (Trajectory[] trajList : TimeProfileSharedObject.getInstance().trajRes) {
+            Collections.addAll(trajShows, trajList);
+        }
+        return trajShows;
     }
 
     private void drawRecRegion() {
@@ -236,43 +378,60 @@ public class UserInterface extends PApplet {
         }
         if (eleId != -1) {
             if (eleId == 0) {//finish
-                finishClick();
+                finishClick(4);
                 finishClick = true;
             } else if (eleId == 1) {
                 rectRegion = null;
-                finishClick();
+                finishClick(4);
                 finishClick = true;
             }
         }
     }
 
     private RectRegion getSelectRegion(Position lastClick) {
-        float mapWidth = 1000;
-        float mapHeight = 800;
+        ScreenPosition center = map.getScreenPosition(regions[0]);
 
-        float mx = constrain(mouseX, 3, mapWidth - 3);
-        float my = constrain(mouseY, 3, mapHeight - 3);
+        double lenth = 79.9, width = 44.9;
+        Position lt = new Position(center.x - lenth, center.y - width);
+        Position rb = new Position(center.x + lenth, center.y + width);
 
-        Position curClick = new Position(mx, my);
-        RectRegion selectRegion = new RectRegion();
-        if (lastClick.x < curClick.x) {//left
-            if (lastClick.y < curClick.y) {//up
-                selectRegion.leftTop = lastClick;
-                selectRegion.rightBtm = curClick;
-            } else {//left_down
-                Position left_top = new Position(lastClick.x, curClick.y);
-                Position right_btm = new Position(curClick.x, lastClick.y);
-                selectRegion = new RectRegion(left_top, right_btm);
-            }
-        } else {//right
-            if (lastClick.y < curClick.y) {//up
-                Position left_top = new Position(curClick.x, lastClick.y);
-                Position right_btm = new Position(lastClick.x, curClick.y);
-                selectRegion = new RectRegion(left_top, right_btm);
-            } else {
-                selectRegion = new RectRegion(curClick, lastClick);
-            }
-        }
+//        if (lastClick.x < curClick.x) {//left
+//            if (lastClick.y < curClick.y) {//up
+//                selectRegion.leftTop = lastClick;
+//                selectRegion.rightBtm = curClick;
+//            } else {//left_down
+//                Position left_top = new Position(lastClick.x, curClick.y);
+//                Position right_btm = new Position(curClick.x, lastClick.y);
+//                selectRegion = new RectRegion(left_top, right_btm);
+//            }
+//        } else {//right
+//            if (lastClick.y < curClick.y) {//up
+//                Position left_top = new Position(curClick.x, lastClick.y);
+//                Position right_btm = new Position(lastClick.x, curClick.y);
+//                selectRegion = new RectRegion(left_top, right_btm);
+//            } else {
+//                selectRegion = new RectRegion(curClick, lastClick);
+//            }
+//        }
+
+        RectRegion selectRegion = new RectRegion(lt, rb);
+        selectRegion.color = PSC.COLOR_LIST[1];
+
+
+        selectRegion.initLoc(map.getLocation(selectRegion.leftTop.x, selectRegion.leftTop.y),
+                map.getLocation(selectRegion.rightBtm.x, selectRegion.rightBtm.y));
+
+        return selectRegion;
+    }
+
+    private RectRegion getSelectRegion(int i) {
+        ScreenPosition center = map.getScreenPosition(regions[i]);
+
+        double lenth = 79.9, width = 44.9;
+        Position lt = new Position(center.x - lenth, center.y - width);
+        Position rb = new Position(center.x + lenth, center.y + width);
+
+        RectRegion selectRegion = new RectRegion(lt, rb);
         selectRegion.color = PSC.COLOR_LIST[1];
 
 
@@ -289,7 +448,8 @@ public class UserInterface extends PApplet {
     }
 
     private Trajectory[] totalTrajector;
-    private int[] trajScore;
+    private Trajectory[] vfgsTrajector;
+//    private int[] trajScore;
 
     private void loadTotalData(String filePath) {
         System.out.println("data pre-processing......");
@@ -297,19 +457,22 @@ public class UserInterface extends PApplet {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
             String line;
-            while ((line = reader.readLine()) != null) {
+            int limit = 50000;
+            int cnt = 0;
+            while ((line = reader.readLine()) != null /*&& cnt < limit*/) {
                 totalTraj.add(line);
+                cnt++;
             }
             reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
         totalTrajector = new Trajectory[totalTraj.size()];
-        trajScore = new int[totalTraj.size()];
+//        trajScore = new int[totalTraj.size()];
         int i = 0;
         for (String trajStr : totalTraj) {
             String[] item = trajStr.split(";");
-            trajScore[i] = Integer.parseInt(item[0]);
+//            trajScore[i] = Integer.parseInt(item[0]);
             String[] trajPoint = item[1].split(",");
 
             Trajectory traj = new Trajectory(i);
@@ -318,11 +481,86 @@ public class UserInterface extends PApplet {
                 locations[j / 2] = new Location(Float.parseFloat(trajPoint[j + 1]), Float.parseFloat(trajPoint[j]));
             }
             traj.setLocations(locations);
+            traj.setScore(Integer.parseInt(item[0]));
             totalTrajector[i++] = traj;
         }
         System.out.println(totalTrajector.length);
         System.out.println("data preprocess done");
     }
+
+    private void consumeChangeDataSetOpt() {
+        String fileKind = ".tif";
+        switch (key) {
+            case 'm':
+                map.zoomTo(11);
+                regionNum++;
+                rectRegion = getSelectRegion(regionNum);
+                progress = 2;
+                finishClick(progress);
+                System.out.println(regionNum + " " + progress);
+                break;
+            case 'n':
+//                nextPic();
+//                break;
+                progress++;
+                finishClick(progress);
+                System.out.println((regionNum + 1) + " " + progress);
+                break;
+            case 's':
+                String path = "D:\\arslanaWu\\VFGS\\DemoSystem\\output\\region" + (regionNum + 1) + "\\" + tasks[progress - 1] + fileKind;
+                saveFrame(path);
+                System.out.println((regionNum + 1) + " " + progress + " saved");
+                break;
+            case 'p':
+                ScreenPosition lt = map.getScreenPosition(rectRegion.getLeftTopLoc());
+                ScreenPosition rb = map.getScreenPosition(rectRegion.getRightBtmLoc());
+                Location loc = map.getLocation(lt.x + (rb.x - lt.x) / 2, lt.y + (rb.y - lt.y) / 2);
+
+                map.panTo(loc);
+                break;
+            case 'z':
+                map.zoomTo(11);
+                break;
+            case 'x':
+                map.zoomTo(15);
+                break;
+        }
+
+    }
+
+    public void changeMap() {
+        map.zoomTo(15);
+
+        ScreenPosition lt = map.getScreenPosition(rectRegion.getLeftTopLoc());
+        ScreenPosition rb = map.getScreenPosition(rectRegion.getRightBtmLoc());
+        Location loc = map.getLocation(lt.x + (rb.x - lt.x) / 2, lt.y + (rb.y - lt.y) / 2);
+
+        map.panTo(loc);
+    }
+
+//    public void nextPic() {
+//        map.zoomTo(11);
+//
+//        if (progress == 8) {
+//            map.zoomTo(11);
+//            regionNum++;
+//            rectRegion = getSelectRegion(regionNum);
+//            progress = 2;
+//            finishClick(progress);
+//            System.out.println(regionNum + " " + progress);
+//        } else {
+//            progress++;
+//            finishClick(progress);
+//            System.out.println((regionNum + 1) + " " + progress);
+//        }
+//
+//    }
+//
+//    public void savePic() {
+//        String path = "D:\\arslanaWu\\VFGS\\DemoSystem\\output\\region" + (regionNum + 1) + "\\" + tasks[progress - 1] + ".tif";
+//        saveFrame(path);
+//        System.out.println((regionNum + 1) + " " + progress + " saved");
+//    }
 
     public static void main(String[] args) {
 

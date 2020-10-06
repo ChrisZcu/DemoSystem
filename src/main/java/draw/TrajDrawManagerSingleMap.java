@@ -39,7 +39,7 @@ public class TrajDrawManagerSingleMap {
 
         TrajDrawWorkerSingleMap[] workList = new TrajDrawWorkerSingleMap[threadNum];
         for (int i = 0; i < threadNum; i++) {
-            workList[i] = new TrajDrawWorkerSingleMap(app.createGraphics(1000, 800), map,
+            workList[i] = new TrajDrawWorkerSingleMap(app.createGraphics(2544, 1425), map,
                     i * segLen, (i + 1) * segLen, trajTotal);
             drawPool.submit(workList[i]);
         }
