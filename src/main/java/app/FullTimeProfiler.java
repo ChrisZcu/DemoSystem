@@ -7,7 +7,6 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
-import javafx.geometry.Pos;
 import model.Position;
 import model.RectRegion;
 import model.Trajectory;

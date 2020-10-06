@@ -1,6 +1,5 @@
 package index;
 
-import javafx.geometry.Pos;
 import model.Position;
 import model.TrajToQuality;
 import model.TrajectoryMeta;

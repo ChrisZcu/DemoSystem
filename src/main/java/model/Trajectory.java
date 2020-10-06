@@ -1,7 +1,6 @@
 package model;
 
 import de.fhpotsdam.unfolding.geo.Location;
-import javafx.geometry.Pos;
 
 import java.util.ArrayList;
 import java.util.Collections;

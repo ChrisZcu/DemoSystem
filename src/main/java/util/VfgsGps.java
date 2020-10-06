@@ -8,16 +8,16 @@ import java.util.HashSet;
 
 public class VfgsGps {
 
-    public static TrajectoryMeta[] getVfgs(TrajectoryMeta[] trajFull, double rate, double minLat, double minLon, double latP, double lonP, StringBuilder sb) {
+    public static TrajectoryMeta[] getVfgs(TrajectoryMeta[] trajFull, double rate, int delta, double minLat, double minLon, double latP, double lonP, StringBuilder sb) {
         System.out.println(minLat + ", " + minLon + ", " + latP + ", " + lonP);
         int trajNum = (int) (trajFull.length * rate);
         TrajectoryMeta[] trajectories = new TrajectoryMeta[trajNum];
         try {
             long t0 = System.currentTimeMillis();
-            double totalScore = getTotalScore(trajFull, minLat, minLon, latP, lonP);
+            HashSet<GpsPosition> totalScoreSet = getTotalScore(trajFull, minLat, minLon, latP, lonP);
             sb.append((System.currentTimeMillis() - t0)).append(",");
 //            System.out.println("total score time: " + (System.currentTimeMillis() - t0) + " ms");
-            System.out.println("total score: " + totalScore);
+            System.out.println("total score: " + totalScoreSet.size());
             long t1 = System.currentTimeMillis();
             GreedyChooseMeta greedyChooseMeta = new GreedyChooseMeta(trajFull.length);
             trajScoreInit(trajFull, greedyChooseMeta);
@@ -27,7 +27,7 @@ public class VfgsGps {
                     updateTrajScore(greedyChooseMeta.getHeapHead(), influScoreSet);
                     if (greedyChooseMeta.GreetOrder()) {
                         TrajectoryMeta traj = greedyChooseMeta.getMaxScoreTraj();
-                        updateInfluScoreSet(traj, influScoreSet);
+                        updateInfluScoreSet(traj, influScoreSet, totalScoreSet, delta);
                         trajectories[i] = traj;
                         break;
                     } else {
@@ -43,8 +43,17 @@ public class VfgsGps {
         return trajectories;
     }
 
-    private static void updateInfluScoreSet(TrajectoryMeta TrajectoryMeta, HashSet<GpsPosition> influSet) {
-        influSet.addAll(Arrays.asList(TrajectoryMeta.getGpsPositions()));
+    private static void updateInfluScoreSet(TrajectoryMeta trajectoryMeta, HashSet<GpsPosition> influSet, HashSet<GpsPosition> totalSet, int delta) {
+        for (GpsPosition gpsPosition : trajectoryMeta.getGpsPositions()) {
+             for (int i=-delta; i <delta+1; i++){
+                 for (int j=-delta;j<delta+1;j++){
+                     GpsPosition gpsPosition1 = new GpsPosition(gpsPosition.x + i, gpsPosition.y +j);
+                     if (totalSet.contains(gpsPosition1)){
+                         influSet.add(gpsPosition);
+                     }
+                 }
+             }
+        }
     }
 
     private static void trajScoreInit(TrajectoryMeta[] trajectories, GreedyChooseMeta greedyChooseMeta) {
@@ -62,19 +71,17 @@ public class VfgsGps {
         return totalScoreSet;
     }
 
-    private static int getTotalScore(TrajectoryMeta[] trajFull, double minLat, double minLon, double latP, double lonP) {
-        int cnt = 0;
+    private static HashSet<GpsPosition> getTotalScore(TrajectoryMeta[] trajFull, double minLat, double minLon, double latP, double lonP) {
         HashSet<GpsPosition> totalScoreSet = new HashSet<>(trajFull.length);
         for (TrajectoryMeta traj : trajFull) {
             for (GpsPosition gpsPosition : traj.getGpsPositions()) {
                 gpsPosition.x = (int) ((gpsPosition.lat - minLat) / latP);
                 gpsPosition.y = (int) ((gpsPosition.lon - minLon) / lonP);
-                cnt++;
             }
             totalScoreSet.addAll(Arrays.asList(traj.getGpsPositions()));
         }
 //        System.out.println(cnt + ", " + totalScoreSet.size());
-        return totalScoreSet.size();
+        return totalScoreSet;
     }
 
     private static void updateTrajScore(TrajectoryMeta TrajectoryMeta, HashSet<GpsPosition> influScoreSet) {

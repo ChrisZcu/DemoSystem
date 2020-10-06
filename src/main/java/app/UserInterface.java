@@ -8,7 +8,6 @@ import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManager;
 import draw.TrajDrawManagerSingleMap;
 import draw.TrajDrawWorkerSingleMap;
-import javafx.util.converter.TimeStringConverter;
 import model.*;
 import org.lwjgl.Sys;
 import processing.core.PApplet;
@@ -27,7 +26,7 @@ import java.util.jar.JarOutputStream;
 public class UserInterface extends PApplet {
 
     String partTrajFilePath = "data/GPS/Porto5w/Porto5w.txt";
-    String totalFilePath = "data/GPS/porto_full.txt";
+    String totalFilePath = "C:\\Users\\Administrator\\Desktop\\zhengxin\\vfgs\\porto_full.txt";
 
     String filePath = totalFilePath;
     UnfoldingMap map;
@@ -67,7 +66,7 @@ public class UserInterface extends PApplet {
 
     private double regionSize = 1.0 / 64;
     private int regionId = 0;
-    private int alg = 0;
+    private int alg = 2;
     boolean cleanTime = true;
 
     @Override
@@ -86,7 +85,7 @@ public class UserInterface extends PApplet {
                     regionSize = 1.0 / 64;
                     if (regionId == rectRegionLoc.length - 1) {
                         regionId = 0;
-                        if (alg == 1) {
+                        if (alg == 2) {
                             System.out.println("-----------------------------------done-----------------------------------");
                             exit();
                         } else {
@@ -120,8 +119,11 @@ public class UserInterface extends PApplet {
 //                        (-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) + ", " +
 //                        (-rectRegion.getLeftTopLoc().getLon() + rectRegion.getRightBtmLoc().getLon()) + ", "
 //                        + ((-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) / 0.000001));
-                if (alg == 1) {
-                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01,
+                if (alg == 2) {
+                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, delta,
+                            rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0000001, 0.0000001, sb);
+                } else if (alg == 1) {
+                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, 0,
                             rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0000001, 0.0000001, sb);
                 } else {
                     TimeProfileSharedObject.getInstance().trajectoryMetas = getRandom(trajShows.toArray(new TrajectoryMeta[0]), 0.01);
@@ -168,14 +170,10 @@ public class UserInterface extends PApplet {
 
     private TrajectoryMeta[] getRandom(TrajectoryMeta[] trajectoryMeta, double rate) {
         TrajectoryMeta[] res = new TrajectoryMeta[(int) (trajectoryMeta.length * rate)];
-        HashSet<Integer> idSet = new HashSet<>((int) (trajectoryMeta.length * rate));
         Random random = new Random(0);
-        while (idSet.size() != (int) (trajectoryMeta.length * rate)) {
-            idSet.add(random.nextInt((int) (trajectoryMeta.length * rate) - 1));
-        }
-        int i = 0;
-        for (Integer e : idSet) {
-            res[i++] = trajectoryMeta[e];
+        for (int i = 0; i < (int) (trajectoryMeta.length * rate); i++) {
+            int id = random.nextInt((int) (trajectoryMeta.length * rate));
+            res[i] = trajectoryMeta[id];
         }
         return res;
     }
@@ -214,7 +212,7 @@ public class UserInterface extends PApplet {
             new Location(41.1882, -8.35178), new Location(41.137554, -8.596918),
             new Location(41.044403, -8.470575), new Location(40.971338, -8.591425)};
 
-    private boolean autoTimeProfile = true;
+    private boolean autoTimeProfile = false;
 
     @Override
     public void mouseDragged() {
@@ -236,6 +234,7 @@ public class UserInterface extends PApplet {
     private long wayPointCalTime = 0L;
     private long vfgsTime = 0L;
     private long drawTime = 0L;
+    private int delta = 150;
 
     private void finishClick() {
         if (!loadDone) {
@@ -245,7 +244,7 @@ public class UserInterface extends PApplet {
         if (!autoTimeProfile) {
             System.out.println(1);
 //            TimeProfileSharedObject.getInstance().trajectoryMetas = totalTrajector;
-            TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(totalTrajector, 0.01,
+            TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(totalTrajector, 0.01, delta,
                     37.199188232, -9.446561814, 0.000001, 0.000001, new StringBuilder());
             TimeProfileSharedObject.getInstance().calDone = true;
             return;
@@ -266,7 +265,7 @@ public class UserInterface extends PApplet {
 //                        (-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) + ", " +
 //                        (-rectRegion.getLeftTopLoc().getLon() + rectRegion.getRightBtmLoc().getLon()) + ", "
 //                        + ((-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) / 0.000001));
-                TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01,
+                TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, delta,
                         rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.000001, 0.000001, new StringBuilder());
                 TimeProfileSharedObject.getInstance().calDone = true;
                 vfgsTime = System.currentTimeMillis() - t1;

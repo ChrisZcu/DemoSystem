@@ -45,7 +45,7 @@ public class TimeProfileGPU extends PApplet {
         mapClone = new UnfoldingMap(this, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
         mapClone.setZoomRange(0, 20);
 
-        loadData("C:\\Users\\Administrator\\Desktop\\zhengxin\\vfgs_origin_data\\porto\\porto_full.txt");
+        loadData("C:\\Users\\Administrator\\Desktop\\zhengxin\\vfgs\\porto_full.txt");
 //        loadData("data/GPS/Porto5w/Porto5w.txt");
 
 //        initRandomIdList();
@@ -65,14 +65,13 @@ public class TimeProfileGPU extends PApplet {
             new Location(41.1882, -8.35178), new Location(41.137554, -8.596918),
             new Location(41.044403, -8.470575), new Location(40.971338, -8.591425)};
     private Location PRESENT = rectRegionLoc[rectRegionID]/*new Location(41.206, -8.627)*/;
-    private int alg = 0;
+    private int alg = 2;
     private double[] rate = {0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001};
     private int rateId = 0;
     private int[] deltaList = {0, 4, 8, 16, 32, 64};
     private int deltaId = 0;
 
     private RectRegion rectRegion = new RectRegion();
-
 
     @Override
     public void draw() {
@@ -148,7 +147,7 @@ public class TimeProfileGPU extends PApplet {
                     .append(wayPointCost).append(",").append(algCost).append(",").append(timeRender[0]).append(",")
                     .append(timeRender[1]).append(",").append(quality).append(",").append(qualityCost);
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter("data/localRec/AllRecord.txt", true));
+                BufferedWriter writer = new BufferedWriter(new FileWriter("data/localRec/AllRecordV2.txt", true));
                 writer.write(info.toString());
                 writer.newLine();
                 writer.close();

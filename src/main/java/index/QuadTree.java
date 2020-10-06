@@ -3,15 +3,10 @@ package index;
 import app.TimeProfileSharedObject;
 import de.fhpotsdam.unfolding.geo.Location;
 import model.*;
-import org.jcp.xml.dsig.internal.dom.DOMUtils;
-import select.TimeProfileManager;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class QuadTree {
     private static double minGLat = Float.MAX_VALUE;

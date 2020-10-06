@@ -3,7 +3,6 @@ package app;
 import model.RectRegion;
 import model.Trajectory;
 import model.TrajectoryMeta;
-import org.w3c.dom.css.Rect;
 import processing.core.PGraphics;
 
 import java.util.ArrayList;
