@@ -71,8 +71,8 @@ public class UserInterface extends PApplet {
         }.start();
     }
 
-    private double regionSize = 1.0 / 64;
-    private int regionId = 0;
+    private double regionSize = 1.0 / 2;
+    private int regionId = 1;
     private int alg = 2;
     boolean cleanTime = true;
 
@@ -88,7 +88,7 @@ public class UserInterface extends PApplet {
             }
             if (autoTimeProfile && loadDone) {
                 rectRegion = new RectRegion();
-                if (regionSize == 1.0) {
+                if (regionSize == 1.0 / 2) {
                     regionSize = 1.0 / 64;
                     if (regionId == rectRegionLoc.length - 1) {
                         regionId = 0;
@@ -127,11 +127,18 @@ public class UserInterface extends PApplet {
 //                        (-rectRegion.getLeftTopLoc().getLon() + rectRegion.getRightBtmLoc().getLon()) + ", "
 //                        + ((-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) / 0.000001));
                 if (alg == 2) {
-                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, delta,
-                            rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0001, 0.0001, sb, mapClone);
+//                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, delta,
+//                            rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0001, 0.0001, sb, mapClone);
+                    Trajectory[] trajTemp = translateTrajArr(trajShows.toArray(new TrajectoryMeta[0]));
+                    Trajectory[] vfgsRes = VFGS.getCellCover(trajTemp, map, 0.01, delta);
+                    System.out.println("vfgs select size: " + vfgsRes.length);
+                    TimeProfileSharedObject.getInstance().trajectoryMetas = translateTrajArr(vfgsRes);
                 } else if (alg == 1) {
-                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, 0,
-                            rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0001, 0.0001, sb,mapClone);
+//                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, 0,
+//                            rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0001, 0.0001, sb, mapClone);
+                    Trajectory[] trajTemp = translateTrajArr(trajShows.toArray(new TrajectoryMeta[0]));
+                    Trajectory[] vfgsRes = VFGS.getCellCover(trajTemp, map, 0.01, 0);
+                    TimeProfileSharedObject.getInstance().trajectoryMetas = translateTrajArr(vfgsRes);
                 } else {
                     TimeProfileSharedObject.getInstance().trajectoryMetas = getRandom(trajShows.toArray(new TrajectoryMeta[0]), 0.01);
                 }
@@ -170,6 +177,45 @@ public class UserInterface extends PApplet {
         }
     }
 
+    /**
+     * Translate {@link TrajectoryMeta} to {@link Trajectory}
+     */
+    private Trajectory[] translateTrajArr(TrajectoryMeta[] trajListMeta) {
+        Trajectory[] ret = new Trajectory[trajListMeta.length];
+        int idx = 0;
+        for (TrajectoryMeta trajMt : trajListMeta) {
+            Trajectory traj = new Trajectory(trajMt.getTrajId());
+            GpsPosition[] gpsPositions = trajMt.getGpsPositions();
+            Location[] locations = new Location[gpsPositions.length];
+            int posIdx = 0;
+            for (GpsPosition gpsPosition : gpsPositions) {
+                locations[posIdx++] = new Location(gpsPosition.lat, gpsPosition.lon);
+            }
+            traj.setLocations(locations);
+            ret[idx++] = traj;
+        }
+        return ret;
+    }
+
+    /**
+     * Translate {@link Trajectory} to {@link TrajectoryMeta}
+     */
+    private TrajectoryMeta[] translateTrajArr(Trajectory[] trajList) {
+        TrajectoryMeta[] ret = new TrajectoryMeta[trajList.length];
+        int idx = 0;
+        for (Trajectory traj : trajList) {
+            TrajectoryMeta trajMt = new TrajectoryMeta(traj.getTrajId());
+            Location[] locations = traj.locations;
+            GpsPosition[] gpsPositions = new GpsPosition[locations.length];
+            int posIdx = 0;
+            for (Location loc : locations) {
+                gpsPositions[posIdx++] = new GpsPosition(loc.y, loc.x);
+            }
+            trajMt.setGpsPositions(gpsPositions);
+            ret[idx++] = trajMt;
+        }
+        return ret;
+    }
 
     TrajectoryMeta[] trajShow = new TrajectoryMeta[0];
     RectRegion rectRegion;
@@ -252,7 +298,7 @@ public class UserInterface extends PApplet {
             System.out.println(1);
 //            TimeProfileSharedObject.getInstance().trajectoryMetas = totalTrajector;
             TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(totalTrajector, 0.01, delta,
-                    minLat, minLon, 0.0001, 0.0001, new StringBuilder(),mapClone);
+                    minLat, minLon, 0.0001, 0.0001, new StringBuilder(), mapClone);
             TimeProfileSharedObject.getInstance().calDone = true;
             return;
         }
@@ -273,7 +319,7 @@ public class UserInterface extends PApplet {
 //                        (-rectRegion.getLeftTopLoc().getLon() + rectRegion.getRightBtmLoc().getLon()) + ", "
 //                        + ((-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) / 0.000001));
                 TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, delta,
-                        rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.000001, 0.000001, new StringBuilder(),mapClone);
+                        rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.000001, 0.000001, new StringBuilder(), mapClone);
                 TimeProfileSharedObject.getInstance().calDone = true;
                 vfgsTime = System.currentTimeMillis() - t1;
             }
