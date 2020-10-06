@@ -12,6 +12,13 @@ public class GpsPosition {
         lon = y;
     }
 
+    public GpsPosition() {
+    }
+
+    public GpsPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
 
     @Override
     public boolean equals(Object obj) {
