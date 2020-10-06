@@ -1,0 +1,3 @@
+alg,regionSize,regionId,wayPointCost,VfgsSeriesCost,VfgsCalCost,VisCost,N0. of traj for Vfgs
+0,0.03125,0,436,0,0
+0,0.0625,0,425,0,0

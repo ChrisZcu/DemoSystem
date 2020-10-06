@@ -7,6 +7,8 @@ import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManager;
 import draw.TrajDrawManagerSingleMap;
+import draw.TrajDrawWorkerSingleMap;
+import javafx.util.converter.TimeStringConverter;
 import model.*;
 import org.lwjgl.Sys;
 import processing.core.PApplet;
@@ -14,16 +16,12 @@ import processing.core.PGraphics;
 import select.TimeProfileManager;
 import util.PSC;
 import util.VFGS;
+import util.VfgsGps;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.io.*;
+import java.util.*;
 import java.util.jar.JarOutputStream;
 
 public class UserInterface extends PApplet {
@@ -61,23 +59,15 @@ public class UserInterface extends PApplet {
             @Override
             public void run() {
                 loadTotalData(filePath);
-/*
-                Vfgs = loadVfgs("data/GPS/vfgs_0.txt");
-                Trajectory[] totalTrajectorTmp = new Trajectory[Vfgs.size()];
-                System.out.println(Vfgs.size());
-                int i = 0;
-                for (Integer e : Vfgs) {
-                    totalTrajectorTmp[i++] = totalTrajector[e];
-                }
-                totalTrajector = totalTrajectorTmp;
-
- */
                 loadDone = true;
                 System.out.println("data done " + totalTrajector.length);
             }
         }.start();
     }
 
+    private double regionSize = 1.0 / 64;
+    private int regionId = 0;
+    private int alg = 0;
     boolean cleanTime = true;
 
     @Override
@@ -85,37 +75,110 @@ public class UserInterface extends PApplet {
         if (!map.allTilesLoaded()) {
             map.draw();
         } else {
-            if (cleanTime) {
-                map.draw();
-            }
+            map.draw();
+            StringBuilder sb = new StringBuilder();
             if (regionDrawing) {
                 rectRegion = getSelectRegion(lastClick);
             }
+            if (autoTimeProfile && loadDone) {
+                rectRegion = new RectRegion();
+                if (regionSize == 1.0) {
+                    regionSize = 1.0 / 64;
+                    if (regionId == rectRegionLoc.length - 1) {
+                        regionId = 0;
+                        if (alg == 1) {
+                            System.out.println("-----------------------------------done-----------------------------------");
+                            exit();
+                        } else {
+                            alg++;
+                        }
+                    } else {
+                        regionId++;
+                    }
+                } else {
+                    regionSize *= 2;
+                }
+                sb.append(alg).append(",").append(regionSize).append(",").append(regionId).append(",");
 
-            drawRecRegion();
+                map.zoomAndPanTo(ZOOMLEVEL, rectRegionLoc[regionId]);
 
-            if (TimeProfileSharedObject.getInstance().calDone) {
-                trajShow = TimeProfileSharedObject.getInstance().trajShow;
-                TrajDrawManagerSingleMap trajManager = new TrajDrawManagerSingleMap(trajShow, 1, this, map);
-                trajManager.startDraw();
-                TimeProfileSharedObject.getInstance().calDone = false;
-                System.out.println(">>>>way point time: " + wayPointCalTime +
-                        " ms\n" + ">>>>vfgs cal time: " + vfgsTime + " ms");
+                float x = (float) (500 * regionSize);
+                float y = (float) (400 * regionSize);
+                rectRegion.setLeftTopLoc(map.getLocation(500 - x, 400 - y));
+                rectRegion.setRightBtmLoc(map.getLocation(500 + x, 400 + y));
+
+                long t0 = System.currentTimeMillis();
+                startCalWayPoint();
+                long wayPointTime = System.currentTimeMillis() - t0;
+                sb.append(wayPointTime).append(",");
+
+                ArrayList<TrajectoryMeta> trajShows = new ArrayList<>();
+                for (TrajectoryMeta[] trajList : TimeProfileSharedObject.getInstance().trajMetaRes) {
+                    Collections.addAll(trajShows, trajList);
+                }
+//                System.out.println(rectRegion.getLeftTopLoc().getLat() + ", " + rectRegion.getLeftTopLoc().getLon() + ", " +
+//                        (-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) + ", " +
+//                        (-rectRegion.getLeftTopLoc().getLon() + rectRegion.getRightBtmLoc().getLon()) + ", "
+//                        + ((-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) / 0.000001));
+                if (alg == 1) {
+                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01,
+                            rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0000001, 0.0000001, sb);
+                } else {
+                    TimeProfileSharedObject.getInstance().trajectoryMetas = getRandom(trajShows.toArray(new TrajectoryMeta[0]), 0.01);
+                }
+                TimeProfileSharedObject.getInstance().calDone = true;
+                trajShow = TimeProfileSharedObject.getInstance().trajectoryMetas;
+                drawTrajCPU(sb);
+                drawRecRegion();
+
+                System.out.println(sb.toString());
+                try {
+                    BufferedWriter writer = new BufferedWriter(new FileWriter("data/localRec/TimeProfile20201006.txt", true));
+                    writer.write(sb.toString());
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            } else {
+                drawRecRegion();
+                if (TimeProfileSharedObject.getInstance().calDone) {
+                    trajShow = TimeProfileSharedObject.getInstance().trajectoryMetas;
+
+                    TrajDrawManagerSingleMap trajManager = new TrajDrawManagerSingleMap(trajShow, 1, this, map);
+                    trajManager.startDraw();
+                    TimeProfileSharedObject.getInstance().calDone = false;
+                    System.out.println(">>>>way point time: " + wayPointCalTime +
+                            " ms\n" + ">>>>vfgs cal time: " + vfgsTime + " ms");
+                }
+                //draw traj
+                long t3 = System.currentTimeMillis();
+                drawTime = System.currentTimeMillis() - t3;
+
+                drawTrajCPU();
+                drawComponent();
             }
-            //draw traj
-            long t3 = System.currentTimeMillis();
-            drawTrajCPU();
-            drawTime = System.currentTimeMillis() - t3;
-
-
-            drawComponent();
         }
     }
 
 
-    Trajectory[] trajShow = new Trajectory[0];
+    TrajectoryMeta[] trajShow = new TrajectoryMeta[0];
     RectRegion rectRegion;
     Position lastClick;
+
+    private TrajectoryMeta[] getRandom(TrajectoryMeta[] trajectoryMeta, double rate) {
+        TrajectoryMeta[] res = new TrajectoryMeta[(int) (trajectoryMeta.length * rate)];
+        HashSet<Integer> idSet = new HashSet<>((int) (trajectoryMeta.length * rate));
+        Random random = new Random(0);
+        while (idSet.size() != (int) (trajectoryMeta.length * rate)) {
+            idSet.add(random.nextInt((int) (trajectoryMeta.length * rate) - 1));
+        }
+        int i = 0;
+        for (Integer e : idSet) {
+            res[i++] = trajectoryMeta[e];
+        }
+        return res;
+    }
 
     @Override
     public void mousePressed() {
@@ -146,6 +209,13 @@ public class UserInterface extends PApplet {
 
     private boolean panning = false;
 
+    private Location[] rectRegionLoc = {new Location(41.315205, -8.629877), new Location(41.275997, -8.365519),
+            new Location(41.198544, -8.677942), new Location(41.213013, -8.54542),
+            new Location(41.1882, -8.35178), new Location(41.137554, -8.596918),
+            new Location(41.044403, -8.470575), new Location(40.971338, -8.591425)};
+
+    private boolean autoTimeProfile = true;
+
     @Override
     public void mouseDragged() {
         if (mouseButton == LEFT) {
@@ -172,8 +242,11 @@ public class UserInterface extends PApplet {
             System.out.println("!!!!!!Data not done, wait....");
             return;
         }
-        if (rectRegion == null) {
-            TimeProfileSharedObject.getInstance().trajShow = totalTrajector;
+        if (!autoTimeProfile) {
+            System.out.println(1);
+//            TimeProfileSharedObject.getInstance().trajectoryMetas = totalTrajector;
+            TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(totalTrajector, 0.01,
+                    37.199188232, -9.446561814, 0.000001, 0.000001, new StringBuilder());
             TimeProfileSharedObject.getInstance().calDone = true;
             return;
         }
@@ -184,13 +257,17 @@ public class UserInterface extends PApplet {
                 long t0 = System.currentTimeMillis();
                 startCalWayPoint();
                 wayPointCalTime = System.currentTimeMillis() - t0;
-
                 long t1 = System.currentTimeMillis();
-                ArrayList<Trajectory> trajShows = new ArrayList<>();
-                for (Trajectory[] trajList : TimeProfileSharedObject.getInstance().trajRes) {
+                ArrayList<TrajectoryMeta> trajShows = new ArrayList<>();
+                for (TrajectoryMeta[] trajList : TimeProfileSharedObject.getInstance().trajMetaRes) {
                     Collections.addAll(trajShows, trajList);
                 }
-                TimeProfileSharedObject.getInstance().trajShow = VFGS.getCellCover(trajShows.toArray(new Trajectory[0]), map, 0.01, 0);
+//                System.out.println(rectRegion.getLeftTopLoc().getLat() + ", " + rectRegion.getLeftTopLoc().getLon() + ", " +
+//                        (-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) + ", " +
+//                        (-rectRegion.getLeftTopLoc().getLon() + rectRegion.getRightBtmLoc().getLon()) + ", "
+//                        + ((-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) / 0.000001));
+                TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01,
+                        rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.000001, 0.000001, new StringBuilder());
                 TimeProfileSharedObject.getInstance().calDone = true;
                 vfgsTime = System.currentTimeMillis() - t1;
             }
@@ -219,6 +296,39 @@ public class UserInterface extends PApplet {
             }
             image(pg, 0, 0);
         }
+        if (TimeProfileSharedObject.getInstance().drawDone) {
+            saveFrame("data/picture/vfgs.png");
+            noLoop();
+        }
+    }
+
+    private void drawTrajCPU(StringBuilder sb) {
+        noFill();
+        strokeWeight(1);
+        stroke(new Color(190, 46, 29).getRGB());
+        long t0 = System.currentTimeMillis();
+        ArrayList<ArrayList<TrajDrawWorkerSingleMap.Point>> trajPointList = new ArrayList<>();
+        for (int i = 0; i < trajShow.length; i++) {
+            ArrayList<TrajDrawWorkerSingleMap.Point> pointList = new ArrayList<>();
+            for (GpsPosition gpsPosition : trajShow[i].getGpsPositions()) {
+                Location loc = new Location(gpsPosition.lat, gpsPosition.lon);
+                ScreenPosition pos = map.getScreenPosition(loc);
+                pointList.add(new TrajDrawWorkerSingleMap.Point(pos.x, pos.y));
+            }
+            trajPointList.add(pointList);
+        }
+
+        for (ArrayList<TrajDrawWorkerSingleMap.Point> traj : trajPointList) {
+            beginShape();
+            for (TrajDrawWorkerSingleMap.Point pos : traj) {
+                vertex(pos.x, pos.y);
+            }
+            endShape();
+        }
+
+        sb.append((System.currentTimeMillis() - t0)).append(",");
+        sb.append((trajShow.length)).append("\n");
+        System.out.println(">>>>render time: " + (System.currentTimeMillis() - t0) + " ms");
     }
 
     EleButton[] dataButtonList = new EleButton[0];
@@ -303,8 +413,9 @@ public class UserInterface extends PApplet {
         tm.startRun();
     }
 
-    private Trajectory[] totalTrajector;
-    private int[] trajScore;
+    double minLat = 100, minLon = 100;
+
+    private TrajectoryMeta[] totalTrajector;
 
     private void loadTotalData(String filePath) {
         System.out.println("data pre-processing......");
@@ -319,22 +430,24 @@ public class UserInterface extends PApplet {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        totalTrajector = new Trajectory[totalTraj.size()];
-        trajScore = new int[totalTraj.size()];
+        totalTrajector = new TrajectoryMeta[totalTraj.size()];
         int i = 0;
         for (String trajStr : totalTraj) {
             String[] item = trajStr.split(";");
-            trajScore[i] = Integer.parseInt(item[0]);
             String[] trajPoint = item[1].split(",");
 
-            Trajectory traj = new Trajectory(i);
-            Location[] locations = new Location[trajPoint.length / 2 - 1];
+            GpsPosition[] gpsPositions = new GpsPosition[trajPoint.length / 2 - 1];
             for (int j = 0; j < trajPoint.length - 2; j += 2) {
-                locations[j / 2] = new Location(Float.parseFloat(trajPoint[j + 1]), Float.parseFloat(trajPoint[j]));
+                minLat = Math.min(Double.parseDouble(trajPoint[j + 1]), minLat);
+                minLon = Math.min(Double.parseDouble(trajPoint[j]), minLon);
+                gpsPositions[j / 2] = new GpsPosition(Float.parseFloat(trajPoint[j + 1]), Float.parseFloat(trajPoint[j]));
             }
-            traj.setLocations(locations);
+            TrajectoryMeta traj = new TrajectoryMeta(i);
+            traj.setGpsPositions(gpsPositions);
+            traj.setScore(Double.parseDouble(item[0]));
             totalTrajector[i++] = traj;
         }
+        System.out.println(minLat + ", " + minLon);
         System.out.println(totalTrajector.length);
         System.out.println("data preprocess done");
     }

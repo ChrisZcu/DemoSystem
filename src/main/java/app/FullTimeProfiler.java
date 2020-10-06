@@ -238,13 +238,13 @@ public class FullTimeProfiler extends PApplet {
                 String[] data = item[1].split(",");
                 Trajectory traj = new Trajectory(j);
 //                ArrayList<Location> locations = new ArrayList<>();
-                Position[] positions = new Position[data.length /2 - 1];
+                Position[] positions = new Position[data.length / 2 - 1];
 //                Position[] metaGPS = new Position[data.length / 2 - 1];
                 for (int i = 0; i < data.length - 2; i = i + 2) {
 //                    Location loc = new Location(Float.parseFloat(data[i + 1]),
 //                            Float.parseFloat(data[i]));
 //                    locations.add(loc);
-                    positions[i/2] = new Position(Float.parseFloat(data[i + 1]),
+                    positions[i / 2] = new Position(Float.parseFloat(data[i + 1]),
                             Float.parseFloat(data[i]));
 //                    metaGPS[i / 2] = new Position(Float.parseFloat(data[i + 1]), Float.parseFloat(data[i]));
                 }

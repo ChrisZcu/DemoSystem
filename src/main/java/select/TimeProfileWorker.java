@@ -2,9 +2,7 @@ package select;
 
 import app.TimeProfileSharedObject;
 import de.fhpotsdam.unfolding.geo.Location;
-import model.Position;
-import model.RectRegion;
-import model.Trajectory;
+import model.*;
 
 import java.util.ArrayList;
 
@@ -12,11 +10,15 @@ public class TimeProfileWorker extends Thread {
     private int begin;
     private int end;
     private Trajectory[] trajectory;
+    private TrajectoryMeta[] trajectoryMeta;
+
     private int id;
     private float leftLon;
     private float leftLat;
     private float rightLon;
     private float rightLat;
+
+    boolean isMeta = false;
 
     public TimeProfileWorker(int begin, int end, Trajectory[] trajectory, int id, RectRegion region) {
         this.begin = begin;
@@ -30,11 +32,28 @@ public class TimeProfileWorker extends Thread {
 
     }
 
+    public TimeProfileWorker(int begin, int end, TrajectoryMeta[] trajectory, int id, RectRegion region) {
+        this.begin = begin;
+        this.end = end;
+        this.trajectoryMeta = trajectory;
+        this.id = id;
+        leftLat = region.getLeftTopLoc().getLat();
+        leftLon = region.getLeftTopLoc().getLon();
+        rightLon = region.getRightBtmLoc().getLon();
+        rightLat = region.getRightBtmLoc().getLat();
+        isMeta = true;
+
+    }
+
     @Override
     public void run() {
         try {
-            Trajectory[] res = getWayPointPos();
-            TimeProfileSharedObject.getInstance().trajRes[id] = res;
+            if (!isMeta) {
+                Trajectory[] res = getWayPointPos();
+                TimeProfileSharedObject.getInstance().trajRes[id] = res;
+            } else {
+                TimeProfileSharedObject.getInstance().trajMetaRes[id] = getWayPointPosMeta();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -51,8 +70,21 @@ public class TimeProfileWorker extends Thread {
                 }
             }
         }
-//        return res.toArray(new Trajectory[0]);
         return cutTrajsPos(res.toArray(new Trajectory[0]));
+    }
+
+    private TrajectoryMeta[] getWayPointPosMeta() {
+        ArrayList<TrajectoryMeta> res = new ArrayList<>();
+        for (int i = begin; i < end; i++) {
+            TrajectoryMeta traj = trajectoryMeta[i];
+            for (GpsPosition gpsPosition : traj.getGpsPositions()) {
+                if (inCheck(gpsPosition)) {
+                    res.add(traj);
+                    break;
+                }
+            }
+        }
+        return cutTrajsPos(res.toArray(new TrajectoryMeta[0]));
     }
 
     //
@@ -73,6 +105,11 @@ public class TimeProfileWorker extends Thread {
         return cutTrajs(res.toArray(new Trajectory[0]));
     }
 
+    private boolean inCheck(GpsPosition position) {
+        return position.lat >= Math.min(leftLat, rightLat) && position.lat <= Math.max(leftLat, rightLat)
+                && position.lon >= Math.min(leftLon, rightLon) && position.lon <= Math.max(leftLon, rightLon);
+    }
+
     private boolean inCheck(Position position) {
         return position.x >= Math.min(leftLat, rightLat) && position.x <= Math.max(leftLat, rightLat)
                 && position.y >= Math.min(leftLon, rightLon) && position.y <= Math.max(leftLon, rightLon);
@@ -89,6 +126,14 @@ public class TimeProfileWorker extends Thread {
             res.addAll(getRegionInTraj(traj));
         }
         return res.toArray(new Trajectory[0]);
+    }
+
+    private TrajectoryMeta[] cutTrajsPos(TrajectoryMeta[] trajectories) {
+        ArrayList<TrajectoryMeta> res = new ArrayList<>();
+        for (TrajectoryMeta traj : trajectories) {
+            res.addAll(getRegionInTrajPos(traj));
+        }
+        return res.toArray(new TrajectoryMeta[0]);
     }
 
     private Trajectory[] cutTrajsPos(Trajectory[] trajectories) {
@@ -137,4 +182,22 @@ public class TimeProfileWorker extends Thread {
         return res;
     }
 
+    private ArrayList<TrajectoryMeta> getRegionInTrajPos(TrajectoryMeta traj) {
+        ArrayList<TrajectoryMeta> res = new ArrayList<>();
+        for (int i = 0; i < traj.getGpsPositions().length; i++) {
+            if (inCheck(traj.getGpsPositions()[i])) {
+                TrajectoryMeta trajTmp = new TrajectoryMeta(-1);
+                GpsPosition gpsPosition = traj.getGpsPositions()[i++];
+                ArrayList<GpsPosition> locTmp = new ArrayList<>();
+                while (inCheck(gpsPosition) && i < traj.getGpsPositions().length) {
+                    locTmp.add(gpsPosition);
+                    gpsPosition = traj.getGpsPositions()[i++];
+                }
+                trajTmp.setGpsPositions(locTmp.toArray(new GpsPosition[0]));
+                trajTmp.setScore(locTmp.size());
+                res.add(trajTmp);
+            }
+        }
+        return res;
+    }
 }

@@ -6,6 +6,17 @@ public class TrajectoryMeta {
     private double metaScore;
     private int trajId;
 
+    private GpsPosition[] gpsPositions;
+
+    public GpsPosition[] getGpsPositions() {
+        return gpsPositions;
+    }
+
+    public void setGpsPositions(GpsPosition[] gpsPositions) {
+        this.gpsPositions = gpsPositions;
+    }
+
+
     public TrajectoryMeta(int trajId) {
         score = 0;
         this.trajId = trajId;

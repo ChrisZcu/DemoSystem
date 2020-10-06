@@ -11,7 +11,7 @@ import java.util.ArrayList;
 public class TimeProfileSharedObject {
     private static TimeProfileSharedObject instance = new TimeProfileSharedObject();
     private ArrayList<RectRegion> qudaRegion = new ArrayList<>();
-
+    public boolean drawDone = false;
     public void addQuadRectRegion(RectRegion rectRegion) {
         qudaRegion.add(rectRegion);
     }
@@ -30,9 +30,12 @@ public class TimeProfileSharedObject {
     public PGraphics[] trajImageMtx;
     public Trajectory[][] trajRes;
 
+    public TrajectoryMeta[][] trajMetaRes;
+
     public Trajectory[] trajShow;
     public TrajectoryMeta[] trajectoryMetas;
     boolean calDone = false;
+
 
     public void setTrajMatrix(PGraphics pg, int id) {
         trajImageMtx[id] = pg;

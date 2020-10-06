@@ -58,6 +58,11 @@ public class QuadTree {
                     continue;
                 }
                 //debug done
+//                if (i > 10){
+//                    j = item.length;
+//                    next = true;
+//                    continue;
+//                }
 
                 positions[j / 2] = new Position((int) (lat * 1000000), (int) (lon * 1000000));
 

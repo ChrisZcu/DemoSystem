@@ -4,16 +4,16 @@ import app.TimeProfileSharedObject;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
+import model.GpsPosition;
 import model.Position;
 import model.Trajectory;
 import model.TrajectoryMeta;
-import org.lwjgl.Sys;
 import processing.core.PGraphics;
 
 import java.awt.*;
-import java.lang.reflect.Array;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class TrajDrawWorkerSingleMap extends Thread {
     private PGraphics pg;
@@ -119,6 +119,7 @@ public class TrajDrawWorkerSingleMap extends Thread {
             }
 
  */
+/*
             for (int i = begin; i < end; i++) {
                 TrajectoryMeta traj = trajMetaList[i];
 
@@ -130,17 +131,60 @@ public class TrajDrawWorkerSingleMap extends Thread {
                 }
                 pg.endShape();
             }
-            System.out.println(">>>>render time: " + (System.currentTimeMillis() - t0) + " ms");
+            */
+/*
+            for (int i = begin; i < end; i++) {
+                TrajectoryMeta traj = trajMetaList[i];
 
+                pg.beginShape();
+                for (GpsPosition gpsPosition : traj.getGpsPositions()) {
+                    Location loc = new Location(gpsPosition.lat, gpsPosition.lon);
+                    ScreenPosition pos = map.getScreenPosition(loc);
+                    pg.vertex(pos.x, pos.y);
+                }
+                pg.endShape();
+            }
+            */
+            ArrayList<ArrayList<Point>> trajPointList = new ArrayList<>();
+            for (int i = begin; i < end; i++) {
+                ArrayList<Point> pointList = new ArrayList<>();
+                for (GpsPosition gpsPosition : trajMetaList[i].getGpsPositions()) {
+                    if (this.stop) {
+                        System.out.println(this.getName() + " cancel");
+                        return;
+                    }
+                    Location loc = new Location(gpsPosition.lat, gpsPosition.lon);
+                    ScreenPosition pos = map.getScreenPosition(loc);
+                    pointList.add(new Point(pos.x, pos.y));
+                }
+                trajPointList.add(pointList);
+            }
+
+            for (ArrayList<Point> traj : trajPointList) {
+                pg.beginShape();
+                for (Point pos : traj) {
+                    if (this.stop) {
+                        System.out.println(this.getName() + " cancel");
+                        pg.endShape();
+                        pg.endDraw();
+                        return;
+                    }
+                    pg.vertex(pos.x, pos.y);
+                }
+                pg.endShape();
+            }
+
+            System.out.println(">>>>render time: " + (System.currentTimeMillis() - t0) + " ms");
+            TimeProfileSharedObject.getInstance().drawDone = true;
             TimeProfileSharedObject.getInstance().setTrajMatrix(pg, id);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    class Point {
-        float x;
-        float y;
+    public static class Point {
+        public float x;
+        public float y;
 
         public Point(float x, float y) {
             this.x = x;

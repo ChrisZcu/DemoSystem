@@ -30,7 +30,7 @@ import static java.util.Arrays.*;
 public class RegionSearchApp extends PApplet {
 
     UnfoldingMap map;
-    private int ZOOMLEVEL = 11;
+    private int ZOOMLEVEL = 12;
     private Location PRESENT = new Location(41.151, -8.523); /*new Location(41.151, -8.616);*/
     private double[] latLon = new double[4];
     private TrajectoryMeta[] trajFull;
@@ -67,7 +67,7 @@ public class RegionSearchApp extends PApplet {
 //                quadRegionRoot = null;
 
                 long t1 = System.currentTimeMillis();
-                quadRegionRoot = QuadTree.getQuadIndex(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 8);
+                quadRegionRoot = QuadTree.getQuadIndex(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 10);
 //                System.out.println("index time for single thread: " + (System.currentTimeMillis() - t1));
                 loadDone = true;
                 indexDone = true;
@@ -125,6 +125,7 @@ public class RegionSearchApp extends PApplet {
             Location loc = map.getLocation(mouseX, mouseY);
             System.out.println(loc);
             buttonClickListener();
+            System.out.println("zoom level: " + map.getZoomLevel());
         }
     }
 
