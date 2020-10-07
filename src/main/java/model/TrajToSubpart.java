@@ -30,4 +30,14 @@ public final class TrajToSubpart {
                 ", endPosIdx=" + endPosIdx +
                 '}';
     }
+
+    public static String serialize(TrajToSubpart tts) {
+        return tts.trajId + "," + tts.beginPosIdx + "," + tts.endPosIdx;
+    }
+
+    public static TrajToSubpart antiSerialize(String str) {
+        String[] strArr = str.split(",");
+        return new TrajToSubpart(Integer.parseInt(strArr[0]), Integer.parseInt(strArr[1]),
+                Integer.parseInt(strArr[2]));
+    }
 }

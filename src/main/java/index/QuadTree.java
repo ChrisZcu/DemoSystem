@@ -3,8 +3,11 @@ package index;
 import app.TimeProfileSharedObject;
 import de.fhpotsdam.unfolding.geo.Location;
 import model.*;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -98,8 +101,8 @@ public class QuadTree {
     }
 
 
-    private static QuadRegion local(double minLat, double maxLat, double minLon, double maxLon, int H,
-                                    TrajectoryMeta[] trajFull) {
+    private static QuadRegion createFromTrajList(double minLat, double maxLat, double minLon, double maxLon, int H,
+                                                 TrajectoryMeta[] trajFull) {
         RectRegion rectRegion = new RectRegion();
         rectRegion.initLoc(new Location(minLat, minLon), new Location(maxLat, maxLon));
 //        System.out.println(H + " :(" + minLat + ", " + maxLat + ", " + minLon + ", " + maxLon + ")");
@@ -117,7 +120,7 @@ public class QuadTree {
                 double tmpLatMin = minLat + latOff * laxId;
                 double tmpLonMin = minLon + lonOff * lonId;
                 TrajectoryMeta[] wayPoint = getWayPointPos(trajFull, tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff);
-                quadChildren[i] = local(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint);
+                quadChildren[i] = createFromTrajList(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint);
             }
             quadRegion.setQuadRegionChildren(quadChildren);
         }
@@ -127,8 +130,8 @@ public class QuadTree {
     /**
      * Generate the quad tree by {@link VfgsForIndexPart}
      */
-    private static QuadRegion localPart(double minLat, double maxLat, double minLon, double maxLon, int H,
-                                    TrajectoryMeta[] trajMetaList) {
+    private static QuadRegion createPartlyFromTrajList(double minLat, double maxLat, double minLon, double maxLon, int H,
+                                                       TrajectoryMeta[] trajMetaList) {
         RectRegion rectRegion = new RectRegion();
         rectRegion.initLoc(new Location(minLat, minLon), new Location(maxLat, maxLon));
 //        System.out.println(H + " :(" + minLat + ", " + maxLat + ", " + minLon + ", " + maxLon + ")");
@@ -148,7 +151,7 @@ public class QuadTree {
                 double tmpLatMin = minLat + latOff * laxId;
                 double tmpLonMin = minLon + lonOff * lonId;
                 TrajectoryMeta[] wayPoint = getWayPointPos(trajMetaList, tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff);
-                quadChildren[i] = localPart(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint);
+                quadChildren[i] = createPartlyFromTrajList(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint);
             }
             quadRegion.setQuadRegionChildren(quadChildren);
         }
@@ -222,22 +225,22 @@ public class QuadTree {
 
     public static QuadRegion getQuadIndex(String filePath, int height) {
         TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
-        return local(minGLat, maxGLat, minGLon, maxGLon, height, trajectories);
+        return createFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories);
     }
 
     public static QuadRegion getQuadIndex(double minLat, double maxLat, double minLon, double maxLon,
                                           TrajectoryMeta[] trajectories, int height) {
-        return local(minLat, maxLat, minLon, maxLon, height, trajectories);
+        return createFromTrajList(minLat, maxLat, minLon, maxLon, height, trajectories);
     }
 
     public static QuadRegion getQuadIndexPart(String filePath, int height) {
         TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
-        return localPart(minGLat, maxGLat, minGLon, maxGLon, height, trajectories);
+        return createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories);
     }
 
     public static QuadRegion getQuadIndexPart(double minLat, double maxLat, double minLon, double maxLon,
                                           TrajectoryMeta[] trajectories, int height) {
-        return localPart(minLat, maxLat, minLon, maxLon, height, trajectories);
+        return createPartlyFromTrajList(minLat, maxLat, minLon, maxLon, height, trajectories);
     }
 
     private static List<Position> generatePosList(TrajectoryMeta trajMeta) {
@@ -248,6 +251,84 @@ public class QuadTree {
         return Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1);
     }
 
+    public static void saveTreeToFile(String fileName) {
+
+    }
+
+    private static void saveNodeToFile(String fileName, QuadRegion qrNode) {
+
+    }
+
+    public static void loadTreeFromFile(String filePath) throws IOException {
+        List<Trajectory> res = new ArrayList<>();
+        LineIterator it = null;
+
+        System.out.print("Read quad tree data from " + filePath + " ...");
+
+        try {
+            it = FileUtils.lineIterator(new File(filePath), "UTF-8");
+            quadRegionRoot = loadChildrenRecurse(it, null);
+            System.out.println("\b\b\bfinished.");
+
+        } catch (IOException e) {
+            System.out.println("\b\b\bfailed.");
+            e.printStackTrace();
+        } finally {
+            if (it != null) {
+                LineIterator.closeQuietly(it);
+            }
+        }
+    }
+
+    /**
+     * Create tree by breath first iterate.
+     */
+    private static QuadRegion loadChildrenRecurse(LineIterator lit, QuadRegion[] parents) {
+        if (parents == null) {
+            // is root
+            List<String> strList = getOneStrList(lit);
+            QuadRegion root = QuadRegion.antiSerialize(strList);
+            if (lit.hasNext()) {
+                // has next level
+                QuadRegion[] nxtParents = new QuadRegion[]{root};
+                loadChildrenRecurse(lit, nxtParents);
+            }
+            return root;
+        }
+        // not root, load whole level
+        // lit.hasNext() must be true
+        int prtCnt = 0;     // idx for nxtParents
+        QuadRegion[] nxtParents = new QuadRegion[parents.length * 4];
+        for (QuadRegion parent : parents) {
+            QuadRegion[] children = new QuadRegion[4];
+            for (int idx = 0; idx < 4; idx++) {
+                List<String> strList = getOneStrList(lit);
+                QuadRegion child = QuadRegion.antiSerialize(strList);
+                children[idx] = child;
+                nxtParents[prtCnt++] = child;
+            }
+            parent.setQuadRegionChildren(children);
+        }
+
+        if (lit.hasNext()) {
+            // has next level
+            loadChildrenRecurse(lit, nxtParents);
+        }
+        return null;        // not root, no need to return anything
+    }
+
+    /**
+     * Read full string data for one {@link QuadRegion}, but not to anti-serialize it
+     */
+    private static List<String> getOneStrList(LineIterator lit) {
+        String str = lit.nextLine();
+        int lineNum = Integer.parseInt(str);
+        List<String> ret = new ArrayList<>(lineNum);
+        for (int i = 0; i < lineNum; i++) {
+            ret.add(lit.nextLine());
+        }
+        return ret;
+    }
 
     //lat41 lon8
     public static void main(String[] args) {
@@ -258,7 +339,7 @@ public class QuadTree {
         trajMetaFull = trajectories;
 
         long t0 = System.currentTimeMillis();
-        QuadRegion quadRegion = localPart(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories);
+        QuadRegion quadRegion = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories);
         System.out.println("index time: " + (System.currentTimeMillis() - t0));
         try {
             Thread.sleep(5000);

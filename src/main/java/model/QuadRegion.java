@@ -1,5 +1,8 @@
 package model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class QuadRegion {
     double minLat;
     double maxLat;
@@ -13,6 +16,8 @@ public class QuadRegion {
     /* add */
     TrajToSubpart[] trajToSubparts;
     /* add end */
+
+    public QuadRegion() {}
 
     public QuadRegion(QuadRegion[] quadRegionChildren, TrajToQuality[] trajQuality) {
         this.quadRegionChildren = quadRegionChildren;
@@ -80,5 +85,26 @@ public class QuadRegion {
 
     public void setTrajToSubparts(TrajToSubpart[] trajToSubparts) {
         this.trajToSubparts = trajToSubparts;
+    }
+
+    public static List<String> serialize(QuadRegion qr) {
+        TrajToSubpart[] trajToSubpartList = qr.trajToSubparts;
+        List<String> ret = new ArrayList<>(trajToSubpartList.length + 1);
+        ret.add(String.valueOf(trajToSubpartList.length));
+        for (TrajToSubpart tts : trajToSubpartList) {
+            ret.add(TrajToSubpart.serialize(tts));
+        }
+        return ret;
+    }
+
+    public static QuadRegion antiSerialize(List<String> strList) {
+        QuadRegion ret = new QuadRegion();
+        TrajToSubpart[] trajToSubparts = new TrajToSubpart[Integer.parseInt(strList.get(0))];
+        for (int i = 0; i < trajToSubparts.length; i++) {
+            String ttsStr = strList.get(i + 1);
+            trajToSubparts[i] = TrajToSubpart.antiSerialize(ttsStr);
+        }
+        ret.setTrajToSubparts(trajToSubparts);
+        return ret;
     }
 }
