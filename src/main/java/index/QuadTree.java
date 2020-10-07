@@ -3,10 +3,10 @@ package index;
 import app.TimeProfileSharedObject;
 import de.fhpotsdam.unfolding.geo.Location;
 import model.*;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -75,8 +75,9 @@ public class QuadTree {
 
             }
 //
-            if (next)
+            if (next) {
                 continue;
+            }
             TrajectoryMeta traj = new TrajectoryMeta(i);
             traj.setScore(score);
             traj.setPositions(positions);
@@ -130,14 +131,14 @@ public class QuadTree {
      * Generate the quad tree by {@link VfgsForIndexPart}
      */
     private static QuadRegion createPartlyFromTrajList(double minLat, double maxLat, double minLon, double maxLon, int H,
-                                                       TrajectoryMeta[] trajMetaList) {
+                                                       TrajectoryMeta[] trajMetaList, int delta) {
         RectRegion rectRegion = new RectRegion();
         rectRegion.initLoc(new Location(minLat, minLon), new Location(maxLat, maxLon));
 //        System.out.println(H + " :(" + minLat + ", " + maxLat + ", " + minLon + ", " + maxLon + ")");
         TimeProfileSharedObject.getInstance().addQuadRectRegion(rectRegion);
         QuadRegion quadRegion = new QuadRegion(minLat, maxLat, minLon, maxLon);
 
-        TrajToSubpart[] trajToSubparts = VfgsForIndexPart.getVfgs(trajMetaList);
+        TrajToSubpart[] trajToSubparts = VfgsForIndexPart.getVfgs(trajMetaList, delta);
 
         quadRegion.setTrajToSubparts(trajToSubparts);
         if (H > 1) {
@@ -150,7 +151,7 @@ public class QuadTree {
                 double tmpLatMin = minLat + latOff * laxId;
                 double tmpLonMin = minLon + lonOff * lonId;
                 TrajectoryMeta[] wayPoint = getWayPointPos(trajMetaList, tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff);
-                quadChildren[i] = createPartlyFromTrajList(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint);
+                quadChildren[i] = createPartlyFromTrajList(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint, delta);
             }
             quadRegion.setQuadRegionChildren(quadChildren);
         }
@@ -232,14 +233,14 @@ public class QuadTree {
         return createFromTrajList(minLat, maxLat, minLon, maxLon, height, trajectories);
     }
 
-    public static QuadRegion getQuadIndexPart(String filePath, int height) {
+    public static QuadRegion getQuadIndexPart(String filePath, int height, int delta) {
         TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
-        return createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories);
+        return createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories, delta);
     }
 
     public static QuadRegion getQuadIndexPart(double minLat, double maxLat, double minLon, double maxLon,
-                                          TrajectoryMeta[] trajectories, int height) {
-        return createPartlyFromTrajList(minLat, maxLat, minLon, maxLon, height, trajectories);
+                                          TrajectoryMeta[] trajectories, int height, int delta) {
+        return createPartlyFromTrajList(minLat, maxLat, minLon, maxLon, height, trajectories, delta);
     }
 
     private static List<Position> generatePosList(TrajectoryMeta trajMeta) {
@@ -392,7 +393,7 @@ public class QuadTree {
         trajMetaFull = trajectories;
 
         long t0 = System.currentTimeMillis();
-        QuadTree.quadRegionRoot = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories);
+        QuadTree.quadRegionRoot = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories, 0);
         System.out.println("index time: " + (System.currentTimeMillis() - t0));
 
         QuadTree.saveTreeToFile("data/GPS/porto5w/quad_tree_info.txt");
