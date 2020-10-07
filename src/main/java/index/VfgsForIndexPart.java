@@ -39,9 +39,9 @@ public class VfgsForIndexPart {
                         updateInfluScoreSet(trajMeta, influScoreSet);
                         vfgsTraj.add(new TrajToSubpart(trajMeta.getTrajId(), trajMeta.getBegin(), trajMeta.getEnd()));
                         lastScore += trajMeta.getScore();
-                        if (lastScore >= totalScore) {
-                            i = trajMetaList.length + 1;
-                        }
+//                        if (lastScore >= totalScore) {
+//                            i = trajMetaList.length + 1;
+//                        }
                         break;
                     } else {
                         greedyChooseMeta.orderAdjust();
