@@ -48,6 +48,8 @@ public class QuadTree {
             boolean next = false;
             Position[] positions = new Position[item.length / 2 - 1];
             for (int j = 0; j < item.length - 2; j += 2) {
+//                int srcX = Integer.parseInt(item[j]);
+//                int srcY = Integer.parseInt(item[j + 1]);
                 float lat = Float.parseFloat(item[j + 1]);
                 float lon = Float.parseFloat(item[j]);
                 //debug
@@ -64,7 +66,7 @@ public class QuadTree {
 //                    continue;
 //                }
 
-                positions[j / 2] = new Position((int) (lat * 1000000), (int) (lon * 1000000));
+                positions[j / 2] = new Position((int) (lat * 10000), (int) (lon * 10000));
 
                 minGLat = Math.min(lat, minGLat);
                 maxGLat = Math.max(lat, maxGLat);
@@ -128,15 +130,14 @@ public class QuadTree {
      * Generate the quad tree by {@link VfgsForIndexPart}
      */
     private static QuadRegion localPart(double minLat, double maxLat, double minLon, double maxLon, int H,
-                                    TrajectoryMeta[] trajMetaList) {
+                                        TrajectoryMeta[] trajMetaList, int delta) {
         RectRegion rectRegion = new RectRegion();
         rectRegion.initLoc(new Location(minLat, minLon), new Location(maxLat, maxLon));
 //        System.out.println(H + " :(" + minLat + ", " + maxLat + ", " + minLon + ", " + maxLon + ")");
         TimeProfileSharedObject.getInstance().addQuadRectRegion(rectRegion);
         QuadRegion quadRegion = new QuadRegion(minLat, maxLat, minLon, maxLon);
 
-        TrajToSubpart[] trajToSubparts = VfgsForIndexPart.getVfgs(trajMetaList);
-
+        TrajToSubpart[] trajToSubparts = VfgsForIndexPart.getVfgs(trajMetaList, delta);
         quadRegion.setTrajToSubparts(trajToSubparts);
         if (H > 1) {
             QuadRegion[] quadChildren = new QuadRegion[4];
@@ -148,7 +149,7 @@ public class QuadTree {
                 double tmpLatMin = minLat + latOff * laxId;
                 double tmpLonMin = minLon + lonOff * lonId;
                 TrajectoryMeta[] wayPoint = getWayPointPos(trajMetaList, tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff);
-                quadChildren[i] = localPart(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint);
+                quadChildren[i] = localPart(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint, delta);
             }
             quadRegion.setQuadRegionChildren(quadChildren);
         }
@@ -170,8 +171,8 @@ public class QuadTree {
     }
 
     private static boolean inCheck(Position position, double minLat, double maxLat, double minLon, double maxLon) {
-        return position.x / 1000000.0 >= minLat && position.x / 1000000.0 <= maxLat
-                && position.y / 1000000.0 >= minLon && position.y / 1000000.0 <= maxLon;
+        return position.x / 10000.0 >= minLat && position.x / 10000.0 <= maxLat
+                && position.y / 10000.0 >= minLon && position.y / 10000.0 <= maxLon;
     }
 
 
@@ -232,12 +233,12 @@ public class QuadTree {
 
     public static QuadRegion getQuadIndexPart(String filePath, int height) {
         TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
-        return localPart(minGLat, maxGLat, minGLon, maxGLon, height, trajectories);
+        return localPart(minGLat, maxGLat, minGLon, maxGLon, height, trajectories, 0);
     }
 
     public static QuadRegion getQuadIndexPart(double minLat, double maxLat, double minLon, double maxLon,
-                                          TrajectoryMeta[] trajectories, int height) {
-        return localPart(minLat, maxLat, minLon, maxLon, height, trajectories);
+                                              TrajectoryMeta[] trajectories, int height, int delta) {
+        return localPart(minLat, maxLat, minLon, maxLon, height, trajectories, delta);
     }
 
     private static List<Position> generatePosList(TrajectoryMeta trajMeta) {
@@ -258,7 +259,7 @@ public class QuadTree {
         trajMetaFull = trajectories;
 
         long t0 = System.currentTimeMillis();
-        QuadRegion quadRegion = localPart(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories);
+        QuadRegion quadRegion = localPart(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories, 0);
         System.out.println("index time: " + (System.currentTimeMillis() - t0));
         try {
             Thread.sleep(5000);

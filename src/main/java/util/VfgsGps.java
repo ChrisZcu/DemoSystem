@@ -12,7 +12,8 @@ import java.util.HashSet;
 public class VfgsGps {
 
 
-    public static TrajectoryMeta[] getVfgs(TrajectoryMeta[] trajFull, double rate, int delta, double minLat, double minLon, double latP, double lonP, StringBuilder sb, UnfoldingMap map) {
+    public static TrajectoryMeta[] getVfgs(TrajectoryMeta[] trajFull, double rate, int delta, double minLat, double minLon,
+                                           double latP, double lonP, StringBuilder sb, UnfoldingMap map) {
         map.zoomTo(20);
         System.out.println(minLat + ", " + minLon + ", " + latP + ", " + lonP);
         System.out.println(rate + ", " + delta);

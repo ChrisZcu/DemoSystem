@@ -8,6 +8,7 @@ import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManagerSingleMap;
 import index.QuadTree;
 import index.SearchRegionPart;
+import index.SearchRegion;
 import model.*;
 import processing.core.PApplet;
 import processing.core.PGraphics;
@@ -20,8 +21,8 @@ import java.util.Scanner;
 public class RegionSearchApp extends PApplet {
 
     UnfoldingMap map;
-    private int ZOOMLEVEL = 12;
-    private Location PRESENT = new Location(41.151, -8.523); /*new Location(41.151, -8.616);*/
+    private int ZOOMLEVEL = 11;
+    private Location PRESENT = new Location(41.035, -8.361); /*new Location(41.151, -8.616);*/
     private double[] latLon = new double[4];
     private TrajectoryMeta[] trajFull;
 
@@ -30,9 +31,9 @@ public class RegionSearchApp extends PApplet {
         size(1000, 800, P2D);
     }
 
-    private String partFilePath = "data/GPS/porto5w/__score.txt";
+    private String partFilePath = "data/GPS/Porto5w/Porto5w.txt";
     private String fullFilePath = "data/GPS/porto_full.txt";
-    private String filePath = partFilePath;
+    private String filePath = fullFilePath;
     private QuadRegion quadRegionRoot;
     private boolean indexDone = false;
 
@@ -60,7 +61,7 @@ public class RegionSearchApp extends PApplet {
 
                 long t1 = System.currentTimeMillis();
 //                quadRegionRoot = QuadTree.getQuadIndex(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
-                quadRegionRoot = QuadTree.getQuadIndexPart(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
+                quadRegionRoot = QuadTree.getQuadIndexPart(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3, 32);
 //                System.out.println("index time for single thread: " + (System.currentTimeMillis() - t1));
                 loadDone = true;
                 indexDone = true;

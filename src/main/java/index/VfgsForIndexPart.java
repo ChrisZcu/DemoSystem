@@ -3,6 +3,7 @@ package index;
 import app.TimeProfileSharedObject;
 import model.Position;
 import model.TrajToSubpart;
+import model.Trajectory;
 import model.TrajectoryMeta;
 import util.GreedyChooseMeta;
 
@@ -12,21 +13,36 @@ import java.util.HashSet;
 import java.util.List;
 
 public class VfgsForIndexPart {
-    public static final int threshold = 5_0001;
+    public static final int threshold = 200;
     public static final double alpha = 0.01;
 
     public static TrajectoryMeta[] trajMetaFull;
 
-    public static TrajToSubpart[] getVfgs(TrajectoryMeta[] trajMetaList) {
+    public static TrajToSubpart[] getVfgs(TrajectoryMeta[] trajMetaList, int delta) {
         trajMetaFull = TimeProfileSharedObject.getInstance().trajMetaFull;
 
         ArrayList<TrajToSubpart> vfgsTraj = new ArrayList<>();
         try {
 
-//            double totalScore = getTotalScore(trajMetaList);
+            HashSet<Position> totalScoreSet = getTotalScore(trajMetaList);
+
+
 //            double lastScore = 0.0;
 
             int limit = getRealSize(trajMetaList.length);
+/*
+            System.out.println("--------------------------------------------------");
+            System.out.println("total score: " + totalScoreSet.size());
+            System.out.println(trajMetaList.length);
+            System.out.println(limit);
+            System.out.println("--------------------------------------------------");
+*/
+            if (limit == trajMetaList.length) {
+                for (TrajectoryMeta trajMeta : trajMetaList) {
+                    vfgsTraj.add(new TrajToSubpart(trajMeta.getTrajId(), trajMeta.getBegin(), trajMeta.getEnd()));
+                }
+                return vfgsTraj.toArray(new TrajToSubpart[0]);
+            }
 
             GreedyChooseMeta greedyChooseMeta = new GreedyChooseMeta(trajMetaList.length);
             trajScoreInit(trajMetaList, greedyChooseMeta);
@@ -36,7 +52,7 @@ public class VfgsForIndexPart {
                     updateTrajScore(greedyChooseMeta.getHeapHead(), influScoreSet);
                     if (greedyChooseMeta.GreetOrder()) {
                         TrajectoryMeta trajMeta = greedyChooseMeta.getMaxScoreTraj();
-                        updateInfluScoreSet(trajMeta, influScoreSet);
+                        updateInfluScoreSet(trajMeta, totalScoreSet, influScoreSet, delta);
                         vfgsTraj.add(new TrajToSubpart(trajMeta.getTrajId(), trajMeta.getBegin(), trajMeta.getEnd()));
 //                        lastScore += trajMeta.getScore();
 //                        if (lastScore >= totalScore) {
@@ -57,6 +73,7 @@ public class VfgsForIndexPart {
 
     /**
      * TODO
+     *
      * @return the real size of the quad tree node, according to full size
      */
     private static int getRealSize(int fullSize) {
@@ -66,8 +83,18 @@ public class VfgsForIndexPart {
         return (int) (fullSize * alpha);
     }
 
-    private static void updateInfluScoreSet(TrajectoryMeta TrajectoryMeta, HashSet<Position> influSet) {
-        influSet.addAll(generatePosList(TrajectoryMeta));
+    private static void updateInfluScoreSet(TrajectoryMeta TrajectoryMeta, HashSet<Position> totalScoreSet,
+                                            HashSet<Position> influSet, int delta) {
+        for (Position position : generatePosList(TrajectoryMeta)) {
+            for (int i = -delta; i < delta; i++) {
+                for (int j = -delta; j < delta; j++) {
+                    Position position1 = new Position(position.x + i, position.y + j);
+                    if (totalScoreSet.contains(position1))
+                        influSet.add(position1);
+                }
+            }
+        }
+//        influSet.addAll(generatePosList(TrajectoryMeta));
     }
 
     private static void trajScoreInit(TrajectoryMeta[] trajectories, GreedyChooseMeta greedyChooseMeta) {
@@ -77,7 +104,9 @@ public class VfgsForIndexPart {
         }
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     private HashSet<Position> getTotalScoreSet(TrajectoryMeta[] trajFull) {
         HashSet<Position> totalScoreSet = new HashSet<>(trajFull.length);
         for (TrajectoryMeta traj : trajFull) {
@@ -86,12 +115,12 @@ public class VfgsForIndexPart {
         return totalScoreSet;
     }
 
-    private static int getTotalScore(TrajectoryMeta[] trajFull) {
+    private static HashSet<Position> getTotalScore(TrajectoryMeta[] trajFull) {
         HashSet<Position> totalScoreSet = new HashSet<>(trajFull.length);
         for (TrajectoryMeta traj : trajFull) {
             totalScoreSet.addAll(generatePosList(traj));
         }
-        return totalScoreSet.size();
+        return totalScoreSet;
     }
 
     private static void updateTrajScore(TrajectoryMeta TrajectoryMeta, HashSet<Position> influScoreSet) {

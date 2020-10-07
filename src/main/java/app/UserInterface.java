@@ -25,8 +25,8 @@ import java.util.jar.JarOutputStream;
 
 public class UserInterface extends PApplet {
 
-    String partTrajFilePath = "C:\\Users\\Administrator\\Desktop\\zhengxin\\vfgs\\porto_10k.txt";
-    String totalFilePath = "C:\\Users\\Administrator\\Desktop\\zhengxin\\vfgs\\porto_full.txt";
+    String partTrajFilePath = "data/GPS/Porto5w/Porto5w.txt";
+    String totalFilePath = "data/GPS/porto_full.txt";
 
     String filePath = totalFilePath;
     UnfoldingMap map;
@@ -39,8 +39,8 @@ public class UserInterface extends PApplet {
         size(1000, 800, P2D);
     }
 
-    private int ZOOMLEVEL = 11;
-    private Location PRESENT = new Location(41.151, -8.634)/*new Location(41.206, -8.627)*/;
+    private int ZOOMLEVEL = 14;
+    private Location PRESENT = new Location(41.315205, -8.629877)/*new Location(41.151, -8.634)*//*new Location(41.206, -8.627)*/;
     private boolean loadDone = false;
 
     @Override
@@ -72,14 +72,24 @@ public class UserInterface extends PApplet {
     }
 
     private double regionSize = 1.0 / 2;
-    private int regionId = 1;
+    private int regionId = 0;
     private int alg = 2;
     boolean cleanTime = true;
+    int zoomLevel = -1;
+    Location loc = new Location(-1, -1);
+    boolean totalLoad = false;
 
     @Override
     public void draw() {
-        if (!map.allTilesLoaded()) {
-            map.draw();
+        totalLoad = totalLoad && ((map.getZoomLevel() == zoomLevel && loc.equals(map.getCenter())));
+        if (!totalLoad) {
+            if (!map.allTilesLoaded()) {
+                map.draw();
+            } else {
+                totalLoad = true;
+                zoomLevel = map.getZoomLevel();
+                loc = map.getCenter();
+            }
         } else {
             map.draw();
             StringBuilder sb = new StringBuilder();
@@ -88,8 +98,70 @@ public class UserInterface extends PApplet {
             }
             if (autoTimeProfile && loadDone) {
                 rectRegion = new RectRegion();
+                sb.append(alg).append(",").append(regionSize).append(",").append(regionId).append(",");
+                String title = sb.toString();
+
+                float x = (float) (500 * regionSize);
+                float y = (float) (400 * regionSize);
+                rectRegion.setLeftTopLoc(map.getLocation(500 - x, 400 - y));
+                rectRegion.setRightBtmLoc(map.getLocation(500 + x, 400 + y));
+
+                long t0 = System.currentTimeMillis();
+                startCalWayPoint();
+                long wayPointTime = System.currentTimeMillis() - t0;
+
+                trajShow = TimeProfileSharedObject.getInstance().trajMetaRes[0];
+                drawTrajCPU(sb);
+                drawRecRegion();
+                sb.append(wayPointTime).append(",");
+                System.out.println(">>>waypoint size: " + trajShow.length);
+                saveFrame("data/picture/20201006/waypoint/" + title + "_" +
+                        trajShow.length + "_waypoint.png");
+                ArrayList<TrajectoryMeta> trajShows = new ArrayList<>();
+                for (TrajectoryMeta[] trajList : TimeProfileSharedObject.getInstance().trajMetaRes) {
+                    Collections.addAll(trajShows, trajList);
+                }
+
+
+//                System.out.println(rectRegion.getLeftTopLoc().getLat() + ", " + rectRegion.getLeftTopLoc().getLon() + ", " +
+//                        (-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) + ", " +
+//                        (-rectRegion.getLeftTopLoc().getLon() + rectRegion.getRightBtmLoc().getLon()) + ", "
+//                        + ((-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) / 0.000001));
+                if (alg == 2) {
+                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, delta,
+                            rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0001, 0.0001, sb, mapClone);
+//                    Trajectory[] trajTemp = translateTrajArr(trajShows.toArray(new TrajectoryMeta[0]));
+//                    Trajectory[] vfgsRes = VFGS.getCellCover(trajTemp, map, 0.01, delta);
+//                    System.out.println("vfgs select size: " + vfgsRes.length);
+//                    TimeProfileSharedObject.getInstance().trajectoryMetas = translateTrajArr(vfgsRes);
+                } else if (alg == 1) {
+                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, 0,
+                            rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0001, 0.0001, sb, mapClone);
+//                    Trajectory[] trajTemp = translateTrajArr(trajShows.toArray(new TrajectoryMeta[0]));
+//                    Trajectory[] vfgsRes = VFGS.getCellCover(trajTemp, map, 0.01, 0);
+//                    TimeProfileSharedObject.getInstance().trajectoryMetas = translateTrajArr(vfgsRes);
+                } else {
+                    TimeProfileSharedObject.getInstance().trajectoryMetas = getRandom(trajShows.toArray(new TrajectoryMeta[0]), 0.01);
+                }
+                TimeProfileSharedObject.getInstance().calDone = true;
+                trajShow = TimeProfileSharedObject.getInstance().trajectoryMetas;
+
+                map.draw();
+                drawTrajCPU(sb);
+                drawRecRegion();
+
+                System.out.println(sb.toString());
+                saveFrame("data/picture/20201006/vfgs+32/" + title + "_vfgs_32.png");
+                try {
+                    BufferedWriter writer = new BufferedWriter(new FileWriter("data/localRec/TimeProfile20201007.txt", true));
+                    writer.write(sb.toString());
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 if (regionSize == 1.0 / 2) {
-                    regionSize = 1.0 / 64;
+                    regionSize = 1.0 / 2;
                     if (regionId == rectRegionLoc.length - 1) {
                         regionId = 0;
                         if (alg == 2) {
@@ -104,57 +176,7 @@ public class UserInterface extends PApplet {
                 } else {
                     regionSize *= 2;
                 }
-                sb.append(alg).append(",").append(regionSize).append(",").append(regionId).append(",");
-
                 map.zoomAndPanTo(ZOOMLEVEL, rectRegionLoc[regionId]);
-
-                float x = (float) (500 * regionSize);
-                float y = (float) (400 * regionSize);
-                rectRegion.setLeftTopLoc(map.getLocation(500 - x, 400 - y));
-                rectRegion.setRightBtmLoc(map.getLocation(500 + x, 400 + y));
-
-                long t0 = System.currentTimeMillis();
-                startCalWayPoint();
-                long wayPointTime = System.currentTimeMillis() - t0;
-                sb.append(wayPointTime).append(",");
-
-                ArrayList<TrajectoryMeta> trajShows = new ArrayList<>();
-                for (TrajectoryMeta[] trajList : TimeProfileSharedObject.getInstance().trajMetaRes) {
-                    Collections.addAll(trajShows, trajList);
-                }
-//                System.out.println(rectRegion.getLeftTopLoc().getLat() + ", " + rectRegion.getLeftTopLoc().getLon() + ", " +
-//                        (-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) + ", " +
-//                        (-rectRegion.getLeftTopLoc().getLon() + rectRegion.getRightBtmLoc().getLon()) + ", "
-//                        + ((-rectRegion.getRightBtmLoc().getLat() + rectRegion.getLeftTopLoc().getLat()) / 0.000001));
-                if (alg == 2) {
-//                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, delta,
-//                            rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0001, 0.0001, sb, mapClone);
-                    Trajectory[] trajTemp = translateTrajArr(trajShows.toArray(new TrajectoryMeta[0]));
-                    Trajectory[] vfgsRes = VFGS.getCellCover(trajTemp, map, 0.01, delta);
-                    System.out.println("vfgs select size: " + vfgsRes.length);
-                    TimeProfileSharedObject.getInstance().trajectoryMetas = translateTrajArr(vfgsRes);
-                } else if (alg == 1) {
-//                    TimeProfileSharedObject.getInstance().trajectoryMetas = VfgsGps.getVfgs(trajShows.toArray(new TrajectoryMeta[0]), 0.01, 0,
-//                            rectRegion.getRightBtmLoc().getLat(), rectRegion.getLeftTopLoc().getLon(), 0.0001, 0.0001, sb, mapClone);
-                    Trajectory[] trajTemp = translateTrajArr(trajShows.toArray(new TrajectoryMeta[0]));
-                    Trajectory[] vfgsRes = VFGS.getCellCover(trajTemp, map, 0.01, 0);
-                    TimeProfileSharedObject.getInstance().trajectoryMetas = translateTrajArr(vfgsRes);
-                } else {
-                    TimeProfileSharedObject.getInstance().trajectoryMetas = getRandom(trajShows.toArray(new TrajectoryMeta[0]), 0.01);
-                }
-                TimeProfileSharedObject.getInstance().calDone = true;
-                trajShow = TimeProfileSharedObject.getInstance().trajectoryMetas;
-                drawTrajCPU(sb);
-                drawRecRegion();
-
-                System.out.println(sb.toString());
-                try {
-                    BufferedWriter writer = new BufferedWriter(new FileWriter("data/localRec/TimeProfile20201006.txt", true));
-                    writer.write(sb.toString());
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
 
             } else {
                 drawRecRegion();
