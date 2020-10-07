@@ -35,6 +35,8 @@ public class TimeProfileSharedObject {
     public TrajectoryMeta[] trajectoryMetas;
     boolean calDone = false;
 
+    public TrajectoryMeta[] trajMetaFull;
+
 
     public void setTrajMatrix(PGraphics pg, int id) {
         trajImageMtx[id] = pg;

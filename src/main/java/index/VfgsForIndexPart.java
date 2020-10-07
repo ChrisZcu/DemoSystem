@@ -1,5 +1,6 @@
 package index;
 
+import app.TimeProfileSharedObject;
 import model.Position;
 import model.TrajToSubpart;
 import model.TrajectoryMeta;
@@ -13,7 +14,11 @@ public class VfgsForIndexPart {
     public static final int threshold = 2500;
     public static final double alpha = 0.01;
 
+    public static TrajectoryMeta[] trajMetaFull;
+
     public static TrajToSubpart[] getVfgs(TrajectoryMeta[] trajMetaList) {
+        trajMetaFull = TimeProfileSharedObject.getInstance().trajMetaFull;
+
         ArrayList<TrajToSubpart> vfgsTraj = new ArrayList<>();
         try {
 
@@ -61,7 +66,10 @@ public class VfgsForIndexPart {
     }
 
     private static void updateInfluScoreSet(TrajectoryMeta TrajectoryMeta, HashSet<Position> influSet) {
-        influSet.addAll(Arrays.asList(TrajectoryMeta.getPositions()));
+        int trajId = TrajectoryMeta.getTrajId();
+        int begin = TrajectoryMeta.getBegin();
+        int end = TrajectoryMeta.getEnd();      // notice that the end is included
+        influSet.addAll(Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1));
     }
 
     private static void trajScoreInit(TrajectoryMeta[] trajectories, GreedyChooseMeta greedyChooseMeta) {
@@ -71,6 +79,7 @@ public class VfgsForIndexPart {
         }
     }
 
+    /** @deprecated */
     private HashSet<Position> getTotalScoreSet(TrajectoryMeta[] trajFull) {
         HashSet<Position> totalScoreSet = new HashSet<>(trajFull.length);
         for (TrajectoryMeta traj : trajFull) {
@@ -80,17 +89,24 @@ public class VfgsForIndexPart {
     }
 
     private static int getTotalScore(TrajectoryMeta[] trajFull) {
-
         HashSet<Position> totalScoreSet = new HashSet<>(trajFull.length);
         for (TrajectoryMeta traj : trajFull) {
-            totalScoreSet.addAll(Arrays.asList(traj.getPositions()));
+            int trajId = traj.getTrajId();
+            int begin = traj.getBegin();
+            int end = traj.getEnd();      // notice that the end is included
+            totalScoreSet.addAll(Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1));
         }
         return totalScoreSet.size();
     }
 
     private static void updateTrajScore(TrajectoryMeta TrajectoryMeta, HashSet<Position> influScoreSet) {
         double score = 0;
-        for (Position position : TrajectoryMeta.getPositions()) {
+
+        int trajId = TrajectoryMeta.getTrajId();
+        int begin = TrajectoryMeta.getBegin();
+        int end = TrajectoryMeta.getEnd();      // notice that the end is included
+
+        for (Position position : Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1)) {
             if (!influScoreSet.contains(position)) {
                 score++;
             }
