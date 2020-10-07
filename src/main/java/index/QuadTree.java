@@ -201,12 +201,12 @@ public class QuadTree {
                 trajTmp.setBegin(i);
                 /* add end */
                 Position position = partPosList.get(i++);
-//                ArrayList<Position> locTmp = new ArrayList<>();
+                ArrayList<Position> locTmp = new ArrayList<>();
                 while (inCheck(position, minLat, maxLat, minLon, maxLon) && i < partPosList.size()) {
-//                    locTmp.add(position);
+                    locTmp.add(position);
                     position = partPosList.get(i++);
                 }
-//                trajTmp.setPositions(locTmp.toArray(new Position[0]));
+                trajTmp.setPositions(locTmp.toArray(new Position[0]));
                 /* add */
                 trajTmp.setScore(i - 1 - begin);
                 trajTmp.setEnd(i - 1);

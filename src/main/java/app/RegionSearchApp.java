@@ -7,7 +7,7 @@ import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManagerSingleMap;
 import index.QuadTree;
-import index.SearchRegion;
+import index.SearchRegionPart;
 import model.*;
 import processing.core.PApplet;
 import processing.core.PGraphics;
@@ -30,9 +30,9 @@ public class RegionSearchApp extends PApplet {
         size(1000, 800, P2D);
     }
 
-    private String partFilePath = "data/GPS/Porto5w/Porto5w.txt";
+    private String partFilePath = "data/GPS/porto5w/__score.txt";
     private String fullFilePath = "data/GPS/porto_full.txt";
-    private String filePath = fullFilePath;
+    private String filePath = partFilePath;
     private QuadRegion quadRegionRoot;
     private boolean indexDone = false;
 
@@ -50,6 +50,8 @@ public class RegionSearchApp extends PApplet {
             @Override
             public void run() {
                 trajFull = QuadTree.loadData(latLon, filePath);
+                TimeProfileSharedObject.getInstance().trajMetaFull = trajFull;
+                QuadTree.trajMetaFull = trajFull;
 //                long t0 = System.currentTimeMillis();
 //                IndexStructManager indexStructManager = new IndexStructManager(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 5);
 //                quadRegionRoot = indexStructManager.startIndexStructure();
@@ -57,7 +59,8 @@ public class RegionSearchApp extends PApplet {
 //                quadRegionRoot = null;
 
                 long t1 = System.currentTimeMillis();
-                quadRegionRoot = QuadTree.getQuadIndex(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 10);
+//                quadRegionRoot = QuadTree.getQuadIndex(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
+                quadRegionRoot = QuadTree.getQuadIndexPart(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
 //                System.out.println("index time for single thread: " + (System.currentTimeMillis() - t1));
                 loadDone = true;
                 indexDone = true;
@@ -306,7 +309,8 @@ public class RegionSearchApp extends PApplet {
                 double maxLon = Math.max(leftLon, rightLon);
                 System.out.println(minLat + ", " + maxLat + ", " + minLon + ", " + maxLon);
 
-                TimeProfileSharedObject.getInstance().trajectoryMetas = SearchRegion.searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, quality);
+//                TimeProfileSharedObject.getInstance().trajectoryMetas = SearchRegion.searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, quality);
+                TimeProfileSharedObject.getInstance().trajectoryMetas = SearchRegionPart.searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, quality);
                 TimeProfileSharedObject.getInstance().calDone = true;
                 System.out.println("Calculate done!");
             }

@@ -23,8 +23,8 @@ public class VfgsForIndexPart {
         ArrayList<TrajToSubpart> vfgsTraj = new ArrayList<>();
         try {
 
-            double totalScore = getTotalScore(trajMetaList);
-            double lastScore = 0.0;
+//            double totalScore = getTotalScore(trajMetaList);
+//            double lastScore = 0.0;
 
             int limit = getRealSize(trajMetaList.length);
 
@@ -38,7 +38,7 @@ public class VfgsForIndexPart {
                         TrajectoryMeta trajMeta = greedyChooseMeta.getMaxScoreTraj();
                         updateInfluScoreSet(trajMeta, influScoreSet);
                         vfgsTraj.add(new TrajToSubpart(trajMeta.getTrajId(), trajMeta.getBegin(), trajMeta.getEnd()));
-                        lastScore += trajMeta.getScore();
+//                        lastScore += trajMeta.getScore();
 //                        if (lastScore >= totalScore) {
 //                            i = trajMetaList.length + 1;
 //                        }
@@ -51,7 +51,7 @@ public class VfgsForIndexPart {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.printf(">>> select %d out of %d by VfgsForIndexPart%n", vfgsTraj.size(), trajMetaList.length);
+//        System.out.printf(">>> select %d out of %d by VfgsForIndexPart%n", vfgsTraj.size(), trajMetaList.length);
         return vfgsTraj.toArray(new TrajToSubpart[0]);
     }
 

@@ -4,16 +4,15 @@ import app.TimeProfileSharedObject;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
-import model.GpsPosition;
 import model.Position;
 import model.Trajectory;
 import model.TrajectoryMeta;
 import processing.core.PGraphics;
 
 import java.awt.*;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class TrajDrawWorkerSingleMap extends Thread {
     private PGraphics pg;
@@ -23,6 +22,8 @@ public class TrajDrawWorkerSingleMap extends Thread {
     private Trajectory[] trajList;
     private TrajectoryMeta[] trajMetaList;
     private int id;
+
+    private TrajectoryMeta[] trajMetaFull;
 
     public volatile boolean stop = false;
 
@@ -44,6 +45,8 @@ public class TrajDrawWorkerSingleMap extends Thread {
         this.end = end;
         this.trajMetaList = trajMetaList;
         this.stop = stop;
+
+        this.trajMetaFull = TimeProfileSharedObject.getInstance().trajMetaFull;
 
         this.setPriority(9);
     }
@@ -145,24 +148,24 @@ public class TrajDrawWorkerSingleMap extends Thread {
                 pg.endShape();
             }
             */
-            ArrayList<ArrayList<Point>> trajPointList = new ArrayList<>();
+            ArrayList<ArrayList<ScreenPosition>> trajPointList = new ArrayList<>();
             for (int i = begin; i < end; i++) {
-                ArrayList<Point> pointList = new ArrayList<>();
-                for (GpsPosition gpsPosition : trajMetaList[i].getGpsPositions()) {
+                ArrayList<ScreenPosition> pointList = new ArrayList<>();
+                for (Position pos : generatePosList(trajMetaList[i])) {
                     if (this.stop) {
                         System.out.println(this.getName() + " cancel");
                         return;
                     }
-                    Location loc = new Location(gpsPosition.lat, gpsPosition.lon);
-                    ScreenPosition pos = map.getScreenPosition(loc);
-                    pointList.add(new Point(pos.x, pos.y));
+                    Location loc = new Location(pos.x / 1000000.0, pos.y / 1000000.0);
+                    ScreenPosition screenPos = map.getScreenPosition(loc);
+                    pointList.add(screenPos);
                 }
                 trajPointList.add(pointList);
             }
 
-            for (ArrayList<Point> traj : trajPointList) {
+            for (ArrayList<ScreenPosition> traj : trajPointList) {
                 pg.beginShape();
-                for (Point pos : traj) {
+                for (ScreenPosition pos : traj) {
                     if (this.stop) {
                         System.out.println(this.getName() + " cancel");
                         pg.endShape();
@@ -180,6 +183,14 @@ public class TrajDrawWorkerSingleMap extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private List<Position> generatePosList(TrajectoryMeta trajMeta) {
+        int trajId = trajMeta.getTrajId();
+        int begin = trajMeta.getBegin();
+        int end = trajMeta.getEnd();      // notice that the end is included
+
+        return Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1);
     }
 
     public static class Point {
