@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class VfgsForIndexPart {
-    public static final int threshold = 2500;
+    public static final int threshold = 5_0001;
     public static final double alpha = 0.01;
 
     public static TrajectoryMeta[] trajMetaFull;

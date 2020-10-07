@@ -53,10 +53,12 @@ public class SearchRegionPart extends PApplet {
     private static void addAllSubMetaTraj(List<TrajectoryMeta> trajectories, QuadRegion quadRegionHead) {
         for (TrajToSubpart trajToSubpart : quadRegionHead.getTrajToSubparts()) {
             // now just create the part of it and not consider this traj in other cells.
-//            TrajectoryMeta trajTmp = new TrajectoryMeta(trajToSubpart.getTrajId());
-//            trajTmp.setPositions(generatePosList(trajToSubpart).toArray(new Position[0]));
-//            trajectories.add(trajTmp);
-            trajectories.add(trajMetaFull[trajToSubpart.getTrajId()]);
+            TrajectoryMeta trajTmp = new TrajectoryMeta(trajToSubpart.getTrajId());
+            trajTmp.setBegin(trajToSubpart.getBeginPosIdx());
+            trajTmp.setEnd(trajToSubpart.getEndPosIdx());
+            trajTmp.setPositions(generatePosList(trajToSubpart).toArray(new Position[0]));
+            trajectories.add(trajTmp);
+//            trajectories.add(trajMetaFull[trajToSubpart.getTrajId()]);
         }
     }
 
@@ -84,7 +86,7 @@ public class SearchRegionPart extends PApplet {
         int begin = trajToSubpart.getBeginPosIdx();
         int end = trajToSubpart.getEndPosIdx();      // notice that the end is included
 
-        return Arrays.asList(trajMetaFull[trajId].getPositions())/*.subList(begin, end + 1)*/;
+        return Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1);
     }
 
     public static void main(String[] args) {

@@ -208,6 +208,9 @@ public class QuadTree {
                 }
                 trajTmp.setPositions(locTmp.toArray(new Position[0]));
                 /* add */
+                if (i - 1 - begin != locTmp.size()) {
+                    System.err.println("Error!");
+                }
                 trajTmp.setScore(i - 1 - begin);
                 trajTmp.setEnd(i - 1);
                 /* add end */
