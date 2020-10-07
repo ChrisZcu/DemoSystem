@@ -45,7 +45,7 @@ public class VfgsForIndexPart {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.printf(">>> select %d out of %d by VfgsForIndexPart", trajMetaList.length, vfgsTraj.size());
+        System.out.printf(">>> select %d out of %d by VfgsForIndexPart%n", trajMetaList.length, vfgsTraj.size());
         return vfgsTraj.toArray(new TrajToSubpart[0]);
     }
 

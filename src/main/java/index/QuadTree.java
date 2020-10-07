@@ -187,17 +187,18 @@ public class QuadTree {
             if (inCheck(traj.getPositions()[i], minLat, maxLat, minLon, maxLon)) {
                 TrajectoryMeta trajTmp = new TrajectoryMeta(-1);
                 /* add */
+                int begin = i;
                 trajTmp.setBegin(i);
                 /* add end */
                 Position position = traj.getPositions()[i++];
-                ArrayList<Position> locTmp = new ArrayList<>();
+//                ArrayList<Position> locTmp = new ArrayList<>();
                 while (inCheck(position, minLat, maxLat, minLon, maxLon) && i < traj.getPositions().length) {
-                    locTmp.add(position);
+//                    locTmp.add(position);
                     position = traj.getPositions()[i++];
                 }
-                trajTmp.setPositions(locTmp.toArray(new Position[0]));
-                trajTmp.setScore(locTmp.size());
+//                trajTmp.setPositions(locTmp.toArray(new Position[0]));
                 /* add */
+                trajTmp.setScore(i - 1 - begin);
                 trajTmp.setEnd(i - 1);
                 /* add end */
                 res.add(trajTmp);
@@ -233,7 +234,12 @@ public class QuadTree {
         TrajectoryMeta[] trajectories = loadData(new double[4], "data/GPS/porto_full.txt");
 
         long t0 = System.currentTimeMillis();
-        QuadRegion quadRegion = local(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories);
+        QuadRegion quadRegion = localPart(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories);
         System.out.println("index time: " + (System.currentTimeMillis() - t0));
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

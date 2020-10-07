@@ -7,16 +7,12 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
-import draw.TrajDrawWorkerSingleMap;
-import model.Position;
 import model.RectRegion;
 import model.Trajectory;
-import org.lwjgl.Sys;
 import processing.core.PApplet;
 import processing.opengl.PJOGL;
 import select.TimeProfileManager;
 import util.PSC;
-import util.VFGS;
 
 import java.awt.*;
 import java.io.*;
@@ -83,8 +79,8 @@ public class TimeProfileGPU extends PApplet {
 
             if (alg == 0) {
                 deltaList = new int[]{0};
-            } else {
-                deltaList = new int[]{0, 4, 8, 16, 32, 64};
+//            } else {
+//                deltaList = new int[]{0, 4, 8, 16, 32, 64};
             }
             float x = (float) (500 * recNumId);
             float y = (float) (400 * recNumId);

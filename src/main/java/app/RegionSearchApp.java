@@ -6,25 +6,15 @@ import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import draw.TrajDrawManagerSingleMap;
-import index.IndexStructManager;
 import index.QuadTree;
 import index.SearchRegion;
 import model.*;
-import org.apache.lucene.util.RamUsageEstimator;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import util.PSC;
-import util.VFGS;
 
 import java.awt.*;
-import java.lang.reflect.Array;
-import java.sql.Time;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Scanner;
-
-import static java.util.Arrays.*;
 
 
 public class RegionSearchApp extends PApplet {
