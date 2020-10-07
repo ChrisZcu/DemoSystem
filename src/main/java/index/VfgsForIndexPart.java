@@ -9,6 +9,7 @@ import util.GreedyChooseMeta;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 public class VfgsForIndexPart {
     public static final int threshold = 2500;
@@ -50,7 +51,7 @@ public class VfgsForIndexPart {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.printf(">>> select %d out of %d by VfgsForIndexPart%n", trajMetaList.length, vfgsTraj.size());
+        System.out.printf(">>> select %d out of %d by VfgsForIndexPart%n", vfgsTraj.size(), trajMetaList.length);
         return vfgsTraj.toArray(new TrajToSubpart[0]);
     }
 
@@ -66,10 +67,7 @@ public class VfgsForIndexPart {
     }
 
     private static void updateInfluScoreSet(TrajectoryMeta TrajectoryMeta, HashSet<Position> influSet) {
-        int trajId = TrajectoryMeta.getTrajId();
-        int begin = TrajectoryMeta.getBegin();
-        int end = TrajectoryMeta.getEnd();      // notice that the end is included
-        influSet.addAll(Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1));
+        influSet.addAll(generatePosList(TrajectoryMeta));
     }
 
     private static void trajScoreInit(TrajectoryMeta[] trajectories, GreedyChooseMeta greedyChooseMeta) {
@@ -91,26 +89,26 @@ public class VfgsForIndexPart {
     private static int getTotalScore(TrajectoryMeta[] trajFull) {
         HashSet<Position> totalScoreSet = new HashSet<>(trajFull.length);
         for (TrajectoryMeta traj : trajFull) {
-            int trajId = traj.getTrajId();
-            int begin = traj.getBegin();
-            int end = traj.getEnd();      // notice that the end is included
-            totalScoreSet.addAll(Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1));
+            totalScoreSet.addAll(generatePosList(traj));
         }
         return totalScoreSet.size();
     }
 
     private static void updateTrajScore(TrajectoryMeta TrajectoryMeta, HashSet<Position> influScoreSet) {
         double score = 0;
-
-        int trajId = TrajectoryMeta.getTrajId();
-        int begin = TrajectoryMeta.getBegin();
-        int end = TrajectoryMeta.getEnd();      // notice that the end is included
-
-        for (Position position : Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1)) {
+        for (Position position : generatePosList(TrajectoryMeta)) {
             if (!influScoreSet.contains(position)) {
                 score++;
             }
         }
         TrajectoryMeta.updateScore(score);
+    }
+
+    private static List<Position> generatePosList(TrajectoryMeta trajMeta) {
+        int trajId = trajMeta.getTrajId();
+        int begin = trajMeta.getBegin();
+        int end = trajMeta.getEnd();      // notice that the end is included
+
+        return Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1);
     }
 }

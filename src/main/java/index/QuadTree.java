@@ -3,10 +3,13 @@ package index;
 import app.TimeProfileSharedObject;
 import de.fhpotsdam.unfolding.geo.Location;
 import model.*;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class QuadTree {
     private static double minGLat = Float.MAX_VALUE;
@@ -15,6 +18,8 @@ public class QuadTree {
     private static double maxGLon = -Float.MAX_VALUE;
 
     public static QuadRegion quadRegionRoot;
+
+    public static TrajectoryMeta[] trajMetaFull;
 
     public QuadTree() {
     }
@@ -73,6 +78,9 @@ public class QuadTree {
             TrajectoryMeta traj = new TrajectoryMeta(i);
             traj.setScore(score);
             traj.setPositions(positions);
+
+            traj.setBegin(0);
+            traj.setEnd(positions.length - 1);
 //            trajFull[i] = traj;
             i++;
             res.add(traj);
@@ -151,7 +159,7 @@ public class QuadTree {
     public static TrajectoryMeta[] getWayPointPos(TrajectoryMeta[] trajFull, double minLat, double maxLat, double minLon, double maxLon) {
         ArrayList<TrajectoryMeta> res = new ArrayList<>();
         for (TrajectoryMeta traj : trajFull) {
-            for (Position position : traj.getPositions()) {
+            for (Position position : generatePosList(traj)) {
                 if (inCheck(position, minLat, maxLat, minLon, maxLon)) {
                     res.add(traj);
                     break;
@@ -183,18 +191,20 @@ public class QuadTree {
      */
     private static ArrayList<TrajectoryMeta> getRegionInTrajPos(TrajectoryMeta traj, double minLat, double maxLat, double minLon, double maxLon) {
         ArrayList<TrajectoryMeta> res = new ArrayList<>();
-        for (int i = 0; i < traj.getPositions().length; i++) {
-            if (inCheck(traj.getPositions()[i], minLat, maxLat, minLon, maxLon)) {
-                TrajectoryMeta trajTmp = new TrajectoryMeta(-1);
+        int trajId = traj.getTrajId();
+        List<Position> partPosList = generatePosList(traj);
+        for (int i = 0; i < partPosList.size(); i++) {
+            if (inCheck(partPosList.get(i), minLat, maxLat, minLon, maxLon)) {
+                TrajectoryMeta trajTmp = new TrajectoryMeta(trajId);
                 /* add */
                 int begin = i;
                 trajTmp.setBegin(i);
                 /* add end */
-                Position position = traj.getPositions()[i++];
+                Position position = partPosList.get(i++);
 //                ArrayList<Position> locTmp = new ArrayList<>();
-                while (inCheck(position, minLat, maxLat, minLon, maxLon) && i < traj.getPositions().length) {
+                while (inCheck(position, minLat, maxLat, minLon, maxLon) && i < partPosList.size()) {
 //                    locTmp.add(position);
-                    position = traj.getPositions()[i++];
+                    position = partPosList.get(i++);
                 }
 //                trajTmp.setPositions(locTmp.toArray(new Position[0]));
                 /* add */
@@ -227,6 +237,14 @@ public class QuadTree {
         return localPart(minLat, maxLat, minLon, maxLon, height, trajectories);
     }
 
+    private static List<Position> generatePosList(TrajectoryMeta trajMeta) {
+        int trajId = trajMeta.getTrajId();
+        int begin = trajMeta.getBegin();
+        int end = trajMeta.getEnd();      // notice that the end is included
+
+        return Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1);
+    }
+
 
     //lat41 lon8
     public static void main(String[] args) {
@@ -234,6 +252,7 @@ public class QuadTree {
         TrajectoryMeta[] trajectories = loadData(new double[4], "data/GPS/porto_full.txt");
 
         TimeProfileSharedObject.getInstance().trajMetaFull = trajectories;
+        trajMetaFull = trajectories;
 
         long t0 = System.currentTimeMillis();
         QuadRegion quadRegion = localPart(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories);
