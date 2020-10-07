@@ -60,7 +60,15 @@ public class RegionSearchApp extends PApplet {
 
                 long t1 = System.currentTimeMillis();
 //                quadRegionRoot = QuadTree.getQuadIndex(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
-                quadRegionRoot = QuadTree.getQuadIndexPart(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
+                QuadTree.quadRegionRoot = QuadTree.getQuadIndexPart(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
+
+                String qtPath = "data/GPS/porto5w/quad_tree_info.txt";
+                QuadTree.saveTreeToFile(qtPath);
+                System.out.println("save finished.");
+                QuadTree.loadTreeFromFile(qtPath);
+                System.out.println("load finished");
+
+                quadRegionRoot = QuadTree.quadRegionRoot;
 //                System.out.println("index time for single thread: " + (System.currentTimeMillis() - t1));
                 loadDone = true;
                 indexDone = true;

@@ -6,10 +6,7 @@ import model.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -251,23 +248,77 @@ public class QuadTree {
         return Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1);
     }
 
-    public static void saveTreeToFile(String fileName) {
+    public static void saveTreeToFile(String filePath) {
+        System.out.print("Write position info to " + filePath + " ...");
 
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
+            QuadRegion[] parents = new QuadRegion[]{quadRegionRoot};
+            saveLevelRecurse(writer, parents);
+            writer.close();
+            System.out.println("\b\b\bfinished.");
+
+        } catch (IOException e) {
+            System.out.println("\b\b\bfailed.");
+            e.printStackTrace();
+        }
     }
 
-    private static void saveNodeToFile(String fileName, QuadRegion qrNode) {
+    /**
+     * Save all nodes in same level (they are the children of {@code parents}).
+     * Suppose that the {@code parents} will never be invalid.
+     */
+    private static void saveLevelRecurse(BufferedWriter writer, QuadRegion[] parents) throws IOException {
+        boolean hasChildren = (parents[0].getQuadRegionChildren() != null);
 
+        if (!hasChildren) {
+            for (QuadRegion parent : parents) {
+                // save parent
+                List<String> strList = QuadRegion.serialize(parent);
+                saveOneStrList(writer, strList);
+            }
+            return;
+        }
+
+        // has next level
+
+        int cldIdx = 0;     // index for children
+        QuadRegion[] children = new QuadRegion[parents.length * 4];
+
+        for (QuadRegion parent : parents) {
+            // save parent
+            List<String> strList = QuadRegion.serialize(parent);
+            saveOneStrList(writer, strList);
+
+            // generate children
+            System.arraycopy(parent.getQuadRegionChildren(), 0, children, cldIdx, 4);
+            cldIdx += 4;
+        }
+
+        saveLevelRecurse(writer, children);
     }
 
-    public static void loadTreeFromFile(String filePath) throws IOException {
-        List<Trajectory> res = new ArrayList<>();
+    /**
+     * Save full string data for one {@link QuadRegion}.
+     */
+    private static void saveOneStrList(BufferedWriter writer, List<String> strList) throws IOException {
+        for (String s : strList) {
+            writer.write(s);
+            writer.newLine();
+        }
+    }
+
+    /**
+     * Load quad tree from file and save root to static field
+     */
+    public static void loadTreeFromFile(String filePath) {
         LineIterator it = null;
 
         System.out.print("Read quad tree data from " + filePath + " ...");
 
         try {
             it = FileUtils.lineIterator(new File(filePath), "UTF-8");
-            quadRegionRoot = loadChildrenRecurse(it, null);
+            quadRegionRoot = loadLevelRecurse(it, null);
             System.out.println("\b\b\bfinished.");
 
         } catch (IOException e) {
@@ -281,17 +332,17 @@ public class QuadTree {
     }
 
     /**
-     * Create tree by breath first iterate.
+     * Create tree by breath first iterate. Each recurse is one level.
      */
-    private static QuadRegion loadChildrenRecurse(LineIterator lit, QuadRegion[] parents) {
+    private static QuadRegion loadLevelRecurse(LineIterator lit, QuadRegion[] parents) {
         if (parents == null) {
             // is root
-            List<String> strList = getOneStrList(lit);
+            List<String> strList = loadOneStrList(lit);
             QuadRegion root = QuadRegion.antiSerialize(strList);
             if (lit.hasNext()) {
                 // has next level
                 QuadRegion[] nxtParents = new QuadRegion[]{root};
-                loadChildrenRecurse(lit, nxtParents);
+                loadLevelRecurse(lit, nxtParents);
             }
             return root;
         }
@@ -302,7 +353,7 @@ public class QuadTree {
         for (QuadRegion parent : parents) {
             QuadRegion[] children = new QuadRegion[4];
             for (int idx = 0; idx < 4; idx++) {
-                List<String> strList = getOneStrList(lit);
+                List<String> strList = loadOneStrList(lit);
                 QuadRegion child = QuadRegion.antiSerialize(strList);
                 children[idx] = child;
                 nxtParents[prtCnt++] = child;
@@ -312,7 +363,7 @@ public class QuadTree {
 
         if (lit.hasNext()) {
             // has next level
-            loadChildrenRecurse(lit, nxtParents);
+            loadLevelRecurse(lit, nxtParents);
         }
         return null;        // not root, no need to return anything
     }
@@ -320,10 +371,11 @@ public class QuadTree {
     /**
      * Read full string data for one {@link QuadRegion}, but not to anti-serialize it
      */
-    private static List<String> getOneStrList(LineIterator lit) {
+    private static List<String> loadOneStrList(LineIterator lit) {
         String str = lit.nextLine();
         int lineNum = Integer.parseInt(str);
         List<String> ret = new ArrayList<>(lineNum);
+        ret.add(str);       // also add first line to result
         for (int i = 0; i < lineNum; i++) {
             ret.add(lit.nextLine());
         }
@@ -332,19 +384,15 @@ public class QuadTree {
 
     //lat41 lon8
     public static void main(String[] args) {
-//        TrajectoryMeta[] trajectories = loadData("data/GPS/Porto5w/Porto5w.txt");
-        TrajectoryMeta[] trajectories = loadData(new double[4], "data/GPS/porto_full.txt");
+        TrajectoryMeta[] trajectories = loadData(new double[4], "data/GPS/porto5w/__score.txt");
 
         TimeProfileSharedObject.getInstance().trajMetaFull = trajectories;
         trajMetaFull = trajectories;
 
         long t0 = System.currentTimeMillis();
-        QuadRegion quadRegion = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories);
+        QuadTree.quadRegionRoot = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories);
         System.out.println("index time: " + (System.currentTimeMillis() - t0));
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
+        QuadTree.saveTreeToFile("data/GPS/porto5w/quad_tree_info.txt");
     }
 }
