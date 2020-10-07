@@ -20,7 +20,6 @@ public class TrajectoryMeta {
         this.gpsPositions = gpsPositions;
     }
 
-
     public TrajectoryMeta(int trajId) {
         score = 0;
         this.trajId = trajId;
@@ -35,7 +34,7 @@ public class TrajectoryMeta {
         metaScore = score;
     }
 
-    public void updateScore(double score){
+    public void updateScore(double score) {
         this.score = score;
     }
 
@@ -47,11 +46,11 @@ public class TrajectoryMeta {
         return trajId;
     }
 
-    public void setPositions(Position[] posi){
+    public void setPositions(Position[] posi) {
         positions = posi;
     }
 
-    public Position[] getPositions(){
+    public Position[] getPositions() {
         return positions;
     }
 

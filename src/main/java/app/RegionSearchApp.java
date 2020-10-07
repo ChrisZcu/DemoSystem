@@ -20,8 +20,8 @@ import java.util.Scanner;
 public class RegionSearchApp extends PApplet {
 
     UnfoldingMap map;
-    private int ZOOMLEVEL = 12;
-    private Location PRESENT = new Location(41.151, -8.523); /*new Location(41.151, -8.616);*/
+    private int ZOOMLEVEL = 11;
+    private Location PRESENT = new Location(41.035, -8.361); /*new Location(41.151, -8.616);*/
     private double[] latLon = new double[4];
     private TrajectoryMeta[] trajFull;
 
@@ -60,7 +60,7 @@ public class RegionSearchApp extends PApplet {
 
                 long t1 = System.currentTimeMillis();
 //                quadRegionRoot = QuadTree.getQuadIndex(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
-                QuadTree.quadRegionRoot = QuadTree.getQuadIndexPart(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
+                QuadTree.quadRegionRoot = QuadTree.getQuadIndexPart(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3, 32);
 
                 String qtPath = "data/GPS/porto5w/quad_tree_info.txt";
                 QuadTree.saveTreeToFile(qtPath);

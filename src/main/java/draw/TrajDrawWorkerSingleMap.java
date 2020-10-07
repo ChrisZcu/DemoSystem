@@ -69,7 +69,7 @@ public class TrajDrawWorkerSingleMap extends Thread {
                         System.out.println(this.getName() + " cancel");
                         return;
                     }
-                    Location loc = new Location(position.x / 1000000.0, position.y / 1000000.0);
+                    Location loc = new Location(position.x / 10000.0, position.y / 10000.0);
 //                    System.out.println(loc);
                     ScreenPosition pos = map.getScreenPosition(loc);
                     pointList.add(new Point(pos.x, pos.y));
@@ -114,7 +114,7 @@ public class TrajDrawWorkerSingleMap extends Thread {
 
                 pg.beginShape();
                 for (Position position : traj.getPositions()) {
-                    Location loc = new Location(position.x / 1000000.0, position.y / 1000000.0);
+                    Location loc = new Location(position.x / 10000.0, position.y / 10000.0);
                     ScreenPosition pos = map.getScreenPosition(loc);
                     pg.vertex(pos.x, pos.y);
                 }
@@ -128,7 +128,7 @@ public class TrajDrawWorkerSingleMap extends Thread {
 
                 pg.beginShape();
                 for (Position position : traj.getPositions()) {
-                    Location loc = new Location(position.x / 1000000.0, position.y / 1000000.0);
+                    Location loc = new Location(position.x / 10000.0, position.y / 10000.0);
                     ScreenPosition pos = map.getScreenPosition(loc);
                     pg.vertex(pos.x, pos.y);
                 }
@@ -156,7 +156,7 @@ public class TrajDrawWorkerSingleMap extends Thread {
                         System.out.println(this.getName() + " cancel");
                         return;
                     }
-                    Location loc = new Location(pos.x / 1000000.0, pos.y / 1000000.0);
+                    Location loc = new Location(pos.x / 10000.0, pos.y / 10000.0);
                     ScreenPosition screenPos = map.getScreenPosition(loc);
                     pointList.add(screenPos);
                 }

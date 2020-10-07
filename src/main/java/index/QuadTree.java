@@ -3,10 +3,10 @@ package index;
 import app.TimeProfileSharedObject;
 import de.fhpotsdam.unfolding.geo.Location;
 import model.*;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,6 +48,8 @@ public class QuadTree {
             boolean next = false;
             Position[] positions = new Position[item.length / 2 - 1];
             for (int j = 0; j < item.length - 2; j += 2) {
+//                int srcX = Integer.parseInt(item[j]);
+//                int srcY = Integer.parseInt(item[j + 1]);
                 float lat = Float.parseFloat(item[j + 1]);
                 float lon = Float.parseFloat(item[j]);
                 //debug
@@ -64,7 +66,7 @@ public class QuadTree {
 //                    continue;
 //                }
 
-                positions[j / 2] = new Position((int) (lat * 1000000), (int) (lon * 1000000));
+                positions[j / 2] = new Position((int) (lat * 10000), (int) (lon * 10000));
 
                 minGLat = Math.min(lat, minGLat);
                 maxGLat = Math.max(lat, maxGLat);
@@ -170,8 +172,8 @@ public class QuadTree {
     }
 
     private static boolean inCheck(Position position, double minLat, double maxLat, double minLon, double maxLon) {
-        return position.x / 1000000.0 >= minLat && position.x / 1000000.0 <= maxLat
-                && position.y / 1000000.0 >= minLon && position.y / 1000000.0 <= maxLon;
+        return position.x / 10000.0 >= minLat && position.x / 10000.0 <= maxLat
+                && position.y / 10000.0 >= minLon && position.y / 10000.0 <= maxLon;
     }
 
 
