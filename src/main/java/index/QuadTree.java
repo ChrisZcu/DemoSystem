@@ -116,6 +116,37 @@ public class QuadTree {
         return quadRegion;
     }
 
+    /**
+     * Generate the quad tree by {@link VfgsForIndexPart}
+     */
+    private static QuadRegion localPart(double minLat, double maxLat, double minLon, double maxLon, int H,
+                                    TrajectoryMeta[] trajFull) {
+        RectRegion rectRegion = new RectRegion();
+        rectRegion.initLoc(new Location(minLat, minLon), new Location(maxLat, maxLon));
+//        System.out.println(H + " :(" + minLat + ", " + maxLat + ", " + minLon + ", " + maxLon + ")");
+        TimeProfileSharedObject.getInstance().addQuadRectRegion(rectRegion);
+        QuadRegion quadRegion = new QuadRegion(minLat, maxLat, minLon, maxLon);
+
+        TrajToSubpart[] trajToSubparts = VfgsForIndexPart.getVfgs(trajFull);
+
+        quadRegion.setTrajToSubparts(trajToSubparts);
+        if (H > 1) {
+            QuadRegion[] quadChildren = new QuadRegion[4];
+            double latOff = (maxLat - minLat) / 2;
+            double lonOff = (maxLon - minLon) / 2;
+            for (int i = 0; i < 4; i++) {
+                int laxId = i / 2;
+                int lonId = i % 2;
+                double tmpLatMin = minLat + latOff * laxId;
+                double tmpLonMin = minLon + lonOff * lonId;
+                TrajectoryMeta[] wayPoint = getWayPointPos(trajFull, tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff);
+                quadChildren[i] = localPart(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint);
+            }
+            quadRegion.setQuadRegionChildren(quadChildren);
+        }
+        return quadRegion;
+    }
+
 
     public static TrajectoryMeta[] getWayPointPos(TrajectoryMeta[] trajFull, double minLat, double maxLat, double minLon, double maxLon) {
         ArrayList<TrajectoryMeta> res = new ArrayList<>();
@@ -135,6 +166,10 @@ public class QuadTree {
                 && position.y / 1000000.0 >= minLon && position.y / 1000000.0 <= maxLon;
     }
 
+
+    /**
+     * Run {@link #getRegionInTrajPos} (which cut the traj into subpart) on all trajs.
+     */
     private static TrajectoryMeta[] cutTrajsPos(TrajectoryMeta[] trajectories, double minLat, double maxLat, double minLon, double maxLon) {
         ArrayList<TrajectoryMeta> res = new ArrayList<>();
         for (TrajectoryMeta traj : trajectories) {
@@ -143,11 +178,17 @@ public class QuadTree {
         return res.toArray(new TrajectoryMeta[0]);
     }
 
+    /**
+     * Divide traj into trajMeta according to the giving region.
+     */
     private static ArrayList<TrajectoryMeta> getRegionInTrajPos(TrajectoryMeta traj, double minLat, double maxLat, double minLon, double maxLon) {
         ArrayList<TrajectoryMeta> res = new ArrayList<>();
         for (int i = 0; i < traj.getPositions().length; i++) {
             if (inCheck(traj.getPositions()[i], minLat, maxLat, minLon, maxLon)) {
                 TrajectoryMeta trajTmp = new TrajectoryMeta(-1);
+                /* add */
+                trajTmp.setBegin(i);
+                /* add end */
                 Position position = traj.getPositions()[i++];
                 ArrayList<Position> locTmp = new ArrayList<>();
                 while (inCheck(position, minLat, maxLat, minLon, maxLon) && i < traj.getPositions().length) {
@@ -156,6 +197,9 @@ public class QuadTree {
                 }
                 trajTmp.setPositions(locTmp.toArray(new Position[0]));
                 trajTmp.setScore(locTmp.size());
+                /* add */
+                trajTmp.setEnd(i - 1);
+                /* add end */
                 res.add(trajTmp);
             }
         }
@@ -171,6 +215,17 @@ public class QuadTree {
                                           TrajectoryMeta[] trajectories, int height) {
         return local(minLat, maxLat, minLon, maxLon, height, trajectories);
     }
+
+    public static QuadRegion getQuadIndexPart(String filePath, int height) {
+        TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
+        return localPart(minGLat, maxGLat, minGLon, maxGLon, height, trajectories);
+    }
+
+    public static QuadRegion getQuadIndexPart(double minLat, double maxLat, double minLon, double maxLon,
+                                          TrajectoryMeta[] trajectories, int height) {
+        return localPart(minLat, maxLat, minLon, maxLon, height, trajectories);
+    }
+
 
     //lat41 lon8
     public static void main(String[] args) {

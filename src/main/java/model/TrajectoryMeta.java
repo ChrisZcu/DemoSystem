@@ -6,6 +6,10 @@ public class TrajectoryMeta {
     private double metaScore;
     private int trajId;
 
+    /* add */
+    private int begin, end;     // the subpart of the this meta traj. [begin, end]
+    /* add end */
+
     private GpsPosition[] gpsPositions;
 
     public GpsPosition[] getGpsPositions() {
@@ -55,4 +59,21 @@ public class TrajectoryMeta {
         score = metaScore;
     }
 
+    /* add */
+
+    public int getBegin() {
+        return begin;
+    }
+
+    public void setBegin(int begin) {
+        this.begin = begin;
+    }
+
+    public int getEnd() {
+        return end;
+    }
+
+    public void setEnd(int end) {
+        this.end = end;
+    }
 }
