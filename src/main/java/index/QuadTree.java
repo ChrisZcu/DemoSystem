@@ -239,7 +239,7 @@ public class QuadTree {
     }
 
     public static QuadRegion getQuadIndexPart(double minLat, double maxLat, double minLon, double maxLon,
-                                          TrajectoryMeta[] trajectories, int height, int delta) {
+                                              TrajectoryMeta[] trajectories, int height, int delta) {
         return createPartlyFromTrajList(minLat, maxLat, minLon, maxLon, height, trajectories, delta);
     }
 
@@ -342,6 +342,7 @@ public class QuadTree {
             // is root
             List<String> strList = loadOneStrList(lit);
             QuadRegion root = QuadRegion.antiSerialize(strList);
+            root.setLocation(minGLat, maxGLat, minGLon, maxGLon);
             if (lit.hasNext()) {
                 // has next level
                 QuadRegion[] nxtParents = new QuadRegion[]{root};
@@ -349,15 +350,31 @@ public class QuadTree {
             }
             return root;
         }
+
         // not root, load whole level
         // lit.hasNext() must be true
         int prtCnt = 0;     // idx for nxtParents
         QuadRegion[] nxtParents = new QuadRegion[parents.length * 4];
         for (QuadRegion parent : parents) {
+            double latOff = (parent.getMaxLat() - parent.getMinLat()) / 2;
+            double lonOff = (parent.getMaxLon() - parent.getMinLon()) / 2;
             QuadRegion[] children = new QuadRegion[4];
             for (int idx = 0; idx < 4; idx++) {
+
+                int laxId = idx / 2;
+                int lonId = idx % 2;
+                double tmpLatMin = parent.getMinLat() + latOff * laxId;
+                double tmpLonMin = parent.getMinLon() + lonOff * lonId;
+
                 List<String> strList = loadOneStrList(lit);
                 QuadRegion child = QuadRegion.antiSerialize(strList);
+
+                child.setLocation(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff);
+
+                RectRegion rectRegion = new RectRegion();
+                rectRegion.initLoc(new Location(tmpLatMin, tmpLonMin), new Location(tmpLatMin + latOff, tmpLonMin + lonOff));
+                TimeProfileSharedObject.getInstance().addQuadRectRegion(rectRegion);
+
                 children[idx] = child;
                 nxtParents[prtCnt++] = child;
             }

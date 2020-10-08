@@ -17,7 +17,8 @@ public class QuadRegion {
     TrajToSubpart[] trajToSubparts;
     /* add end */
 
-    public QuadRegion() {}
+    public QuadRegion() {
+    }
 
     public QuadRegion(QuadRegion[] quadRegionChildren, TrajToQuality[] trajQuality) {
         this.quadRegionChildren = quadRegionChildren;
@@ -25,6 +26,13 @@ public class QuadRegion {
     }
 
     public QuadRegion(double minLat, double maxLat, double minLon, double maxLon) {
+        this.minLat = minLat;
+        this.maxLat = maxLat;
+        this.minLon = minLon;
+        this.maxLon = maxLon;
+    }
+
+    public void setLocation(double minLat, double maxLat, double minLon, double maxLon) {
         this.minLat = minLat;
         this.maxLat = maxLat;
         this.minLon = minLon;

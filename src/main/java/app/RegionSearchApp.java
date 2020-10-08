@@ -20,8 +20,8 @@ import java.util.Scanner;
 public class RegionSearchApp extends PApplet {
 
     UnfoldingMap map;
-    private int ZOOMLEVEL = 11;
-    private Location PRESENT = new Location(41.035, -8.361); /*new Location(41.151, -8.616);*/
+    private int ZOOMLEVEL = 16;
+    private Location PRESENT = new Location(41.172, -8.603); /*new Location(41.151, -8.616);*/
     private double[] latLon = new double[4];
     private TrajectoryMeta[] trajFull;
 
@@ -32,7 +32,7 @@ public class RegionSearchApp extends PApplet {
 
     private String partFilePath = "data/GPS/porto5w/__score.txt";
     private String fullFilePath = "data/GPS/porto_full.txt";
-    private String filePath = partFilePath;
+    private String filePath = fullFilePath;
     private QuadRegion quadRegionRoot;
     private boolean indexDone = false;
 
@@ -60,11 +60,11 @@ public class RegionSearchApp extends PApplet {
 
                 long t1 = System.currentTimeMillis();
 //                quadRegionRoot = QuadTree.getQuadIndex(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3);
-                QuadTree.quadRegionRoot = QuadTree.getQuadIndexPart(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3, 32);
+//                QuadTree.quadRegionRoot = QuadTree.getQuadIndexPart(latLon[0], latLon[1], latLon[2], latLon[3], trajFull, 3, 32);
 
-                String qtPath = "data/GPS/porto5w/quad_tree_info.txt";
-                QuadTree.saveTreeToFile(qtPath);
-                System.out.println("save finished.");
+                String qtPath = "data/quad_tree/quad_tree_info_porto.txt";
+//                QuadTree.saveTreeToFile(qtPath);
+//                System.out.println("save finished.");
                 QuadTree.loadTreeFromFile(qtPath);
                 System.out.println("load finished");
 
@@ -101,8 +101,16 @@ public class RegionSearchApp extends PApplet {
             }
 
             if (indexDone) {
+//                System.out.println(TimeProfileSharedObject.getInstance().getQudaRegion().size());
+//                System.out.println();
+                int i = 0;
                 for (RectRegion rectRegion : TimeProfileSharedObject.getInstance().getQudaRegion()) {
-                    drawRecRegion(rectRegion);
+//                    drawRecRegion(rectRegion);
+//                    if (i == 10)
+//                        break;
+//                    System.out.println(rectRegion.getLeftTopLoc());
+//                    System.out.println(rectRegion.getRightBtmLoc());
+//                    i++;
                 }
             }
 
