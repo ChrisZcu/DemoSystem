@@ -58,8 +58,9 @@ public class TrajDrawWorkerSingleMap extends Thread {
 
             pg.beginDraw();
             pg.noFill();
-            pg.strokeWeight(1);
-            pg.stroke(new Color(190, 46, 29).getRGB());
+            pg.strokeWeight(0.5f);
+            pg.stroke(new Color(255, 0, 0).getRGB());
+
             /*
             ArrayList<ArrayList<Point>> trajPointList = new ArrayList<>();
             for (int i = begin; i < end; i++) {

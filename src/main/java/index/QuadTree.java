@@ -53,7 +53,8 @@ public class QuadTree {
                 float lat = Float.parseFloat(item[j + 1]);
                 float lon = Float.parseFloat(item[j]);
                 //debug
-                if (lat > 41.345 || lat < 40.953 || lon < -8.86 || lon > -8.280) {
+                if (lat > 42.184 || lat < 39.628 || lon < -9.095 || lon > -6.568) {
+//                if (lat > 41.346 || lat < 40.948 || lon < -8.806 || lon > -8.229) {
 //                if (lat < 38.429 || lon > -6.595) {
                     j = item.length;
                     next = true;
@@ -342,10 +343,10 @@ public class QuadTree {
             // is root
             List<String> strList = loadOneStrList(lit);
             QuadRegion root = QuadRegion.antiSerialize(strList);
-            root.setLocation(38.53193, 42.11044, -9.44656, -6.696539);
+            root.setLocation(minGLat, maxGLat, minGLon, maxGLon);
 
             RectRegion rectRegion = new RectRegion();
-            rectRegion.initLoc(new Location(38.53193, -9.44656), new Location(42.11044, -6.696539));
+            rectRegion.initLoc(new Location(minGLat, minGLon), new Location(maxGLat, maxGLon));
             TimeProfileSharedObject.getInstance().addQuadRectRegion(rectRegion);
 
             if (lit.hasNext()) {
@@ -411,15 +412,28 @@ public class QuadTree {
 
     //lat41 lon8
     public static void main(String[] args) {
-        TrajectoryMeta[] trajectories = loadData(new double[4], "data/GPS/porto5w/__score.txt");
+        String filePath = "data/GPS/Porto5w/Porto5w.txt";
+        String storeFilePath = "data/GPS/porto5w/quad_tree_info.txt";
+        int height = 13;
+        int delta = 32;
+        if (args.length > 0) {
+            filePath = args[0];
+            storeFilePath = args[1];
+            height = Integer.parseInt(args[2]);
+            delta = Integer.parseInt(args[3]);
+        }
+        TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
 
         TimeProfileSharedObject.getInstance().trajMetaFull = trajectories;
         trajMetaFull = trajectories;
 
         long t0 = System.currentTimeMillis();
-        QuadTree.quadRegionRoot = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, 3, trajectories, 0);
+        System.out.println("begin index");
+        QuadTree.quadRegionRoot = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories, delta);
         System.out.println("index time: " + (System.currentTimeMillis() - t0));
 
-        QuadTree.saveTreeToFile("data/GPS/porto5w/quad_tree_info.txt");
+        QuadTree.saveTreeToFile(storeFilePath);
+
+        System.out.println("save done");
     }
 }

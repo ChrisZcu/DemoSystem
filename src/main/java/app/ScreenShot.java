@@ -121,7 +121,7 @@ public class ScreenShot extends PApplet {
             "P16", "P17",
             "P18", "P19"
     };
-    private int curCenterId = 0;
+    private int curCenterId = 9;
     private PImage mapImage = null;
 
     private int zoomLevel = 11;
@@ -130,8 +130,8 @@ public class ScreenShot extends PApplet {
     Trajectory[] trajShow;
 
 
-    private boolean isGlobal = true;
-    private int alg = 0;//0 for full, 1 for random, 2 for vfgs
+    private boolean isGlobal = false;
+    private int alg = 2;//0 for full, 1 for random, 2 for vfgs
     private int vfgsDeltaId = 0;
 
     private int[] deltaList = {0, 32};
@@ -287,7 +287,7 @@ public class ScreenShot extends PApplet {
         else if (length * rate < 2500)
             return 2500;
         else
-        return (int) (length * rate);
+            return (int) (length * rate);
     }
 
 

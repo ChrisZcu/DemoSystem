@@ -12,6 +12,8 @@ import model.*;
 import org.w3c.dom.css.Rect;
 import processing.core.PApplet;
 import processing.core.PGraphics;
+import processing.core.PImage;
+import processing.event.KeyEvent;
 import util.PSC;
 
 import java.awt.*;
@@ -21,8 +23,8 @@ import java.util.Scanner;
 public class RegionSearchApp extends PApplet {
 
     UnfoldingMap map;
-    private int ZOOMLEVEL = 11;
-    private Location PRESENT = new Location(41.151, -8.616); /*new Location(41.151, -8.616);*/
+    private int ZOOMLEVEL = 12;
+    private Location PRESENT = new Location(41.149, -8.612); /*new Location(41.151, -8.616);*/
     private double[] latLon = new double[4];
     private TrajectoryMeta[] trajFull;
 
@@ -33,7 +35,7 @@ public class RegionSearchApp extends PApplet {
 
     private String partFilePath = "data/GPS/Porto5w/Porto5w.txt";
     private String fullFilePath = "data/GPS/porto_full.txt";
-    private String filePath = partFilePath;
+    private String filePath = fullFilePath;
     private QuadRegion quadRegionRoot;
     private boolean indexDone = false;
 
@@ -53,20 +55,23 @@ public class RegionSearchApp extends PApplet {
                 trajFull = QuadTree.loadData(latLon, filePath);
                 TimeProfileSharedObject.getInstance().trajMetaFull = trajFull;
                 QuadTree.trajMetaFull = trajFull;
-
-//                String qtPath = "data/quad_tree/quad_tree_info_porto.txt";
+                String qtPath = "data/GPS/QuadTreeIndex/quad_tree_quality" + quadQuality + "_info.txt";
 //                QuadTree.saveTreeToFile(qtPath);
 //                System.out.println("save finished.");
-//                QuadTree.loadTreeFromFile(qtPath);
-                quadRegionRoot = QuadTree.getQuadIndexPart(filePath, 5, 0);
+                QuadTree.loadTreeFromFile(qtPath);
+                quadRegionRoot = QuadTree.quadRegionRoot;
+//                quadRegionRoot = QuadTree.getQuadIndexPart(filePath, 5, 32);
                 System.out.println("load finished");
 
-                QuadTree.quadRegionRoot = quadRegionRoot;
+//                QuadTree.quadRegionRoot = quadRegionRoot;
                 loadDone = true;
                 indexDone = true;
 
             }
         }.start();
+
+        rectRegion = new RectRegion();
+        rectRegion.initLoc(new Location(41.216, -8.734), new Location(41.074, -8.458));
     }
 
     private boolean regionDrawing = false;
@@ -74,10 +79,16 @@ public class RegionSearchApp extends PApplet {
     RectRegion rectRegion;
     TrajectoryMeta[] trajShow = new TrajectoryMeta[0];
     boolean print = true;
+    private PImage mapImage = null;
+
 
     @Override
     public void draw() {
         if (!map.allTilesLoaded()) {
+            if (mapImage == null) {
+                mapImage = map.mapDisplay.getInnerPG().get();
+            }
+            image(mapImage, 0, 0);
             map.draw();
         } else {
             map.draw();
@@ -113,14 +124,14 @@ public class RegionSearchApp extends PApplet {
                 noFill();
                 strokeWeight(10);
                 stroke(new Color(19, 149, 186).getRGB());
-                point(src.x, src.y);
-                point(src2.x, src2.y);
+//                point(src.x, src.y);
+//                point(src2.x, src2.y);
             }
-            if (TimeProfileSharedObject.getInstance().searchRegions.size() > 0) {
-                for (RectRegion rectRegion : TimeProfileSharedObject.getInstance().searchRegions) {
-                    drawRecRegion(rectRegion);
-                }
-            }
+//            if (TimeProfileSharedObject.getInstance().searchRegions.size() > 0) {
+//                for (RectRegion rectRegion : TimeProfileSharedObject.getInstance().searchRegions) {
+//                    drawRecRegion(rectRegion);
+//                }
+//            }
 
             drawTrajCPU();
 
@@ -180,6 +191,7 @@ public class RegionSearchApp extends PApplet {
     }
 
     double quality = 0.7;
+    int quadQuality = 4;
 
     @Override
     public void keyPressed() {
@@ -187,6 +199,8 @@ public class RegionSearchApp extends PApplet {
             Scanner scanner = new Scanner(System.in);
             quality = scanner.nextDouble();
             System.out.println("quality selected now: " + quality);
+        } else if (key == 'w') {
+            saveFrame("data/picture/tmp/quality_" + quadQuality + ".png");
         }
     }
 
@@ -202,7 +216,7 @@ public class RegionSearchApp extends PApplet {
     }
 
     private RectRegion getSelectRegion(Position lastClick) {
-        float mapWidth = 1000;
+        float mapWidth = 1200;
         float mapHeight = 800;
 
         int mx = (int) constrain(mouseX, 3, mapWidth - 3);
@@ -313,8 +327,11 @@ public class RegionSearchApp extends PApplet {
             return;
         }
         if (rectRegion == null) {
-            TimeProfileSharedObject.getInstance().trajectoryMetas = trajFull;
+//            TimeProfileSharedObject.getInstance().trajectoryMetas = trajFull;
+            TimeProfileSharedObject.getInstance().trajectoryMetas = new TrajectoryMeta[0];
+
             TimeProfileSharedObject.getInstance().calDone = true;
+
             return;
         }
         new Thread() {

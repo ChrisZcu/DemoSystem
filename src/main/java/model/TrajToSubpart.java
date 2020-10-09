@@ -33,7 +33,7 @@ public final class TrajToSubpart {
     }
 
     public static String serialize(TrajToSubpart tts) {
-        return tts.trajId + "," + tts.beginPosIdx + "," + tts.endPosIdx;
+        return tts.trajId + "," + tts.beginPosIdx + "," + tts.endPosIdx + "," + tts.quality;
     }
 
     public static TrajToSubpart antiSerialize(String str) {

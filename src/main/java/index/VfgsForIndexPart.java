@@ -84,8 +84,8 @@ public class VfgsForIndexPart {
     private static void updateInfluScoreSet(TrajectoryMeta TrajectoryMeta, HashSet<Position> totalScoreSet,
                                             HashSet<Position> influSet, int delta) {
         for (Position position : generatePosList(TrajectoryMeta)) {
-            for (int i = -delta; i < delta; i++) {
-                for (int j = -delta; j < delta; j++) {
+            for (int i = -delta; i <= delta; i++) {
+                for (int j = -delta; j <= delta; j++) {
                     Position position1 = new Position(position.x + i, position.y + j);
                     if (totalScoreSet.contains(position1)) {
                         influSet.add(position1);
