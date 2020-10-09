@@ -1,6 +1,7 @@
 package index;
 
 import app.TimeProfileSharedObject;
+import de.fhpotsdam.unfolding.geo.Location;
 import model.*;
 import processing.core.PApplet;
 
@@ -13,7 +14,7 @@ public class SearchRegionPart extends PApplet {
     private static TrajectoryMeta[] trajMetaFull;
 
     public static TrajectoryMeta[] searchRegion(double minLat, double maxLat, double minLon, double maxLon,
-                                            QuadRegion quadRegion, double quality) {
+                                                QuadRegion quadRegion, double quality) {
         ArrayList<TrajectoryMeta> trajectories = new ArrayList<>();
         Stack<QuadRegion> regionStack = new Stack<QuadRegion>();
         regionStack.push(quadRegion);
@@ -26,6 +27,12 @@ public class SearchRegionPart extends PApplet {
                 if (quadRegionHead.getQuadRegionChildren() == null) {
                     // is leaf.
                     addAllSubMetaTraj(trajectories, quadRegionHead);
+
+                    RectRegion rec = new RectRegion();
+                    rec.initLoc(new Location(quadRegionHead.getMinLat(), quadRegionHead.getMinLon()),
+                            new Location(quadRegionHead.getMaxLat(), quadRegionHead.getMaxLon()));
+                    TimeProfileSharedObject.getInstance().searchRegions.add(rec);
+
                 } else {
                     for (QuadRegion quadRegionTmp : quadRegionHead.getQuadRegionChildren()) {
                         regionStack.push(quadRegionTmp);
@@ -35,10 +42,20 @@ public class SearchRegionPart extends PApplet {
                 //full contain
                 if (isFullContain(minLat, maxLat, minLon, maxLon, quadRegionHead)) {
                     addAllSubMetaTraj(trajectories, quadRegionHead);
+                    RectRegion rec = new RectRegion();
+                    rec.initLoc(new Location(quadRegionHead.getMinLat(), quadRegionHead.getMinLon()),
+                            new Location(quadRegionHead.getMaxLat(), quadRegionHead.getMaxLon()));
+                    TimeProfileSharedObject.getInstance().searchRegions.add(rec);
+
                 } else if (isInteractive(minLat, maxLat, minLon, maxLon, quadRegionHead)) {
                     //interact
                     if (quadRegionHead.getQuadRegionChildren() == null) {
                         addAllSubMetaTraj(trajectories, quadRegionHead);
+                        RectRegion rec = new RectRegion();
+                        rec.initLoc(new Location(quadRegionHead.getMinLat(), quadRegionHead.getMinLon()),
+                                new Location(quadRegionHead.getMaxLat(), quadRegionHead.getMaxLon()));
+                        TimeProfileSharedObject.getInstance().searchRegions.add(rec);
+
                     } else {
                         for (QuadRegion quadRegionTmp : quadRegionHead.getQuadRegionChildren()) {
                             regionStack.push(quadRegionTmp);

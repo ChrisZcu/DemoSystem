@@ -3,6 +3,7 @@ package model;
 public final class TrajToSubpart {
     private final int trajId;     // the id of the ORIGIN traj
     private final int beginPosIdx, endPosIdx;     // the sub part we selected
+    public double quality = 0;
 
     public TrajToSubpart(int trajId, int beginPosIdx, int endPosIdx) {
         this.trajId = trajId;

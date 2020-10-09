@@ -53,8 +53,8 @@ public class QuadTree {
                 float lat = Float.parseFloat(item[j + 1]);
                 float lon = Float.parseFloat(item[j]);
                 //debug
-//                if (lat >41.345 || lat < 40.953 || lon < -8.86 || lon > -8.280) {
-                if (lat < 38.429 || lon > -6.595) {
+                if (lat > 41.345 || lat < 40.953 || lon < -8.86 || lon > -8.280) {
+//                if (lat < 38.429 || lon > -6.595) {
                     j = item.length;
                     next = true;
                     continue;
@@ -72,7 +72,6 @@ public class QuadTree {
                 maxGLat = Math.max(lat, maxGLat);
                 minGLon = Math.min(lon, minGLon);
                 maxGLon = Math.max(lon, maxGLon);
-
             }
 //
             if (next) {
@@ -105,7 +104,6 @@ public class QuadTree {
                                                  TrajectoryMeta[] trajFull) {
         RectRegion rectRegion = new RectRegion();
         rectRegion.initLoc(new Location(minLat, minLon), new Location(maxLat, maxLon));
-//        System.out.println(H + " :(" + minLat + ", " + maxLat + ", " + minLon + ", " + maxLon + ")");
         TimeProfileSharedObject.getInstance().addQuadRectRegion(rectRegion);
         QuadRegion quadRegion = new QuadRegion(minLat, maxLat, minLon, maxLon);
         TrajToQuality[] trajToQualities = VfgsForIndex.getVfgs(trajFull);
@@ -134,7 +132,6 @@ public class QuadTree {
                                                        TrajectoryMeta[] trajMetaList, int delta) {
         RectRegion rectRegion = new RectRegion();
         rectRegion.initLoc(new Location(minLat, minLon), new Location(maxLat, maxLon));
-//        System.out.println(H + " :(" + minLat + ", " + maxLat + ", " + minLon + ", " + maxLon + ")");
         TimeProfileSharedObject.getInstance().addQuadRectRegion(rectRegion);
         QuadRegion quadRegion = new QuadRegion(minLat, maxLat, minLon, maxLon);
 
@@ -169,6 +166,7 @@ public class QuadTree {
                 }
             }
         }
+//        return res.toArray(new TrajectoryMeta[0]);
         return cutTrajsPos(res.toArray(new TrajectoryMeta[0]), minLat, maxLat, minLon, maxLon);
     }
 
@@ -192,32 +190,34 @@ public class QuadTree {
     /**
      * Divide traj into trajMeta according to the giving region.
      */
-    private static ArrayList<TrajectoryMeta> getRegionInTrajPos(TrajectoryMeta traj, double minLat, double maxLat, double minLon, double maxLon) {
+    private static ArrayList<TrajectoryMeta> getRegionInTrajPos(TrajectoryMeta traj,
+                                                                double minLat, double maxLat, double minLon, double maxLon) {
         ArrayList<TrajectoryMeta> res = new ArrayList<>();
         int trajId = traj.getTrajId();
         List<Position> partPosList = generatePosList(traj);
+
         for (int i = 0; i < partPosList.size(); i++) {
             if (inCheck(partPosList.get(i), minLat, maxLat, minLon, maxLon)) {
                 TrajectoryMeta trajTmp = new TrajectoryMeta(trajId);
                 /* add */
                 int begin = i;
-                trajTmp.setBegin(i);
+//                trajTmp.setBegin(i);
+                trajTmp.setBegin(i + traj.getBegin());
                 /* add end */
                 Position position = partPosList.get(i++);
-                ArrayList<Position> locTmp = new ArrayList<>();
                 while (inCheck(position, minLat, maxLat, minLon, maxLon) && i < partPosList.size()) {
-                    locTmp.add(position);
                     position = partPosList.get(i++);
                 }
-                trajTmp.setPositions(locTmp.toArray(new Position[0]));
                 /* add */
-                if (i - 1 - begin != locTmp.size()) {
-                    System.err.println("Error!");
-                }
+//                if (i - 1 - begin != locTmp.size()) {
+//                    System.err.println("Error!");
+//                }
                 trajTmp.setScore(i - 1 - begin);
-                trajTmp.setEnd(i - 1);
+                trajTmp.setEnd(i - 1 + traj.getBegin());
                 /* add end */
                 res.add(trajTmp);
+
+                i = partPosList.size() + 1;
             }
         }
         return res;
@@ -342,12 +342,19 @@ public class QuadTree {
             // is root
             List<String> strList = loadOneStrList(lit);
             QuadRegion root = QuadRegion.antiSerialize(strList);
-            root.setLocation(minGLat, maxGLat, minGLon, maxGLon);
+            root.setLocation(38.53193, 42.11044, -9.44656, -6.696539);
+
+            RectRegion rectRegion = new RectRegion();
+            rectRegion.initLoc(new Location(38.53193, -9.44656), new Location(42.11044, -6.696539));
+            TimeProfileSharedObject.getInstance().addQuadRectRegion(rectRegion);
+
             if (lit.hasNext()) {
                 // has next level
                 QuadRegion[] nxtParents = new QuadRegion[]{root};
                 loadLevelRecurse(lit, nxtParents);
             }
+
+
             return root;
         }
 

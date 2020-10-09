@@ -30,7 +30,7 @@ public class ScreenShot extends PApplet {
 
     private String filePath = fullFile;
 
-    int wight = 1000, hight = 800;
+    int wight = 1200, hight = 800;
 
     @Override
     public void settings() {
@@ -76,9 +76,7 @@ public class ScreenShot extends PApplet {
     int zoomCheck = -1;
     Location centerCheck = new Location(-1, -1);
 
-    String[] locationName = new String[]{
-            "P0", "P6", "A", "B"
-    };
+
     Location[] totalLocationList = {
             new Location(41.150, -8.639), new Location(41.183, -8.608),
             new Location(41.194, -8.665), new Location(41.164, -8.584),
@@ -92,11 +90,37 @@ public class ScreenShot extends PApplet {
             new Location(41.202, -8.324), new Location(41.067, -8.295),
             new Location(41.202, -8.301), new Location(41.207, -8.532)
     };
+    //    private String[] locationName = new String[]{
+//            "P0", "P6", "A", "B"
+//    };
+//    private Location[] centerList = {
+//            new Location(41.150, -8.639), new Location(41.236, -8.623),
+//            new Location(41.202, -8.301), new Location(41.207, -8.532)
+//    };
     private Location[] centerList = {
-            new Location(41.150, -8.639), new Location(41.236, -8.623),
-            new Location(41.202, -8.301), new Location(41.207, -8.532)
+            new Location(41.183, -8.608),
+            new Location(41.194, -8.665), new Location(41.164, -8.584),
+            new Location(41.128, -8.611), new Location(41.202, -8.565),
+            new Location(41.182, -8.508),
+            new Location(41.069, -8.644), new Location(41.075, -8.570),
+            new Location(41.008, -8.642), new Location(40.997, -8.525),
+            new Location(41.113, -8.491), new Location(41.234, -8.537),
+            new Location(41.290, -8.682), new Location(41.330, -8.562),
+            new Location(41.183, -8.409), new Location(41.276, -8.378),
+            new Location(41.202, -8.324), new Location(41.067, -8.295),
     };
-
+    String[] locationName = {
+            "P1",
+            "P2", "P3",
+            "P4", "P5",
+            "P7",
+            "P8", "P9",
+            "P10", "P11",
+            "P12", "P13",
+            "P14", "P15",
+            "P16", "P17",
+            "P18", "P19"
+    };
     private int curCenterId = 0;
     private PImage mapImage = null;
 
@@ -106,11 +130,11 @@ public class ScreenShot extends PApplet {
     Trajectory[] trajShow;
 
 
-    private boolean isGlobal = false;
-    private int alg = 2;//0 for full, 1 for random, 2 for vfgs
+    private boolean isGlobal = true;
+    private int alg = 0;//0 for full, 1 for random, 2 for vfgs
     private int vfgsDeltaId = 0;
 
-    private int[] deltaList = {1, 4};
+    private int[] deltaList = {0, 32};
 
     @Override
     public void draw() {
@@ -129,10 +153,10 @@ public class ScreenShot extends PApplet {
                 map.draw();
                 map.draw();
                 map.draw();
-
             }
         } else {
             if (isDataLoadDone) {
+                System.out.println("calculating......");
                 StringBuilder name = new StringBuilder();
                 if (isGlobal) {
                     name.append("global_");
@@ -165,18 +189,12 @@ public class ScreenShot extends PApplet {
                     name.append("random_");
                 } else {
                     name.append("vfgs").append(deltaList[vfgsDeltaId]).append("_");
-                    /*
-                    if (vfgsDeltaId == 0) {
-                        name.append("vfgs0_");
-                    } else {
-                        name.append("vfgs32_");
-                    }
-                     */
+
                 }
-                name.append("rate0.01_");
+                name.append("rate0.01_threshold_trajNo").append(trajShow.length).append("_");
                 System.out.println("drawing......");
                 drawTraj(trajShow);
-                String picPath = "data/picture/20201008/" + zoomLevel + "/" + locationName[curCenterId] + "/"
+                String picPath = "data/picture/20201009/" + zoomLevel + "/" + locationName[curCenterId] + "/"
                         + name.toString() + ".png";
                 saveFrame(picPath);
                 System.out.println(picPath + ", number: " + trajShow.length + " done");
@@ -268,23 +286,24 @@ public class ScreenShot extends PApplet {
             return length;
         else if (length * rate < 2500)
             return 2500;
-        else return (int) (length * rate);
+        else
+        return (int) (length * rate);
     }
 
 
     private boolean isRegionDone() {
         if (!isGlobal && alg == 2 && vfgsDeltaId == deltaList.length - 1) {
-            alg = 2;
+            alg = 0;
             vfgsDeltaId = 0;
-            isGlobal = false;
+            isGlobal = true;
             return true;
         }
         if (isGlobal) {
-            if (alg < 2) { // not done
+            if (alg < 2) { // global not done
                 alg++;
             } else if (alg == 2) {
                 if (vfgsDeltaId == deltaList.length - 1) {// global vfgs+32 0.01 done
-                    alg = 2;
+                    alg = 0;
                     vfgsDeltaId = 0;
                     isGlobal = false;
                     return false;
