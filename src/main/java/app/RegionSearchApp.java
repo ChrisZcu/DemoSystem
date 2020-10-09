@@ -190,8 +190,8 @@ public class RegionSearchApp extends PApplet {
         TimeProfileSharedObject.getInstance().trajImageMtx = new PGraphics[0];
     }
 
-    double quality = 0.7;
-    int quadQuality = 4;
+    private double quality = 0.7;
+    private int quadQuality = 4;
 
     @Override
     public void keyPressed() {

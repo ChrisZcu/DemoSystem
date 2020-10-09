@@ -149,10 +149,12 @@ public class TrajDrawWorkerSingleMap extends Thread {
                 pg.endShape();
             }
             */
+            int cnt = 0;
             ArrayList<ArrayList<ScreenPosition>> trajPointList = new ArrayList<>();
             for (int i = begin; i < end; i++) {
                 ArrayList<ScreenPosition> pointList = new ArrayList<>();
                 for (Position pos : generatePosList(trajMetaList[i])) {
+                    cnt += 1;
                     if (this.stop) {
                         System.out.println(this.getName() + " cancel");
                         return;
@@ -174,10 +176,12 @@ public class TrajDrawWorkerSingleMap extends Thread {
                         return;
                     }
                     pg.vertex(pos.x, pos.y);
+//                    pg.point(pos.x, pos.y);
+//                    System.out.println(pos.x + ", " + pos.y);
                 }
                 pg.endShape();
             }
-
+            System.out.println("point num: " + cnt);
             System.out.println(">>>>render time: " + (System.currentTimeMillis() - t0) + " ms");
             TimeProfileSharedObject.getInstance().drawDone = true;
             TimeProfileSharedObject.getInstance().setTrajMatrix(pg, id);

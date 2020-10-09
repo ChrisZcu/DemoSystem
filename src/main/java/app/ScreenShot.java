@@ -101,9 +101,9 @@ public class ScreenShot extends PApplet {
             new Location(41.183, -8.608),
             new Location(41.194, -8.665), new Location(41.164, -8.584),
             new Location(41.128, -8.611), new Location(41.202, -8.565),
-            new Location(41.182, -8.508),
+            new Location(41.236, -8.623), new Location(41.182, -8.508),
             new Location(41.069, -8.644), new Location(41.075, -8.570),
-            new Location(41.008, -8.642), new Location(40.997, -8.525),
+            new Location(40.997, -8.525),
             new Location(41.113, -8.491), new Location(41.234, -8.537),
             new Location(41.290, -8.682), new Location(41.330, -8.562),
             new Location(41.183, -8.409), new Location(41.276, -8.378),
@@ -113,26 +113,26 @@ public class ScreenShot extends PApplet {
             "P1",
             "P2", "P3",
             "P4", "P5",
-            "P7",
+            "P6", "P7",
             "P8", "P9",
-            "P10", "P11",
+            "P11",
             "P12", "P13",
             "P14", "P15",
             "P16", "P17",
             "P18", "P19"
     };
-    private int curCenterId = 9;
     private PImage mapImage = null;
 
-    private int zoomLevel = 11;
 
     private HashSet<Integer>[] vfgsSet;
     Trajectory[] trajShow;
 
 
-    private boolean isGlobal = false;
-    private int alg = 2;//0 for full, 1 for random, 2 for vfgs
+    private boolean isGlobal = true;
+    private int alg = 0;//0 for full, 1 for random, 2 for vfgs
     private int vfgsDeltaId = 0;
+    private int curCenterId = 0;
+    private int zoomLevel = 11;
 
     private int[] deltaList = {0, 32};
 
