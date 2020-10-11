@@ -5,7 +5,10 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
-import model.Trajectory;
+import index.QuadTree;
+import index.SearchRegion;
+import index.SearchRegionPart;
+import model.*;
 import processing.core.PApplet;
 import processing.core.PImage;
 import util.PSC;
@@ -15,9 +18,8 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Random;
+import java.util.*;
+import java.util.List;
 
 public class ScreenShot extends PApplet {
     //    private Trajectory[] trajShow;
@@ -56,17 +58,32 @@ public class ScreenShot extends PApplet {
         new Thread() {
             @Override
             public void run() {
-                trajFull = loadData(filePath);
-                isDataLoadDone = true;
-                System.out.println("Total data load done: " + trajFull.length);
+//                trajFull = loadData(filePath);
+                trajMetaFull = QuadTree.loadData(new double[4], filePath);
+                TimeProfileSharedObject.getInstance().trajMetaFull = trajMetaFull;
+                QuadTree.trajMetaFull = trajMetaFull;
+
+                System.out.println("total load done: " + trajMetaFull.length);
+//                System.out.println("Total data load done: " + trajFull.length);
                 vfgsSet = new HashSet[2];
 
-                vfgsSet[0] = loadVfgs("data/GPS/vfgs_0.txt", 0.01);
-                vfgsSet[1] = loadVfgs("data/GPS/vfgs_32.txt", 0.01);
+//                vfgsSet[0] = loadVfgs("data/GPS/vfgs_0.txt", 0.01);
+//                vfgsSet[1] = loadVfgs("data/GPS/vfgs_32.txt", 0.01);
 
+                String quadFilePath = "data/GPS/QuadTreeIndex/quad_tree_quality" + quadQuality + "_info.txt";
+                QuadTree.loadTreeFromFile(quadFilePath);
+                quadRegionRoot = QuadTree.quadRegionRoot;
+
+//                baseLine = loadVfgs("data/GPS/dwt_24k.txt", 0.01);
+
+                System.out.println("index done");
+                isDataLoadDone = true;
             }
         }.start();
     }
+
+    HashSet<Integer> baseLine;
+    QuadRegion quadRegionRoot = null;
 
     @Override
     public void mousePressed() {
@@ -97,42 +114,61 @@ public class ScreenShot extends PApplet {
 //            new Location(41.150, -8.639), new Location(41.236, -8.623),
 //            new Location(41.202, -8.301), new Location(41.207, -8.532)
 //    };
-    private Location[] centerList = {
-            new Location(41.183, -8.608),
-            new Location(41.194, -8.665), new Location(41.164, -8.584),
-            new Location(41.128, -8.611), new Location(41.202, -8.565),
-            new Location(41.236, -8.623), new Location(41.182, -8.508),
-            new Location(41.069, -8.644), new Location(41.075, -8.570),
-            new Location(40.997, -8.525),
-            new Location(41.113, -8.491), new Location(41.234, -8.537),
-            new Location(41.290, -8.682), new Location(41.330, -8.562),
-            new Location(41.183, -8.409), new Location(41.276, -8.378),
-            new Location(41.202, -8.324), new Location(41.067, -8.295),
-    };
+//    private Location[] centerList = {
+//            new Location(41.183, -8.608),
+//            new Location(41.194, -8.665), new Location(41.164, -8.584),
+//            new Location(41.128, -8.611), new Location(41.202, -8.565),
+//            new Location(41.236, -8.623), new Location(41.182, -8.508),
+//            new Location(41.069, -8.644), new Location(41.075, -8.570),
+//            new Location(40.997, -8.525),
+//            new Location(41.113, -8.491), new Location(41.234, -8.537),
+//            new Location(41.290, -8.682), new Location(41.330, -8.562),
+//            new Location(41.183, -8.409), new Location(41.276, -8.378),
+//            new Location(41.202, -8.324), new Location(41.067, -8.295),
+//    };
+//    String[] locationName = {
+//            "P1",
+//            "P2", "P3",
+//            "P4", "P5",
+//            "P6", "P7",
+//            "P8", "P9",
+//            "P11",
+//            "P12", "P13",
+//            "P14", "P15",
+//            "P16", "P17",
+//            "P18", "P19"
+//    };
+    private Location[] centerList = totalLocationList;
+
     String[] locationName = {
-            "P1",
+            "P0", "P1",
             "P2", "P3",
             "P4", "P5",
             "P6", "P7",
             "P8", "P9",
-            "P11",
+            "P10", "P11",
             "P12", "P13",
             "P14", "P15",
             "P16", "P17",
-            "P18", "P19"
+            "P18", "P19",
+            "A", "B"
     };
+
     private PImage mapImage = null;
 
 
     private HashSet<Integer>[] vfgsSet;
     Trajectory[] trajShow;
+    TrajectoryMeta[] trajShowMeta;
 
 
-    private boolean isGlobal = true;
-    private int alg = 0;//0 for full, 1 for random, 2 for vfgs
+    private boolean isGlobal = false;
+    private int alg = 3;//0 for full, 1 for random, 2 for vfgs, 3 for solutionX, 4 for baseline
     private int vfgsDeltaId = 0;
-    private int curCenterId = 0;
-    private int zoomLevel = 11;
+
+    int quadQuality = 0;
+    private int curCenterId = 5;
+    private int zoomLevel = 12;
 
     private int[] deltaList = {0, 32};
 
@@ -164,41 +200,66 @@ public class ScreenShot extends PApplet {
                         trajShow = trajFull;
                     } else if (alg == 1) {//random
                         trajShow = getRandom(trajFull, 0.01);
-                    } else {
+                    } else if (alg == 2) {
                         trajShow = getVfgsTraj(trajFull, vfgsSet[vfgsDeltaId]);
+                    } else if (alg == 4) {
+                        trajShow = getVfgsTraj(trajFull, baseLine);
                     }
                 } else {
                     name.append("local_");
                     Location leftTop = map.getLocation(0, 0);
                     Location rightBtm = map.getLocation(wight, hight);
-                    Trajectory[] waypoint = getWayPointPos(trajFull, leftTop.getLat(), rightBtm.getLat(),
-                            leftTop.getLon(), rightBtm.getLon());
-                    if (alg == 0) {//full
-                        trajShow = waypoint;
-                    } else if (alg == 1) {//random
-                        trajShow = getRandom(waypoint, 0.01);
-                    } else {//vfgs
-                        trajShow = VFGS.getCellCover(waypoint, mapClone, 0.01, deltaList[vfgsDeltaId]);
+
+                    if (alg == 3) {
+                        RectRegion rectRegion = new RectRegion();
+                        rectRegion.initLoc(leftTop, rightBtm);
+                        double leftLat = rectRegion.getLeftTopLoc().getLat();
+                        double leftLon = rectRegion.getLeftTopLoc().getLon();
+                        double rightLon = rectRegion.getRightBtmLoc().getLon();
+                        double rightLat = rectRegion.getRightBtmLoc().getLat();
+
+                        double minLat = Math.min(leftLat, rightLat);
+                        double maxLat = Math.max(leftLat, rightLat);
+                        double minLon = Math.min(leftLon, rightLon);
+                        double maxLon = Math.max(leftLon, rightLon);
+
+                        trajShowMeta = SearchRegionPart.searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, 1);
+                    } else {
+                        Trajectory[] waypoint = getWayPointPos(trajFull, leftTop.getLat(), rightBtm.getLat(),
+                                leftTop.getLon(), rightBtm.getLon());
+                        if (alg == 0) {//full
+                            trajShow = waypoint;
+                        } else if (alg == 1) {//random
+                            trajShow = getRandom(waypoint, 0.01);
+                        } else if (alg == 2) {//vfgs
+                            trajShow = VFGS.getCellCover(waypoint, mapClone, 0.01, deltaList[vfgsDeltaId]);
+                        }
                     }
                 }
-
 
                 if (alg == 0) {
                     name.append("full_");
                 } else if (alg == 1) {
                     name.append("random_");
-                } else {
+                } else if (alg == 2) {
                     name.append("vfgs").append(deltaList[vfgsDeltaId]).append("_");
-
+                } else if (alg == 3) {
+                    name.append("solutionX").append(quadQuality).append("_trajNo").append(trajShowMeta.length).append("_");
+                } else if (alg == 4) {
+                    name.append("baseLine_");
                 }
-                name.append("rate0.01_threshold_trajNo").append(trajShow.length).append("_");
                 System.out.println("drawing......");
-                drawTraj(trajShow);
-                String picPath = "data/picture/20201009/" + zoomLevel + "/" + locationName[curCenterId] + "/"
+
+                if (alg == 3) {
+                    drawTraj(trajShowMeta);
+                } else {
+                    name.append("rate0.01_threshold_trajNo").append(trajShow.length).append("_");
+                    drawTraj(trajShow);
+                }
+                String picPath = "data/picture/20201011XFinal/" + zoomLevel + "/" + locationName[curCenterId] + "/"
                         + name.toString() + ".png";
                 saveFrame(picPath);
-                System.out.println(picPath + ", number: " + trajShow.length + " done");
-
+                System.out.println(picPath + ", number: " + trajShowMeta.length + " done");
                 if (isRegionDone()) {
                     mapChage();
                 }
@@ -292,6 +353,9 @@ public class ScreenShot extends PApplet {
 
 
     private boolean isRegionDone() {
+        if (alg == 4 || alg == 3) {
+            return true;
+        }
         if (!isGlobal && alg == 2 && vfgsDeltaId == deltaList.length - 1) {
             alg = 0;
             vfgsDeltaId = 0;
@@ -343,7 +407,7 @@ public class ScreenShot extends PApplet {
     private void drawTraj(Trajectory[] trajectories) {
         noFill();
         strokeWeight(1);
-        stroke(new Color(190, 46, 29).getRGB());
+        stroke(new Color(255, 0, 0).getRGB());
 
         for (Trajectory trajectory : trajectories) {
             beginShape();
@@ -354,6 +418,36 @@ public class ScreenShot extends PApplet {
             endShape();
         }
     }
+
+    private void drawTraj(TrajectoryMeta[] trajectoryMetas) {
+        noFill();
+        strokeWeight(1);
+        stroke(new Color(255, 0, 0).getRGB());
+
+        for (TrajectoryMeta trajectoryMeta : trajectoryMetas) {
+            beginShape();
+            for (Position pos : generatePosList(trajectoryMeta)) {
+                Location loc = new Location(pos.x / 100000.0, pos.y / 100000.0);
+                ScreenPosition screenPos = map.getScreenPosition(loc);
+                vertex(screenPos.x, screenPos.y);
+            }
+            endShape();
+        }
+    }
+
+    private List<Position> generatePosList(TrajectoryMeta trajMeta) {
+        int trajId = trajMeta.getTrajId();
+        int begin = trajMeta.getBegin();
+        int end = trajMeta.getEnd();      // notice that the end is included
+
+//        return Arrays.asList(trajMetaFull[trajId].getPositions());
+        return Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin - 1 > 0 ? begin - 1 : begin,
+                Math.min(trajMetaFull[trajId].getPositions().length, end + 1));
+
+//        return Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1);
+    }
+
+    TrajectoryMeta[] trajMetaFull;
 
     private HashSet<Integer> loadVfgs(String filePath, double rate) {
         ArrayList<String> vfgsStr = new ArrayList<>();

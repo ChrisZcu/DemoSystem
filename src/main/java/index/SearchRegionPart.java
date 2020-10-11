@@ -80,7 +80,8 @@ public class SearchRegionPart extends PApplet {
     }
 
     private static boolean isContained(double minLat, double maxLat, double minLon, double maxLon, QuadRegion quadRegion) {//quadregion is large
-        return minLat > quadRegion.getMinLat() && maxLat < quadRegion.getMaxLat() && minLon > quadRegion.getMinLon() && maxLon < quadRegion.getMaxLon();
+        return minLat >= quadRegion.getMinLat() && maxLat <= quadRegion.getMaxLat()
+                && minLon >= quadRegion.getMinLon() && maxLon <= quadRegion.getMaxLon();
     }
 
     private static boolean isFullContain(double minLat, double maxLat, double minLon, double maxLon, QuadRegion

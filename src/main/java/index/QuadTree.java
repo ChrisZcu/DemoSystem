@@ -24,6 +24,8 @@ public class QuadTree {
     public QuadTree() {
     }
 
+    private static double preSion = 100000.0;
+
     public static TrajectoryMeta[] loadData(double[] latLon, String filePath) {
         TrajectoryMeta[] trajFull;
         ArrayList<String> trajFullStr = new ArrayList<>();
@@ -67,7 +69,7 @@ public class QuadTree {
 //                    continue;
 //                }
 
-                positions[j / 2] = new Position((int) (lat * 10000), (int) (lon * 10000));
+                positions[j / 2] = new Position((int) (lat * preSion), (int) (lon * preSion));
 
                 minGLat = Math.min(lat, minGLat);
                 maxGLat = Math.max(lat, maxGLat);
@@ -172,10 +174,9 @@ public class QuadTree {
     }
 
     private static boolean inCheck(Position position, double minLat, double maxLat, double minLon, double maxLon) {
-        return position.x / 10000.0 >= minLat && position.x / 10000.0 <= maxLat
-                && position.y / 10000.0 >= minLon && position.y / 10000.0 <= maxLon;
+        return position.x / preSion >= minLat && position.x / preSion <= maxLat
+                && position.y / preSion >= minLon && position.y / preSion <= maxLon;
     }
-
 
     /**
      * Run {@link #getRegionInTrajPos} (which cut the traj into subpart) on all trajs.
@@ -421,6 +422,7 @@ public class QuadTree {
             storeFilePath = args[1];
             height = Integer.parseInt(args[2]);
             delta = Integer.parseInt(args[3]);
+            preSion = Double.parseDouble(args[4]);
         }
         TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
 

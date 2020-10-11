@@ -174,6 +174,33 @@ public class VFGS {
         return totalScore / totalPositionSet.size();
     }
 
+    public static double getQuality(Trajectory[] origin, Trajectory[] res, UnfoldingMap map, int zoomLevel, int delta) {
+        map.zoomAndPanTo(zoomLevel, new Location(41.315205, -8.629877));
+//        System.out.println(map.getZoomLevel() + ", " + delta + "......");
+
+        HashSet<Position> totalPositionSet = getPositionSet(origin, map);
+        HashSet<Position> trajSet = new HashSet<>();
+
+        double totalScore = 0;
+        for (Trajectory traj : res) {
+            for (Location loc : traj.locations) {
+                ScreenPosition pos = map.getScreenPosition(loc);
+                for (int i = -delta; i < delta + 1; i++) {
+                    for (int j = -delta; j < delta + 1; j++) {
+                        Position position = new Position(pos.x + i, pos.y + j);
+                        if (!trajSet.contains(position) && totalPositionSet.contains(position)) {
+                            trajSet.add(position);
+                            totalScore++;
+                        }
+                    }
+                }
+            }
+        }
+        if (totalPositionSet.size() == 0)
+            return 0;
+        return totalScore / totalPositionSet.size();
+    }
+
     private static HashSet<Position> getPositionSet(Trajectory[] trajectories, UnfoldingMap map) {
         HashSet<Position> totalSet = new HashSet<>();
         for (Trajectory traj : trajectories) {
