@@ -49,7 +49,8 @@ public class TimeProfileWorker extends Thread {
     public void run() {
         try {
             if (!isMeta) {
-                Trajectory[] res = getWayPointPos();
+                Trajectory[] res = getWayPoint();
+//                Trajectory[] res = getWayPointPos();
                 TimeProfileSharedObject.getInstance().trajRes[id] = res;
             } else {
                 TimeProfileSharedObject.getInstance().trajMetaRes[id] = getWayPointPosMeta();

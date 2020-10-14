@@ -52,6 +52,59 @@ public class VfgsForIndexPart {
                         updateInfluScoreSet(trajMeta, totalScoreSet, influScoreSet, delta);
                         TrajToSubpart trajToSubpart = new TrajToSubpart(trajMeta.getTrajId(), trajMeta.getBegin(), trajMeta.getEnd());
                         trajToSubpart.quality = influScoreSet.size() * 1.0 / totalScore;
+                        System.out.println(trajMeta.getTrajId() + ", " + influScoreSet.size() + ", " + totalScore + ", " + influScoreSet.size() * 1.0 / totalScore);
+                        vfgsTraj.add(trajToSubpart);
+                        if (influScoreSet.size() >= totalScore) {
+                            i = trajMetaList.length + 1;
+                        }
+                        break;
+                    } else {
+                        greedyChooseMeta.orderAdjust();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+//        System.out.printf(">>> select %d out of %d by VfgsForIndexPart%n", vfgsTraj.size(), trajMetaList.length);
+        return vfgsTraj.toArray(new TrajToSubpart[0]);
+    }
+
+    public static TrajToSubpart[] getVfgs(TrajectoryMeta[] trajMetaList, int delta, double quality) {
+        trajMetaFull = TimeProfileSharedObject.getInstance().trajMetaFull;
+
+        ArrayList<TrajToSubpart> vfgsTraj = new ArrayList<>();
+        try {
+
+            HashSet<Position> totalScoreSet = getTotalScore(trajMetaList);
+            int totalScore = (int) (totalScoreSet.size() * quality);
+
+//            int limit = getRealSize(trajMetaList.length);
+/*
+            System.out.println("--------------------------------------------------");
+            System.out.println("total score: " + totalScoreSet.size());
+            System.out.println(trajMetaList.length);
+            System.out.println(limit);
+            System.out.println("--------------------------------------------------");
+*/
+//            if (limit == trajMetaList.length) {
+//                for (TrajectoryMeta trajMeta : trajMetaList) {
+//                    vfgsTraj.add(new TrajToSubpart(trajMeta.getTrajId(), trajMeta.getBegin(), trajMeta.getEnd()));
+//                }
+//                return vfgsTraj.toArray(new TrajToSubpart[0]);
+//            }
+
+            GreedyChooseMeta greedyChooseMeta = new GreedyChooseMeta(trajMetaList.length);
+            trajScoreInit(trajMetaList, greedyChooseMeta);
+            HashSet<Position> influScoreSet = new HashSet<>();
+            for (int i = 0; i < trajMetaList.length; i++) {
+                while (true) {
+                    updateTrajScore(greedyChooseMeta.getHeapHead(), influScoreSet);
+                    if (greedyChooseMeta.GreetOrder()) {
+                        TrajectoryMeta trajMeta = greedyChooseMeta.getMaxScoreTraj();
+                        updateInfluScoreSet(trajMeta, totalScoreSet, influScoreSet, delta);
+                        TrajToSubpart trajToSubpart = new TrajToSubpart(trajMeta.getTrajId(), trajMeta.getBegin(), trajMeta.getEnd());
+//                        trajToSubpart.quality = influScoreSet.size() * 1.0 / totalScore;
                         vfgsTraj.add(trajToSubpart);
                         if (influScoreSet.size() >= totalScore) {
                             i = trajMetaList.length + 1;

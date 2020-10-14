@@ -7,104 +7,80 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
-import index.QuadTree;
-import model.Position;
-import model.TrajToSubpart;
+import model.RectRegion;
 import model.Trajectory;
-import model.TrajectoryMeta;
 import processing.core.PApplet;
 import processing.opengl.PJOGL;
+import select.TimeProfileManager;
 import util.PSC;
 
-import javax.transaction.TransactionRequiredException;
-import java.awt.*;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Random;
 
-public class RenderTimeCalculate extends PApplet {
-
-    UnfoldingMap map;
-    int wight = 1200, hight = 800;
-    private String fullFile = "data/GPS/porto_full.txt";
-
+public class TimeRecord20201012 extends PApplet {
     Trajectory[] trajFull;
-    private String filePath = fullFile;
+    UnfoldingMap map;
+    UnfoldingMap mapClone;
 
     @Override
     public void settings() {
-        size(wight, hight, P2D);
+        size(1200, 800, P2D);
     }
 
     @Override
     public void setup() {
         map = new UnfoldingMap(this, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
         map.setZoomRange(0, 20);
+        map.zoomAndPanTo(12, new Location(41.150, -8.639));
         map.setBackgroundColor(255);
-//        map.zoomAndPanTo(11, new Location(22.717, 114.269));
-        map.zoomAndPanTo(11, new Location(30.658524, 104.065747));
         MapUtils.createDefaultEventDispatcher(this, map);
 
+        mapClone = new UnfoldingMap(this, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
+        mapClone.setZoomRange(0, 20);
+        mapClone.zoomAndPanTo(20, new Location(41.150, -8.639));
 
-        new Thread() {
-            @Override
-            public void run() {
-                String porto = "data/GPS/porto_full.txt";
-                String cdPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\cd_new_score.txt";
-                loadData(cdPath);
-                vqgs = loadVqgs("data/GPS/cd/cd_vfgs_0.txt");
-                System.out.println("load done");
-                isTotalLoad = true;
-                gl3 = ((PJOGL) beginPGL()).gl.getGL3();
-                endPGL();//?
-            }
-        }.start();
+        String partPorto = "data/GPS/Porto5w/Porto5w.txt";
+        String fullPorto = "data/GPS/porto_full.txt";
+        loadData(fullPorto);
 
+        rectRegion = new RectRegion();
+        rectRegion.initLoc(new Location(map.getLocation(0, 0)), new Location(map.getLocation(1200, 800)));
+
+        long wayPointBegin = System.currentTimeMillis();
+        startCalWayPoint(); //waypoint
+        wayPointCost = (System.currentTimeMillis() - wayPointBegin);
+
+        ArrayList<Trajectory> trajShows = new ArrayList<>();
+        for (Trajectory[] trajList : TimeProfileSharedObject.getInstance().trajRes) {
+            Collections.addAll(trajShows, trajList);
+        }
+        trajWaypoint = trajShows.toArray(new Trajectory[0]);
+
+        System.out.println("waypoint time: " + wayPointCost + ", " + trajWaypoint.length);
+        gl3 = ((PJOGL) beginPGL()).gl.getGL3();
+        endPGL();//?
     }
 
-    int num = 1000000;
-    double[] rateList = {0.01, 0.005, 0.001, 0.0005, 0.0001};
-    int rateId = 0;
+    long wayPointCost;
+    RectRegion rectRegion;
+    Trajectory[] trajWaypoint;
+
+    private void startCalWayPoint() {
+        TimeProfileManager tm = new TimeProfileManager(1, trajFull, rectRegion);
+        tm.startRun();
+    }
 
     @Override
-    public void draw() {
-        if (!map.allTilesLoaded()) {
-            map.draw();
-        } else {
-            if (isTotalLoad) {
-//                Trajectory[] traj = getRandomTraj(num);
-                System.out.println("rendering......");
-//                Trajectory[] traj = trajFull;
-                Trajectory[] traj = loadVqgsTraj(vqgs, rateList[rateId]);
-                long t0 = System.currentTimeMillis();
-                int pointNum = vertexInit(traj);
-                long mappingTime = System.currentTimeMillis() - t0;
-                long t1 = System.currentTimeMillis();
-                drawGPU();
-                long renderTime = System.currentTimeMillis() - t1;
-                System.out.println("trajectory number: " + traj.length + ", " + "point number: " + pointNum + ", mapping time: " +
-                        mappingTime + ", rendering time: " + renderTime + ", total time: " + (mappingTime + renderTime));
-                rateId++;
-                if (rateId == rateList.length) {
-                    exit();
-                }
-//                num *= 10;
-//                if (num > 2000000) {
-//                    System.out.println("Done");
-//                    exit();
-//                }
-//                noLoop();
-            }
-        }
+    public void mousePressed() {
+        System.out.println(mouseX + ", " + mouseY);
     }
-
-    boolean isTotalLoad = false;
 
     private void loadData(String filePath) {
         try {
@@ -125,7 +101,6 @@ public class RenderTimeCalculate extends PApplet {
                 String[] data = item[1].split(",");
                 Trajectory traj = new Trajectory(j);
                 ArrayList<Location> locations = new ArrayList<>();
-//                Position[] metaGPS = new Position[data.length / 2 - 1];
                 for (int i = 0; i < data.length - 2; i = i + 2) {
                     locations.add(new Location(Float.parseFloat(data[i + 1]),
                             Float.parseFloat(data[i])));
@@ -142,86 +117,54 @@ public class RenderTimeCalculate extends PApplet {
         }
     }
 
-    private Trajectory[] getRandomTraj(int number) {
-        Trajectory[] trajectories = new Trajectory[number];
-        Random random = new Random(0);
+    int alg = 1; //0 for full, 1 for random, 2 for vfgs+16, 3 for vfgs+32
 
-        HashSet<Integer> idSet = new HashSet<>(number);
-        while (idSet.size() != number) {
-            idSet.add(random.nextInt(trajFull.length - 1));
-        }
-        int i = 0;
-        for (Integer id : idSet) {
-            trajectories[i++] = trajFull[id];
-        }
-        return trajectories;
+    @Override
+    public void draw() {
+        if (!map.allTilesLoaded()) {
+            map.draw();
+            isFirstClean = true;
+        } else {
+//            if (isFirstClean) {
+//                map.draw();
+//                isFirstClean = false;
+//            }
 
-    }
-
-    int[] vqgs;
-
-    private int[] loadVqgs(String filePath) {
-        int[] vqgs = null;
-        ArrayList<String> tmpList = new ArrayList<>();
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(filePath));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                tmpList.add(line);
+            Trajectory[] trajShow;
+            //alg,waypointCost,algCost,vis,total
+            StringBuilder sb = new StringBuilder().append(alg).append(",").append(wayPointCost).append(",");
+            long algCost = 0;
+            if (alg == 0) {
+                trajShow = trajWaypoint;
+            } else if (alg == 1) { // random
+                long t0 = System.currentTimeMillis();
+                trajShow = getRandomTraj(trajWaypoint, 0.01);
+                algCost = (System.currentTimeMillis() - t0);
+            } else if (alg == 2) {
+                long t0 = System.currentTimeMillis();
+                trajShow = util.VFGS.getCellCover(trajWaypoint, mapClone, 0.01, 16);
+                algCost = (System.currentTimeMillis() - t0);
+            } else {
+                long t0 = System.currentTimeMillis();
+                trajShow = util.VFGS.getCellCover(trajWaypoint, mapClone, 0.01, 32);
+                algCost = (System.currentTimeMillis() - t0);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        vqgs = new int[tmpList.size()];
-        int i = 0;
-        for (String str : tmpList) {
-            vqgs[i++] = Integer.parseInt(str.split(",")[0]);
-        }
-        System.out.println(trajFull.length + ", " + vqgs.length);
-        return vqgs;
-    }
-
-    private Trajectory[] loadVqgsTraj(int[] vqgsList, double rate) {
-        int trajNum = (int) (trajFull.length * rate);
-        Trajectory[] traj = new Trajectory[trajNum];
-        for (int i = 0; i < trajNum; i++) {
-            traj[i] = trajFull[vqgsList[i]];
-        }
-        return traj;
-    }
-
-    private double[] drawTraj(Trajectory[] trajFull) {
-        int pointNum = 0;
-        double[] time = new double[2];
-
-        noFill();
-        strokeWeight(1);
-        stroke(new Color(255, 0, 0).getRGB());
-
-        ArrayList<ArrayList<SolutionXTimeProfile.Point>> pointTraj = new ArrayList<>();
-        long t0 = System.currentTimeMillis();
-        for (Trajectory trajectory : trajFull) {
-            pointNum += trajectory.locations.length;
-            ArrayList<SolutionXTimeProfile.Point> tmpPointList = new ArrayList<>();
-            for (Location loc : trajectory.locations) {
-                ScreenPosition screenPos = map.getScreenPosition(loc);
-                tmpPointList.add(new SolutionXTimeProfile.Point(screenPos.x, screenPos.y));
+            System.out.println(alg + ", trajShow: " + trajShow.length);
+            sb.append(algCost).append(",");
+            long visT0 = System.currentTimeMillis();
+            vertexInit(trajShow);
+//            long mappint = (System.currentTimeMillis() - visT0);
+            drawGPU();
+            long visTime = (System.currentTimeMillis() - visT0);
+//            System.out.println("mapping time: " + mappint);
+            sb.append(visTime).append(",").append((wayPointCost + algCost + visTime));
+            System.out.println(sb.toString());
+//            exit();
+            alg++;
+            if (alg > 3) {
+                exit();
             }
-            pointTraj.add(tmpPointList);
         }
-        time[0] = (System.currentTimeMillis() - t0);
-        long t1 = System.currentTimeMillis();
-        for (ArrayList<SolutionXTimeProfile.Point> points : pointTraj) {
-            beginShape();
-            for (SolutionXTimeProfile.Point point : points) {
-                vertex(point.x, point.y);
-            }
-            endShape();
-        }
-        time[1] = (System.currentTimeMillis() - t1);
-        System.out.println("trajectory number: " + trajFull.length + ", " + "point number: " + pointNum + ", mapping time: " +
-                time[0] + ", rendering time: " + time[1] + ", total time: " + (time[0] + time[1]));
-        return time;
     }
 
     GL3 gl3;
@@ -261,7 +204,7 @@ public class RenderTimeCalculate extends PApplet {
                                 + "layout (location = 1) in vec4 color;"
                                 + "smooth out vec4 theColor;"
                                 + "void main(){"
-                                + "gl_Position.x = position.x / 500.0 - 1;"
+                                + "gl_Position.x = position.x / 600.0 - 1;"
                                 + "gl_Position.y = -1 * position.y / 400.0 + 1;"
                                 + "theColor = color;"
                                 + "}"
@@ -324,20 +267,33 @@ public class RenderTimeCalculate extends PApplet {
                 vertexData[j++] = pos.y;
                 vertexData[j++] = pos2.x;
                 vertexData[j++] = pos2.y;
+//                System.out.println(pos.x);
+//                System.out.println(pos.y);
             }
         }
         return line_count;
     }
 
-    @Override
-    public void mousePressed() {
-        Location location = new Location(mouseX, mouseY);
-        System.out.println(location);
+    private Trajectory[] getRandomTraj(Trajectory[] trajFull, double rate) {
+        int trajNum = (int) (trajFull.length * rate);
+        HashSet<Integer> isSet = new HashSet<>(trajNum);
+        Random random = new Random(0);
+        while (isSet.size() != trajNum) {
+            isSet.add(random.nextInt(trajFull.length - 1));
+        }
+        Trajectory[] trajectories = new Trajectory[trajNum];
+        int i = 0;
+        for (Integer id : isSet) {
+            trajectories[i++] = trajFull[id];
+        }
+        return trajectories;
     }
+
+    private boolean isFirstClean = true;
 
     public static void main(String[] args) {
         PApplet.main(new String[]{
-                RenderTimeCalculate.class.getName()
+                TimeRecord20201012.class.getName()
         });
     }
 }

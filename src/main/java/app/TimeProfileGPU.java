@@ -45,64 +45,23 @@ public class TimeProfileGPU extends PApplet {
         mapClone.setZoomRange(0, 20);
         mapClone.zoomAndPanTo(20, PRESENT);
 
-        int srcX = 0;
-        HashSet<Double> latSet = new HashSet<>();
-
-        for (int i = 0; i < 100; i++) {
-            Location loc = map.getLocation(i, 0);
-            System.out.println(loc.getLon());
-        }
-
-        double latBase = 39.62811;
-        double lonBase = -8.1111;
-        HashSet<Integer> srcXSet = new HashSet<>();
-        int cmt = 0;
-        for (int i = 0; i < 10000; i++) {
-            ScreenPosition src = mapClone.getScreenPosition(new Location((latBase + i / 10000.0), lonBase));
-
-            if (srcXSet.contains((int) src.y)) {
-                System.out.println("Contain!");
-                System.out.println(latBase + ", " + (latBase + i / 10000.0));
-                cmt++;
-            }
-            srcXSet.add((int) src.y);
-        }
-        System.out.println(cmt);
-        exit();
-//        int delta = 4;
-//        String filePath = "data/GPS/vfgs_" + delta + ".txt";
+        int delta = 4;
+        String filePath = "data/GPS/vfgs_" + delta + ".txt";
         loadData("data/GPS/Porto5w/Porto5w.txt");
-//        loadData("data/GPS/porto_full.txt");
-//        Trajectory[] trajectories = loadVfgs("data/GPS/dwt_24k.txt", 0.001);
-//        System.out.println(trajectories.length);
-//        new Thread() {
-//            @Override
-//            public void run() {
-//                for (int i = 11; i < 17; i++) {
-//                    double quality = util.VFGS.getQuality(trajFull, trajectories, mapClone, i, 0);
-//                    System.out.println(quality);
-//                }
-//            }
-//        }.start();
-
+        loadData("data/GPS/porto_full.txt");
+        Trajectory[] trajectories = loadVfgs("data/GPS/dwt_24k.txt", 0.001);
+        System.out.println(trajectories.length);
+        new Thread() {
+            @Override
+            public void run() {
+                for (int i = 11; i < 17; i++) {
+                    double quality = util.VFGS.getQuality(trajFull, trajectories, mapClone, i, 0);
+                    System.out.println(quality);
+                }
+            }
+        }.start();
+//
         //test lat lon
-        Trajectory trajTest = trajFull[0];
-        ScreenPosition posLast = mapClone.getScreenPosition(trajTest.locations[0]);
-        double lastLat = trajTest.locations[0].getLat() * 10000;
-        double lastLon = trajTest.locations[0].getLon() * 10000;
-
-        for (int i = 1; i < trajTest.locations.length; i++) {
-            ScreenPosition posCur = mapClone.getScreenPosition(trajTest.locations[i]);
-            double curLat = trajTest.locations[i].getLat() * 10000;
-            double curLon = trajTest.locations[i].getLon() * 10000;
-
-            System.out.println((curLat - lastLat) + ", " + (curLon - lastLon) + ", "
-                    + (posCur.x - posLast.x) + ", " + (posCur.y - posLast.y));
-            lastLat = curLat;
-            lastLon = curLon;
-            posLast = posCur;
-        }
-        exit();
 
         /*
         double[] rate = {0.01, 0.005, 0.001, 0.0005, 0.0001};
@@ -121,13 +80,13 @@ public class TimeProfileGPU extends PApplet {
 
 //        loadData("data/GPS/Porto5w/Porto5w.txt");
 //
-//        initRandomIdList();
-//        loadRandomTrajList();
-//        VFGSIdList = loadVfgs("data/GPS/vfgs_0.csv");
-//        loadTrajList();
-//
-//        gl3 = ((PJOGL) beginPGL()).gl.getGL3();
-//        endPGL();//?
+        initRandomIdList();
+        loadRandomTrajList();
+        VFGSIdList = loadVfgs("data/GPS/vfgs_0.csv");
+        loadTrajList();
+
+        gl3 = ((PJOGL) beginPGL()).gl.getGL3();
+        endPGL();//?
     }
 
     private int ZOOMLEVEL = 11;
@@ -147,139 +106,136 @@ public class TimeProfileGPU extends PApplet {
     private RectRegion rectRegion = new RectRegion();
 
 
-//    @Override
-//    public void draw() {
-//
-//        if (!map.allTilesLoaded()) {
-//            map.draw();
-//        } else {
-//
-//            map.zoomAndPanTo(ZOOMLEVEL, rectRegionLoc[rectRegionID]);
-//            map.draw();
-//
-//            if (alg == 0) {
-//                deltaList = new int[]{0};
-////            } else {
-////                deltaList = new int[]{0, 4, 8, 16, 32, 64};
-//            }
-//            float x = (float) (500 * recNumId);
-//            float y = (float) (400 * recNumId);
-//            rectRegion.setLeftTopLoc(map.getLocation(500 - x, 400 - y));
-//            rectRegion.setRightBtmLoc(map.getLocation(500 + x, 400 + y));
-//
-//
-//            long wayPointBegin = System.currentTimeMillis();
-//            startCalWayPoint(); //waypoint
-//            long wayPointCost = (System.currentTimeMillis() - wayPointBegin);
-//
-//            trajShow.clear();
-//
-//            ArrayList<Trajectory> trajShows = new ArrayList<>();
-//            for (Trajectory[] trajList : TimeProfileSharedObject.getInstance().trajRes) {
-//                Collections.addAll(trajShows, trajList);
-//            }
-//
-////            Trajectory[] tmpRes = getRan(trajShows.toArray(new Trajectory[0]), rate[VFGS]);
-//
-//            long algBegin = System.currentTimeMillis();
-//            Trajectory[] tmpRes = {};
-//            if (alg == 0) {//ran
-//                tmpRes = getRan(trajShows.toArray(new Trajectory[0]), rate[rateId]);
-//            } else if (alg == 1) {//vfgs
-//                tmpRes = util.VFGS.getCellCover(trajShows.toArray(new Trajectory[0]), mapClone, rate[rateId], deltaList[deltaId]);
-//            }
-//            long algCost = (System.currentTimeMillis() - algBegin);
-//
-//            long qualityBegin = System.currentTimeMillis();
-//
-//            double quality = util.VFGS.getQuality(trajShows.toArray(new Trajectory[0]), tmpRes, map, deltaList[deltaId]);
-//
-//            long qualityCost = (System.currentTimeMillis() - qualityBegin);
-//
-//            this.trajShow.addAll(Arrays.asList(tmpRes));
-//
-//
-///*
-//            long t0 = System.currentTimeMillis();
-//            vertexInit();
-//            long dataTime = (System.currentTimeMillis() - t0);
-//            System.out.println("data init time for rate : " + rate[VFGS] + " of VFGS: " + dataTime + "ms");
-//            long t1 = System.currentTimeMillis();
-//            drawGPU();
-//            long renderTime = (System.currentTimeMillis() - t1);
-//            System.out.println("GPU draw time for rate : " + rate[VFGS] + " of VFGS: " + renderTime + "ms");
-//            */
-//
-//            noFill();
-//            strokeWeight(1);
-//            stroke(new Color(190, 46, 29).getRGB());
-//            long[] timeRender = drawCPU();
-//            drawRect();
-//
-//            //info
-//            StringBuilder info = new StringBuilder();
-//            info.append(ZOOMLEVEL).append(",").append(rectRegionID).append(",").append(recNumId).append(",").append(alg).append(",")
-//                    .append(rate[rateId]).append(",").append(deltaList[deltaId]).append(",")
-//                    .append(wayPointCost).append(",").append(algCost).append(",").append(timeRender[0]).append(",")
-//                    .append(timeRender[1]).append(",").append(quality).append(",").append(qualityCost);
-//            try {
-//                BufferedWriter writer = new BufferedWriter(new FileWriter("data/localRec/AllRecordV2.txt", true));
-//                writer.write(info.toString());
-//                writer.newLine();
-//                writer.close();
-//                System.out.println(trajShows.size() + "-->" + tmpRes.length);
-//                String[] infoList = info.toString().split(",");
-//                String[] titleList = "zoomlevel,regionId,regionSize,algorithm,rate,delta,waypointCost,computionCost,mappingCost,renderingCost,quality,qualityCost".split(",");
-//                for (int i = 0; i < titleList.length; i++) {
-//                    System.out.print(titleList[i] + " = " + infoList[i] + ", ");
-//                }
-//                System.out.println();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-////            try {
-////                Thread.sleep(2000);
-////            } catch (InterruptedException e) {
-////                e.printStackTrace();
-////            }
-//            if (deltaId == deltaList.length - 1) {//delta full
-//                deltaId = 0;
-//                if (rateId == rate.length - 1) {//rate full
-//                    rateId = 0;
-//                    if (alg == 1) {//alg full
-//                        alg = 0;
-//                        if (recNumId == 0.5) {
-//                            recNumId = 1.0 / 128;
-//                            if (rectRegionID == rectRegionLoc.length - 1) {
-//                                rectRegionID = 0;
-//                                if (ZOOMLEVEL == 16) {
-//                                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>done>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-//                                    noLoop();
-//                                    exit();
-//                                } else {
-//                                    ZOOMLEVEL++;
-//                                }
-//                            } else {
-//                                rectRegionID++;
-//                            }
-//                        } else {
-//                            recNumId *= 2;
-//                        }
-//                    } else {
-//                        alg++;
-//                    }
-//                } else {
-//                    rateId++;
-//                }
-//            } else {
-//                deltaId++;
-//            }
-//        }
-//    }
-
     @Override
     public void draw() {
+
+        if (!map.allTilesLoaded()) {
+            map.draw();
+        } else {
+
+            map.zoomAndPanTo(ZOOMLEVEL, rectRegionLoc[rectRegionID]);
+            map.draw();
+
+            if (alg == 0) {
+                deltaList = new int[]{0};
+//            } else {
+//                deltaList = new int[]{0, 4, 8, 16, 32, 64};
+            }
+            float x = (float) (500 * recNumId);
+            float y = (float) (400 * recNumId);
+            rectRegion.setLeftTopLoc(map.getLocation(500 - x, 400 - y));
+            rectRegion.setRightBtmLoc(map.getLocation(500 + x, 400 + y));
+
+
+            long wayPointBegin = System.currentTimeMillis();
+            startCalWayPoint(); //waypoint
+            long wayPointCost = (System.currentTimeMillis() - wayPointBegin);
+
+            trajShow.clear();
+
+            ArrayList<Trajectory> trajShows = new ArrayList<>();
+            for (Trajectory[] trajList : TimeProfileSharedObject.getInstance().trajRes) {
+                Collections.addAll(trajShows, trajList);
+            }
+
+//            Trajectory[] tmpRes = getRan(trajShows.toArray(new Trajectory[0]), rate[VFGS]);
+
+            long algBegin = System.currentTimeMillis();
+            Trajectory[] tmpRes = {};
+            if (alg == 0) {//ran
+                tmpRes = getRan(trajShows.toArray(new Trajectory[0]), rate[rateId]);
+            } else if (alg == 1) {//vfgs
+                tmpRes = util.VFGS.getCellCover(trajShows.toArray(new Trajectory[0]), mapClone, rate[rateId], deltaList[deltaId]);
+            }
+            long algCost = (System.currentTimeMillis() - algBegin);
+
+            long qualityBegin = System.currentTimeMillis();
+
+            double quality = util.VFGS.getQuality(trajShows.toArray(new Trajectory[0]), tmpRes, map, deltaList[deltaId]);
+
+            long qualityCost = (System.currentTimeMillis() - qualityBegin);
+
+            this.trajShow.addAll(Arrays.asList(tmpRes));
+
+
+/*
+            long t0 = System.currentTimeMillis();
+            vertexInit();
+            long dataTime = (System.currentTimeMillis() - t0);
+            System.out.println("data init time for rate : " + rate[VFGS] + " of VFGS: " + dataTime + "ms");
+            long t1 = System.currentTimeMillis();
+            drawGPU();
+            long renderTime = (System.currentTimeMillis() - t1);
+            System.out.println("GPU draw time for rate : " + rate[VFGS] + " of VFGS: " + renderTime + "ms");
+            */
+
+            noFill();
+            strokeWeight(1);
+            stroke(new Color(190, 46, 29).getRGB());
+            long[] timeRender = drawCPU();
+            drawRect();
+
+            //info
+            StringBuilder info = new StringBuilder();
+            info.append(ZOOMLEVEL).append(",").append(rectRegionID).append(",").append(recNumId).append(",").append(alg).append(",")
+                    .append(rate[rateId]).append(",").append(deltaList[deltaId]).append(",")
+                    .append(wayPointCost).append(",").append(algCost).append(",").append(timeRender[0]).append(",")
+                    .append(timeRender[1]).append(",").append(quality).append(",").append(qualityCost);
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter("data/localRec/AllRecordV2.txt", true));
+                writer.write(info.toString());
+                writer.newLine();
+                writer.close();
+                System.out.println(trajShows.size() + "-->" + tmpRes.length);
+                String[] infoList = info.toString().split(",");
+                String[] titleList = "zoomlevel,regionId,regionSize,algorithm,rate,delta,waypointCost,computionCost,mappingCost,renderingCost,quality,qualityCost".split(",");
+                for (int i = 0; i < titleList.length; i++) {
+                    System.out.print(titleList[i] + " = " + infoList[i] + ", ");
+                }
+                System.out.println();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+//            try {
+//                Thread.sleep(2000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+            if (deltaId == deltaList.length - 1) {//delta full
+                deltaId = 0;
+                if (rateId == rate.length - 1) {//rate full
+                    rateId = 0;
+                    if (alg == 1) {//alg full
+                        alg = 0;
+                        if (recNumId == 0.5) {
+                            recNumId = 1.0 / 128;
+                            if (rectRegionID == rectRegionLoc.length - 1) {
+                                rectRegionID = 0;
+                                if (ZOOMLEVEL == 16) {
+                                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>done>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                                    noLoop();
+                                    exit();
+                                } else {
+                                    ZOOMLEVEL++;
+                                }
+                            } else {
+                                rectRegionID++;
+                            }
+                        } else {
+                            recNumId *= 2;
+                        }
+                    } else {
+                        alg++;
+                    }
+                } else {
+                    rateId++;
+                }
+            } else {
+                deltaId++;
+            }
+        }
     }
+
 
     private void drawGPU() {
         shaderInit();

@@ -68,11 +68,11 @@ public class VFGS {
         heapInit();
 
         int trajNum = (int) (rate * TRAJNUM);
-        if (TRAJNUM < 2500) {
-            trajNum = TRAJNUM;
-        } else if (trajNum < 2500) {
-            trajNum = 2500;
-        }
+//        if (TRAJNUM < 2500) {
+//            trajNum = TRAJNUM;
+//        } else if (trajNum < 2500) {
+//            trajNum = 2500;
+//        }
 
         for (int i = 0; i < trajNum; i++) {
             while (true) {

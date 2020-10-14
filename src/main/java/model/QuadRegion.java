@@ -111,6 +111,7 @@ public class QuadRegion {
         for (int i = 0; i < trajToSubparts.length; i++) {
             String ttsStr = strList.get(i + 1);
             trajToSubparts[i] = TrajToSubpart.antiSerialize(ttsStr);
+            trajToSubparts[i].quality = Double.parseDouble(ttsStr.split(",")[3]);
         }
         ret.setTrajToSubparts(trajToSubparts);
         return ret;

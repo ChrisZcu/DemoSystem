@@ -23,8 +23,8 @@ import java.util.Scanner;
 public class RegionSearchApp extends PApplet {
 
     UnfoldingMap map;
-    private int ZOOMLEVEL = 12;
-    private Location PRESENT = new Location(41.149, -8.612); /*new Location(41.151, -8.616);*/
+    private int ZOOMLEVEL = 11;
+    private Location PRESENT = /*new Location(22.717, 114.269)*/ new Location(41.151, -8.616);
     private double[] latLon = new double[4];
     private TrajectoryMeta[] trajFull;
 
@@ -33,6 +33,8 @@ public class RegionSearchApp extends PApplet {
         size(1200, 800, P2D);
     }
 
+    String cdPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\cd_new_score.txt";
+    String szPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\sz_score.txt";
     private String partFilePath = "data/GPS/Porto5w/Porto5w.txt";
     private String fullFilePath = "data/GPS/porto_full.txt";
     private String filePath = fullFilePath;
@@ -47,7 +49,7 @@ public class RegionSearchApp extends PApplet {
         map.setBackgroundColor(255);
         MapUtils.createDefaultEventDispatcher(this, map);
 
-        initButton();
+//        initButton();
 
         new Thread() {
             @Override
@@ -117,13 +119,13 @@ public class RegionSearchApp extends PApplet {
                         System.out.println(rectRegion.getRightBtmLoc());
                     }
                 }
-                print = false;
-                ScreenPosition src = map.getScreenPosition(new Location(41.234, -8.554));
-                ScreenPosition src2 = map.getScreenPosition(new Location(41.182, -8.349));
-
-                noFill();
-                strokeWeight(10);
-                stroke(new Color(19, 149, 186).getRGB());
+//                print = false;
+//                ScreenPosition src = map.getScreenPosition(new Location(41.234, -8.554));
+//                ScreenPosition src2 = map.getScreenPosition(new Location(41.182, -8.349));
+//
+//                noFill();
+//                strokeWeight(10);
+//                stroke(new Color(19, 149, 186).getRGB());
 //                point(src.x, src.y);
 //                point(src2.x, src2.y);
             }
@@ -190,7 +192,7 @@ public class RegionSearchApp extends PApplet {
         TimeProfileSharedObject.getInstance().trajImageMtx = new PGraphics[0];
     }
 
-    private double quality = 0.7;
+    private double quality = 1;
     private int quadQuality = 4;
 
     @Override
@@ -201,6 +203,9 @@ public class RegionSearchApp extends PApplet {
             System.out.println("quality selected now: " + quality);
         } else if (key == 'w') {
             saveFrame("data/picture/tmp/quality_" + quadQuality + ".png");
+        }else if (key == 'e'){
+            finishClick();
+            finishClick = true;
         }
     }
 
@@ -309,11 +314,14 @@ public class RegionSearchApp extends PApplet {
         }
         if (eleId != -1) {
             if (eleId == 0) {//finish
+                System.out.println("button finish");
                 finishClick();
                 finishClick = true;
             } else if (eleId == 1) {
                 rectRegion = null;
                 finishClick();
+                TimeProfileSharedObject.getInstance().trajectoryMetas = trajFull;
+                TimeProfileSharedObject.getInstance().calDone = true;
                 finishClick = true;
             }
         }
@@ -328,6 +336,7 @@ public class RegionSearchApp extends PApplet {
         }
         if (rectRegion == null) {
 //            TimeProfileSharedObject.getInstance().trajectoryMetas = trajFull;
+            System.out.println("null");
             TimeProfileSharedObject.getInstance().trajectoryMetas = new TrajectoryMeta[0];
 
             TimeProfileSharedObject.getInstance().calDone = true;

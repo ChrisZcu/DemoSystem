@@ -26,7 +26,7 @@ public class SearchRegionPart extends PApplet {
             if (isContained(minLat, maxLat, minLon, maxLon, quadRegionHead)) {//全包含
                 if (quadRegionHead.getQuadRegionChildren() == null) {
                     // is leaf.
-                    addAllSubMetaTraj(trajectories, quadRegionHead);
+                    addAllSubMetaTraj(trajectories, quadRegionHead, quality);
 
                     RectRegion rec = new RectRegion();
                     rec.initLoc(new Location(quadRegionHead.getMinLat(), quadRegionHead.getMinLon()),
@@ -41,7 +41,7 @@ public class SearchRegionPart extends PApplet {
             } else {
                 //full contain
                 if (isFullContain(minLat, maxLat, minLon, maxLon, quadRegionHead)) {
-                    addAllSubMetaTraj(trajectories, quadRegionHead);
+                    addAllSubMetaTraj(trajectories, quadRegionHead, quality);
                     RectRegion rec = new RectRegion();
                     rec.initLoc(new Location(quadRegionHead.getMinLat(), quadRegionHead.getMinLon()),
                             new Location(quadRegionHead.getMaxLat(), quadRegionHead.getMaxLon()));
@@ -50,7 +50,7 @@ public class SearchRegionPart extends PApplet {
                 } else if (isInteractive(minLat, maxLat, minLon, maxLon, quadRegionHead)) {
                     //interact
                     if (quadRegionHead.getQuadRegionChildren() == null) {
-                        addAllSubMetaTraj(trajectories, quadRegionHead);
+                        addAllSubMetaTraj(trajectories, quadRegionHead, quality);
                         RectRegion rec = new RectRegion();
                         rec.initLoc(new Location(quadRegionHead.getMinLat(), quadRegionHead.getMinLon()),
                                 new Location(quadRegionHead.getMaxLat(), quadRegionHead.getMaxLon()));
@@ -67,8 +67,11 @@ public class SearchRegionPart extends PApplet {
         return trajectories.toArray(new TrajectoryMeta[0]);
     }
 
-    private static void addAllSubMetaTraj(List<TrajectoryMeta> trajectories, QuadRegion quadRegionHead) {
+    private static void addAllSubMetaTraj(List<TrajectoryMeta> trajectories, QuadRegion quadRegionHead, double quality) {
         for (TrajToSubpart trajToSubpart : quadRegionHead.getTrajToSubparts()) {
+            if (trajToSubpart.quality >= quality) {
+                break;
+            }
             // now just create the part of it and not consider this traj in other cells.
             TrajectoryMeta trajTmp = new TrajectoryMeta(trajToSubpart.getTrajId());
             trajTmp.setBegin(trajToSubpart.getBeginPosIdx());

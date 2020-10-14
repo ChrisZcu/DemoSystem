@@ -24,7 +24,7 @@ public class QuadTree {
     public QuadTree() {
     }
 
-    private static double preSion = 100000.0;
+    private static double preSion = 10000.0;
 
     public static TrajectoryMeta[] loadData(double[] latLon, String filePath) {
         TrajectoryMeta[] trajFull;
@@ -47,30 +47,36 @@ public class QuadTree {
             String[] metaData = line.split(";");
             double score = Double.parseDouble(metaData[0]);
             String[] item = metaData[1].split(",");
+            if (item.length % 2 == 1) {
+                continue;
+            }
             boolean next = false;
-            Position[] positions = new Position[item.length / 2 - 1];
-            for (int j = 0; j < item.length - 2; j += 2) {
+            Position[] positions = new Position[item.length / 2];
+            for (int j = 0; j < item.length - 1; j += 2) {
 //                int srcX = Integer.parseInt(item[j]);
 //                int srcY = Integer.parseInt(item[j + 1]);
                 float lat = Float.parseFloat(item[j + 1]);
                 float lon = Float.parseFloat(item[j]);
                 //debug
-                if (lat > 42.184 || lat < 39.628 || lon < -9.095 || lon > -6.568) {
-//                if (lat > 41.346 || lat < 40.948 || lon < -8.806 || lon > -8.229) {
+//                if (lat > 42.184 || lat < 39.628 || lon < -9.095 || lon > -6.568) {
+//                if (lat > 41.346 || lat < 40.948 || lon < -8.806 || lon > -8.229) { // debug
 //                if (lat < 38.429 || lon > -6.595) {
-                    j = item.length;
-                    next = true;
-                    continue;
-                }
+//                    j = item.length;
+//                    next = true;
+//                    continue;
+//                }
                 //debug done
 //                if (i > 10){
 //                    j = item.length;
 //                    next = true;
 //                    continue;
 //                }
-
-                positions[j / 2] = new Position((int) (lat * preSion), (int) (lon * preSion));
-
+                try {
+                    positions[j / 2] = new Position((int) (lat * preSion), (int) (lon * preSion));
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println(line);
+                    break;
+                }
                 minGLat = Math.min(lat, minGLat);
                 maxGLat = Math.max(lat, maxGLat);
                 minGLon = Math.min(lon, minGLon);
@@ -326,7 +332,7 @@ public class QuadTree {
             quadRegionRoot = loadLevelRecurse(it, null);
             System.out.println("\b\b\bfinished.");
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("\b\b\bfailed.");
             e.printStackTrace();
         } finally {
@@ -355,7 +361,6 @@ public class QuadTree {
                 QuadRegion[] nxtParents = new QuadRegion[]{root};
                 loadLevelRecurse(lit, nxtParents);
             }
-
 
             return root;
         }
@@ -413,10 +418,14 @@ public class QuadTree {
 
     //lat41 lon8
     public static void main(String[] args) {
-        String filePath = "data/GPS/Porto5w/Porto5w.txt";
-        String storeFilePath = "data/GPS/porto5w/quad_tree_info.txt";
-        int height = 13;
-        int delta = 32;
+        String cdPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\cd_new_score.txt";
+        String szPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\sz_score.txt";
+        String partPortoPath = "data/GPS/Porto5w/Porto5w.txt";
+
+        String filePath = cdPath;
+        String storeFilePath = "data/GPS/porto5w/sz_quad_tree_info.txt";
+        int height = 1;
+        int delta = 4;
         if (args.length > 0) {
             filePath = args[0];
             storeFilePath = args[1];

@@ -58,25 +58,26 @@ public class ScreenShot extends PApplet {
         new Thread() {
             @Override
             public void run() {
-//                trajFull = loadData(filePath);
-                trajMetaFull = QuadTree.loadData(new double[4], filePath);
-                TimeProfileSharedObject.getInstance().trajMetaFull = trajMetaFull;
-                QuadTree.trajMetaFull = trajMetaFull;
+                trajFull = loadData(filePath);
 
-                System.out.println("total load done: " + trajMetaFull.length);
-//                System.out.println("Total data load done: " + trajFull.length);
+//                trajMetaFull = QuadTree.loadData(new double[4], filePath);
+//                TimeProfileSharedObject.getInstance().trajMetaFull = trajMetaFull;
+//                QuadTree.trajMetaFull = trajMetaFull;
+
+//                System.out.println("total load done: " + trajMetaFull.length);
+                System.out.println("Total data load done: " + trajFull.length);
                 vfgsSet = new HashSet[2];
 
-//                vfgsSet[0] = loadVfgs("data/GPS/vfgs_0.txt", 0.01);
-//                vfgsSet[1] = loadVfgs("data/GPS/vfgs_32.txt", 0.01);
+                vfgsSet[0] = loadVfgs("data/GPS/vfgs_0.txt", 0.01);
+                vfgsSet[1] = loadVfgs("data/GPS/vfgs_32.txt", 0.01);
 
-                String quadFilePath = "data/GPS/QuadTreeIndex/quad_tree_quality" + quadQuality + "_info.txt";
-                QuadTree.loadTreeFromFile(quadFilePath);
-                quadRegionRoot = QuadTree.quadRegionRoot;
+//                String quadFilePath = "data/GPS/QuadTreeIndex/quad_tree_quality" + quadQuality + "_info.txt";
+//                QuadTree.loadTreeFromFile(quadFilePath);
+//                quadRegionRoot = QuadTree.quadRegionRoot;
 
-//                baseLine = loadVfgs("data/GPS/dwt_24k.txt", 0.01);
+                baseLine = loadVfgs("data/GPS/dwt_24k.txt", 0.01);
 
-                System.out.println("index done");
+//                System.out.println("index done");
                 isDataLoadDone = true;
             }
         }.start();
@@ -162,20 +163,20 @@ public class ScreenShot extends PApplet {
     TrajectoryMeta[] trajShowMeta;
 
 
-    private boolean isGlobal = false;
-    private int alg = 3;//0 for full, 1 for random, 2 for vfgs, 3 for solutionX, 4 for baseline
+    private boolean isGlobal = true;
+    private int alg = 1;//0 for full, 1 for random, 2 for vfgs, 3 for solutionX, 4 for baseline
     private int vfgsDeltaId = 0;
 
-    int quadQuality = 0;
-    private int curCenterId = 5;
-    private int zoomLevel = 12;
+    int quadQuality = 8;
+    private int curCenterId = 16;
+    private int zoomLevel = 14;
 
     private int[] deltaList = {0, 32};
 
     @Override
     public void draw() {
         map.draw();
-        if (!(zoomCheck == map.getZoomLevel() && centerCheck.equals(map.getCenter()))) {
+        if (!(zoomCheck == map.getZoomLevel() && centerCheck.equals(map.getCenter())) || (!map.allTilesLoaded())) {
             if (!map.allTilesLoaded()) {
                 if (mapImage == null) {
                     mapImage = map.mapDisplay.getInnerPG().get();
@@ -191,8 +192,9 @@ public class ScreenShot extends PApplet {
                 map.draw();
             }
         } else {
+
             if (isDataLoadDone) {
-                System.out.println("calculating......");
+//                System.out.println("calculating......");
                 StringBuilder name = new StringBuilder();
                 if (isGlobal) {
                     name.append("global_");
@@ -248,7 +250,7 @@ public class ScreenShot extends PApplet {
                 } else if (alg == 4) {
                     name.append("baseLine_");
                 }
-                System.out.println("drawing......");
+//                System.out.println("drawing......");
 
                 if (alg == 3) {
                     drawTraj(trajShowMeta);
@@ -256,16 +258,25 @@ public class ScreenShot extends PApplet {
                     name.append("rate0.01_threshold_trajNo").append(trajShow.length).append("_");
                     drawTraj(trajShow);
                 }
-                String picPath = "data/picture/20201011XFinal/" + zoomLevel + "/" + locationName[curCenterId] + "/"
-                        + name.toString() + ".png";
-                saveFrame(picPath);
-                System.out.println(picPath + ", number: " + trajShowMeta.length + " done");
-                if (isRegionDone()) {
-                    mapChage();
+                avgNumber++;
+                if (avgNumber == drawNumber) {
+                    avgNumber = 0;
+                    String picPath = "data/picture/20201012RandomGlobal/" + zoomLevel + "/" + locationName[curCenterId] + "/"
+                            + name.toString() + ".png";
+                    saveFrame(picPath);
+                    noLoop();
+                    exit();
+                    System.out.println(picPath + ", number: " + trajShowMeta.length + " done");
+                    if (isRegionDone()) {
+                        mapChage();
+                    }
                 }
             }
         }
     }
+
+    private int drawNumber = 10;
+    private int avgNumber = 0;
 
     private Trajectory[] getWayPointPos(Trajectory[] trajectory,
                                         double leftLat, double rightLat, double leftLon, double rightLon) {
@@ -353,7 +364,7 @@ public class ScreenShot extends PApplet {
 
 
     private boolean isRegionDone() {
-        if (alg == 4 || alg == 3) {
+        if (alg == 4 || alg == 3 || alg == 1) {
             return true;
         }
         if (!isGlobal && alg == 2 && vfgsDeltaId == deltaList.length - 1) {
@@ -427,7 +438,7 @@ public class ScreenShot extends PApplet {
         for (TrajectoryMeta trajectoryMeta : trajectoryMetas) {
             beginShape();
             for (Position pos : generatePosList(trajectoryMeta)) {
-                Location loc = new Location(pos.x / 100000.0, pos.y / 100000.0);
+                Location loc = new Location(pos.x / 10000.0, pos.y / 10000.0);
                 ScreenPosition screenPos = map.getScreenPosition(loc);
                 vertex(screenPos.x, screenPos.y);
             }
