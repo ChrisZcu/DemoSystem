@@ -26,7 +26,7 @@ public class VfgsForIndexPart {
             HashSet<Position> totalScoreSet = getTotalScore(trajMetaList);
             double totalScore = totalScoreSet.size();
 
-            int limit = getRealSize(trajMetaList.length);
+//            int limit = getRealSize(trajMetaList.length);
 /*
             System.out.println("--------------------------------------------------");
             System.out.println("total score: " + totalScoreSet.size());
@@ -52,7 +52,7 @@ public class VfgsForIndexPart {
                         updateInfluScoreSet(trajMeta, totalScoreSet, influScoreSet, delta);
                         TrajToSubpart trajToSubpart = new TrajToSubpart(trajMeta.getTrajId(), trajMeta.getBegin(), trajMeta.getEnd());
                         trajToSubpart.quality = influScoreSet.size() * 1.0 / totalScore;
-                        System.out.println(trajMeta.getTrajId() + ", " + influScoreSet.size() + ", " + totalScore + ", " + influScoreSet.size() * 1.0 / totalScore);
+//                        System.out.println(trajMeta.getTrajId() + ", " + influScoreSet.size() + ", " + totalScore + ", " + influScoreSet.size() * 1.0 / totalScore);
                         vfgsTraj.add(trajToSubpart);
                         if (influScoreSet.size() >= totalScore) {
                             i = trajMetaList.length + 1;
@@ -78,6 +78,7 @@ public class VfgsForIndexPart {
 
             HashSet<Position> totalScoreSet = getTotalScore(trajMetaList);
             int totalScore = (int) (totalScoreSet.size() * quality);
+            System.out.println(totalScoreSet.size() + ", " + totalScore);
 
 //            int limit = getRealSize(trajMetaList.length);
 /*

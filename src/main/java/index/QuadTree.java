@@ -425,7 +425,7 @@ public class QuadTree {
         String filePath = cdPath;
         String storeFilePath = "data/GPS/porto5w/sz_quad_tree_info.txt";
         int height = 1;
-        int delta = 4;
+        int delta = 0;
         if (args.length > 0) {
             filePath = args[0];
             storeFilePath = args[1];
@@ -443,7 +443,7 @@ public class QuadTree {
         QuadTree.quadRegionRoot = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories, delta);
         System.out.println("index time: " + (System.currentTimeMillis() - t0));
 
-        QuadTree.saveTreeToFile(storeFilePath);
+//        QuadTree.saveTreeToFile(storeFilePath);
 
         System.out.println("save done");
     }

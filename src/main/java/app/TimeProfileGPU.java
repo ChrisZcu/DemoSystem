@@ -16,6 +16,7 @@ import select.TimeProfileManager;
 import util.PSC;
 import util.VFGS;
 
+import javax.sound.midi.SysexMessage;
 import java.awt.*;
 import java.io.*;
 import java.nio.Buffer;
@@ -47,9 +48,15 @@ public class TimeProfileGPU extends PApplet {
 
         int delta = 4;
         String filePath = "data/GPS/vfgs_" + delta + ".txt";
-        loadData("data/GPS/Porto5w/Porto5w.txt");
+//        loadData("data/GPS/Porto5w/Porto5w.txt");
         loadData("data/GPS/porto_full.txt");
         Trajectory[] trajectories = loadVfgs("data/GPS/dwt_24k.txt", 0.001);
+        double[] rateList = {0.01, 0.005, 0.001, 0.0005, 0.0001/*, 0.00005, 0.00001*/};
+        for (Double rate : rateList) {
+            long t0 = System.currentTimeMillis();
+            util.VFGS.getCellCover(trajFull, mapClone, rate, 16);
+            System.out.println(rate + ", " + (System.currentTimeMillis() - t0));
+        }
         System.out.println(trajectories.length);
         new Thread() {
             @Override

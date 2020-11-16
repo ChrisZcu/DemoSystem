@@ -53,7 +53,7 @@ public class QualityDrive extends PApplet {
     private String fullFile = "data/GPS/porto_full.txt";
     private String partFilePath = "data/GPS/Porto5w/Porto5w.txt";
 
-    private String filePath = cdPath;
+    private String filePath = szPath;
 
     @Override
     public void setup() {
@@ -72,6 +72,14 @@ public class QualityDrive extends PApplet {
             public void run() {
                 try {
                     trajMetaFull = QuadTree.loadData(new double[4], filePath);
+                    int cnt = 0;
+                    int max = 0;
+                    for (TrajectoryMeta trajectoryMeta : trajMetaFull) {
+                        cnt += trajectoryMeta.getPositions().length;
+                        max = Math.max(max, trajectoryMeta.getPositions().length);
+                    }
+                    System.out.println("cnt: " + cnt);
+                    System.out.println("max: " + max);
                     TimeProfileSharedObject.getInstance().trajMetaFull = trajMetaFull;
                     QuadTree.trajMetaFull = trajMetaFull;
 
@@ -99,7 +107,7 @@ public class QualityDrive extends PApplet {
 //    int[] qualityList = {70, 90};
     int quality = 9;
     int qualityId = 0;
-    double regionSize = 1.0 / 64.0;
+    double regionSize = 1.0;
 
     @Override
     public void draw() {
@@ -180,10 +188,13 @@ public class QualityDrive extends PApplet {
                 TrajectoryMeta[] wayPointTrajMeta = getWayPointPos(trajMetaFull, minLat, maxLat, minLon, maxLon);
                 TrajToSubpart[] trajToSubparts = VfgsForIndexPart.getVfgs(wayPointTrajMeta, 4, qualitySearch);
 
+//                vertexInit(trajMetaFull);
                 vertexInit(trajToSubparts);
                 drawGPU();
 
                 System.out.println(qualitySearch + ", " + regionSize + ", fly time: " + (System.currentTimeMillis() - beginTime) + " ms");
+                saveFrame("data/test1.png");
+                exit();
                 int[] tmpList = new int[20000000];
                 for (int i = 0; i < tmpList.length; i++) {
                     tmpList[i] = i;
