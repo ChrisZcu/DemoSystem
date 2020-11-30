@@ -395,7 +395,7 @@ public class SharedObject {
         switch (type) {
             case NONE:
                 trajList = null;
-                threadNum = -1;
+                threadNum = 0;
                 break;
             case FULL:
                 trajList = this.getTrajFull();

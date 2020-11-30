@@ -2,7 +2,6 @@ package app;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
-import de.fhpotsdam.unfolding.providers.MapBox;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import draw.TrajDrawManager;
 import model.*;
@@ -31,8 +30,8 @@ public class DemoInterface extends PApplet {
 
     private float[][] mapLocInfo;
     private static final Location PORTO_CENTER = new Location(41.14, -8.639);//维度经度
-    private static final Location PRESENT = PORTO_CENTER;
-    private static final int ZOOM_LEVEL = 12;
+    private static final Location PRESENT = new Location(41.14, -8.539); //PORTO_CENTER;
+    private static final int ZOOM_LEVEL = 14; //12;
     private boolean intoMaxMap = false;
 
     private UnfoldingMap[] mapList;
@@ -867,11 +866,10 @@ public class DemoInterface extends PApplet {
         };
 
         for (int i = 0; i < 4; i++) {
-            mapList[i] = new UnfoldingMap(this, mapXList[i], mapYList[i], mapWidth, mapHeight,
-                    new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
+            mapList[i] = new UnfoldingMap(this, mapXList[i], mapYList[i], mapWidth, mapHeight);
         }
-        mapList[4] = new UnfoldingMap(this, mapXList[4], mapYList[4], screenWidth, screenHeight,
-                new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
+        mapList[4] = new UnfoldingMap(this, mapXList[4], mapYList[4], screenWidth, screenHeight);
+        // new Microsoft.RoadProvider()
 
         for (UnfoldingMap map : mapList) {
             map.setZoomRange(1, 20);

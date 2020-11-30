@@ -1,7 +1,5 @@
 package util;
 
-import model.Colour;
-
 import java.awt.*;
 
 /**
@@ -13,19 +11,22 @@ public class PSC {
     // i.e. alpha.
     // These two settings must match the results
     public static double[] RATE_LIST
-            = {0.05, 0.01, 0.005, /*0.001, 0.0005, 0.0001, 0.00005, 0.00001*/};
+            = {0.05, 0.01, 0.005, 0.001, /*0.0005, 0.0001, 0.00005, 0.00001*/};
     public static int[] DELTA_LIST
             = {0, 4, 8, 16, /*32, 50, 64, 128*/};
 
     // origin data src path
     public static String ORIGIN_PATH
-            = "data/GPS/Porto5w/Porto5w.txt";
+            = "data/GPS/porto_full.txt";
 
     public static String PATH_PREFIX
-            = "data/GPS/porto5w/";
+//            = "data/GPS/porto5w/";
+            = "data/GPS/porto_full_res/";
 
     // traj limit for full set. -1 for no limit
-    public static final int LIMIT = 5_0000;
+    public static final int LIMIT
+//            = 5_0000;
+            = -1;
 
     // recommend: core # * 2 or little higher
     public static final int FULL_THREAD_NUM = 8;        // for both draw and select
