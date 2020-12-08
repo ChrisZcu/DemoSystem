@@ -8,6 +8,7 @@ import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import model.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -148,6 +149,10 @@ public class SelectAlg {
     public static Trajectory[] getWayPointTraj(int begin, int end, Trajectory[] trajectory, int optIndex) {
         ArrayList<Trajectory> res = new ArrayList<>();
         if (SharedObject.getInstance().isCircleRegion()) {
+//            if (CircleRegionControl.getCircleRegionControl().getCircleWayPointList()[optIndex].size()== 0) {
+//                System.out.println("1111111111111111111111");
+//                res.addAll(Arrays.asList(trajectory));
+//            } else
             for (CircleRegionGroup circleRegionGroup : CircleRegionControl.getCircleRegionControl().getCircleWayPointList()[optIndex]) {
                 res.addAll(getCircleWayPointTraj(begin, end, trajectory, optIndex, circleRegionGroup.getWayPointLayerList()));
             }
@@ -170,8 +175,9 @@ public class SelectAlg {
     }
 
     private static ArrayList<Trajectory> getCircleWayPointTraj(int begin, int end, Trajectory[] trajectory, int optIndex, ArrayList<ArrayList<CircleRegion>> regionWList) {
+        ArrayList<Trajectory> res = new ArrayList<>();
 
-        ArrayList<Trajectory> res = getCircleWayPointTraj(begin, end, trajectory, regionWList.get(0), optIndex);
+        res = getCircleWayPointTraj(begin, end, trajectory, regionWList.get(0), optIndex);
 
         for (int i = 1; i < regionWList.size(); i++) {
             res = getCircleWayPointTraj(0, res.size(), res, regionWList.get(i), optIndex);

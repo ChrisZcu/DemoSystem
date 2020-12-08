@@ -77,7 +77,10 @@ public class CircleRegionControl {
         updateCircleDList();
     }
 
+    boolean waypoint = false;
+
     public void addWayPoint(CircleRegion circle) {
+        waypoint = true;
         if (wayPointGroup == 0) {
             addNewGroup();
         }
@@ -114,7 +117,8 @@ public class CircleRegionControl {
     }
 
     public RegionType getRegionType() {
-        if (circleRegionGroups.size() > 0) {
+        if (waypoint) {
+//        if (circleRegionGroups.size() > 0) {
             if (circleO == null && circleD == null) {
                 return RegionType.WAY_POINT;
             } else {
@@ -147,8 +151,10 @@ public class CircleRegionControl {
         }
         if (circleRegionGroups != null && circleRegionGroups.size() > 0) {
             for (ArrayList<CircleRegionGroup> circleRegionGroups : circleWayPointList) {
-                for (CircleRegionGroup circleRegionGroup : circleRegionGroups) {
-                    allCircles.addAll(circleRegionGroup.getAllRegions());
+                if (circleRegionGroups != null) {
+                    for (CircleRegionGroup circleRegionGroup : circleRegionGroups) {
+                        allCircles.addAll(circleRegionGroup.getAllRegions());
+                    }
                 }
             }
         }

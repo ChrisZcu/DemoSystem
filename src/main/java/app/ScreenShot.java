@@ -30,7 +30,7 @@ public class ScreenShot extends PApplet {
     private String fullFile = "data/GPS/porto_full.txt";
     private String partFilePath = "data/GPS/Porto5w/Porto5w.txt";
 
-    private String filePath = fullFile;
+    private String filePath = partFilePath;
 
     int wight = 1200, hight = 800;
 
@@ -55,32 +55,32 @@ public class ScreenShot extends PApplet {
         mapClone.zoomAndPanTo(zoomLevel, centerList[curCenterId]);
         MapUtils.createDefaultEventDispatcher(this, map);
 
-        new Thread() {
-            @Override
-            public void run() {
-                trajFull = loadData(filePath);
-
-//                trajMetaFull = QuadTree.loadData(new double[4], filePath);
-//                TimeProfileSharedObject.getInstance().trajMetaFull = trajMetaFull;
-//                QuadTree.trajMetaFull = trajMetaFull;
-
-//                System.out.println("total load done: " + trajMetaFull.length);
-                System.out.println("Total data load done: " + trajFull.length);
-                vfgsSet = new HashSet[2];
-
-                vfgsSet[0] = loadVfgs("data/GPS/vfgs_0.txt", 0.01);
-                vfgsSet[1] = loadVfgs("data/GPS/vfgs_32.txt", 0.01);
-
-//                String quadFilePath = "data/GPS/QuadTreeIndex/quad_tree_quality" + quadQuality + "_info.txt";
-//                QuadTree.loadTreeFromFile(quadFilePath);
-//                quadRegionRoot = QuadTree.quadRegionRoot;
-
-                baseLine = loadVfgs("data/GPS/dwt_24k.txt", 0.01);
-
-//                System.out.println("index done");
-                isDataLoadDone = true;
-            }
-        }.start();
+//        new Thread() {
+//            @Override
+//            public void run() {
+        trajFull = loadData(filePath);
+//
+////                trajMetaFull = QuadTree.loadData(new double[4], filePath);
+////                TimeProfileSharedObject.getInstance().trajMetaFull = trajMetaFull;
+////                QuadTree.trajMetaFull = trajMetaFull;
+//
+////                System.out.println("total load done: " + trajMetaFull.length);
+//                System.out.println("Total data load done: " + trajFull.length);
+//                vfgsSet = new HashSet[2];
+//
+//                vfgsSet[0] = loadVfgs("data/GPS/vfgs_0.txt", 0.01);
+//                vfgsSet[1] = loadVfgs("data/GPS/vfgs_32.txt", 0.01);
+//
+////                String quadFilePath = "data/GPS/QuadTreeIndex/quad_tree_quality" + quadQuality + "_info.txt";
+////                QuadTree.loadTreeFromFile(quadFilePath);
+////                quadRegionRoot = QuadTree.quadRegionRoot;
+//
+//                baseLine = loadVfgs("data/GPS/dwt_24k.txt", 0.01);
+//
+////                System.out.println("index done");
+//                isDataLoadDone = true;
+//            }
+//        }.start();
     }
 
     HashSet<Integer> baseLine;
@@ -168,8 +168,8 @@ public class ScreenShot extends PApplet {
     private int vfgsDeltaId = 0;
 
     int quadQuality = 8;
-    private int curCenterId = 16;
-    private int zoomLevel = 14;
+    private int curCenterId = 0;
+    private int zoomLevel = 10;
 
     private int[] deltaList = {0, 32};
 
@@ -192,87 +192,92 @@ public class ScreenShot extends PApplet {
                 map.draw();
             }
         } else {
-
-            if (isDataLoadDone) {
-//                System.out.println("calculating......");
-                StringBuilder name = new StringBuilder();
-                if (isGlobal) {
-                    name.append("global_");
-                    if (alg == 0) {//full
-                        trajShow = trajFull;
-                    } else if (alg == 1) {//random
-                        trajShow = getRandom(trajFull, 0.01);
-                    } else if (alg == 2) {
-                        trajShow = getVfgsTraj(trajFull, vfgsSet[vfgsDeltaId]);
-                    } else if (alg == 4) {
-                        trajShow = getVfgsTraj(trajFull, baseLine);
-                    }
-                } else {
-                    name.append("local_");
-                    Location leftTop = map.getLocation(0, 0);
-                    Location rightBtm = map.getLocation(wight, hight);
-
-                    if (alg == 3) {
-                        RectRegion rectRegion = new RectRegion();
-                        rectRegion.initLoc(leftTop, rightBtm);
-                        double leftLat = rectRegion.getLeftTopLoc().getLat();
-                        double leftLon = rectRegion.getLeftTopLoc().getLon();
-                        double rightLon = rectRegion.getRightBtmLoc().getLon();
-                        double rightLat = rectRegion.getRightBtmLoc().getLat();
-
-                        double minLat = Math.min(leftLat, rightLat);
-                        double maxLat = Math.max(leftLat, rightLat);
-                        double minLon = Math.min(leftLon, rightLon);
-                        double maxLon = Math.max(leftLon, rightLon);
-
-                        trajShowMeta = SearchRegionPart.searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, 1);
-                    } else {
-                        Trajectory[] waypoint = getWayPointPos(trajFull, leftTop.getLat(), rightBtm.getLat(),
-                                leftTop.getLon(), rightBtm.getLon());
-                        if (alg == 0) {//full
-                            trajShow = waypoint;
-                        } else if (alg == 1) {//random
-                            trajShow = getRandom(waypoint, 0.01);
-                        } else if (alg == 2) {//vfgs
-                            trajShow = VFGS.getCellCover(waypoint, mapClone, 0.01, deltaList[vfgsDeltaId]);
-                        }
-                    }
-                }
-
-                if (alg == 0) {
-                    name.append("full_");
-                } else if (alg == 1) {
-                    name.append("random_");
-                } else if (alg == 2) {
-                    name.append("vfgs").append(deltaList[vfgsDeltaId]).append("_");
-                } else if (alg == 3) {
-                    name.append("solutionX").append(quadQuality).append("_trajNo").append(trajShowMeta.length).append("_");
-                } else if (alg == 4) {
-                    name.append("baseLine_");
-                }
-//                System.out.println("drawing......");
-
-                if (alg == 3) {
-                    drawTraj(trajShowMeta);
-                } else {
-                    name.append("rate0.01_threshold_trajNo").append(trajShow.length).append("_");
-                    drawTraj(trajShow);
-                }
-                avgNumber++;
-                if (avgNumber == drawNumber) {
-                    avgNumber = 0;
-                    String picPath = "data/picture/20201012RandomGlobal/" + zoomLevel + "/" + locationName[curCenterId] + "/"
-                            + name.toString() + ".png";
-                    saveFrame(picPath);
-                    noLoop();
-                    exit();
-                    System.out.println(picPath + ", number: " + trajShowMeta.length + " done");
-                    if (isRegionDone()) {
-                        mapChage();
-                    }
-                }
-            }
+            trajShow = trajFull;
+            drawTraj(trajShow);
+            saveFrame("data/5wpart.png");
+            noLoop();
         }
+        //
+//            if (isDataLoadDone) {
+////                System.out.println("calculating......");
+//                StringBuilder name = new StringBuilder();
+//                if (isGlobal) {
+//                    name.append("global_");
+//                    if (alg == 0) {//full
+//                        trajShow = trajFull;
+//                    } else if (alg == 1) {//random
+//                        trajShow = getRandom(trajFull, 0.01);
+//                    } else if (alg == 2) {
+//                        trajShow = getVfgsTraj(trajFull, vfgsSet[vfgsDeltaId]);
+//                    } else if (alg == 4) {
+//                        trajShow = getVfgsTraj(trajFull, baseLine);
+//                    }
+//                } else {
+//                    name.append("local_");
+//                    Location leftTop = map.getLocation(0, 0);
+//                    Location rightBtm = map.getLocation(wight, hight);
+//
+//                    if (alg == 3) {
+//                        RectRegion rectRegion = new RectRegion();
+//                        rectRegion.initLoc(leftTop, rightBtm);
+//                        double leftLat = rectRegion.getLeftTopLoc().getLat();
+//                        double leftLon = rectRegion.getLeftTopLoc().getLon();
+//                        double rightLon = rectRegion.getRightBtmLoc().getLon();
+//                        double rightLat = rectRegion.getRightBtmLoc().getLat();
+//
+//                        double minLat = Math.min(leftLat, rightLat);
+//                        double maxLat = Math.max(leftLat, rightLat);
+//                        double minLon = Math.min(leftLon, rightLon);
+//                        double maxLon = Math.max(leftLon, rightLon);
+//
+//                        trajShowMeta = SearchRegionPart.searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, 1);
+//                    } else {
+//                        Trajectory[] waypoint = getWayPointPos(trajFull, leftTop.getLat(), rightBtm.getLat(),
+//                                leftTop.getLon(), rightBtm.getLon());
+//                        if (alg == 0) {//full
+//                            trajShow = waypoint;
+//                        } else if (alg == 1) {//random
+//                            trajShow = getRandom(waypoint, 0.01);
+//                        } else if (alg == 2) {//vfgs
+//                            trajShow = VFGS.getCellCover(waypoint, mapClone, 0.01, deltaList[vfgsDeltaId]);
+//                        }
+//                    }
+//                }
+//
+//                if (alg == 0) {
+//                    name.append("full_");
+//                } else if (alg == 1) {
+//                    name.append("random_");
+//                } else if (alg == 2) {
+//                    name.append("vfgs").append(deltaList[vfgsDeltaId]).append("_");
+//                } else if (alg == 3) {
+//                    name.append("solutionX").append(quadQuality).append("_trajNo").append(trajShowMeta.length).append("_");
+//                } else if (alg == 4) {
+//                    name.append("baseLine_");
+//                }
+////                System.out.println("drawing......");
+//
+//                if (alg == 3) {
+//                    drawTraj(trajShowMeta);
+//                } else {
+//                    name.append("rate0.01_threshold_trajNo").append(trajShow.length).append("_");
+//                    drawTraj(trajShow);
+//                }
+//                avgNumber++;
+//                if (avgNumber == drawNumber) {
+//                    avgNumber = 0;
+//                    String picPath = "data/picture/20201012RandomGlobal/" + zoomLevel + "/" + locationName[curCenterId] + "/"
+//                            + name.toString() + ".png";
+//                    saveFrame(picPath);
+//                    noLoop();
+//                    exit();
+//                    System.out.println(picPath + ", number: " + trajShowMeta.length + " done");
+//                    if (isRegionDone()) {
+//                        mapChage();
+//                    }
+//                }
+//            }
+//        }
     }
 
     private int drawNumber = 10;

@@ -99,7 +99,7 @@ public class DemoInterface extends PApplet {
         SharedObject.getInstance().setMapWidth(mapWidth);
         SharedObject.getInstance().setMapHeight(mapHeight);
 
-        size(screenWidth, screenHeight - 1, P2D);
+        size(screenWidth, screenHeight, P2D);
     }
 
     @Override
