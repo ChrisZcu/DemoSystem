@@ -73,7 +73,7 @@ public class VFGS {
 //        } else if (trajNum < 2500) {
 //            trajNum = 2500;
 //        }
-
+        System.out.println(trajNum);
         for (int i = 0; i < trajNum; i++) {
             while (true) {
                 Traj2CellScore(GreedyChoose.getHeapHead());

@@ -43,7 +43,8 @@ public class Position {
 
     @Override
     public String toString() {
-        return "(" + x + ", " + y + ")";
+//        return "(" + x + ", " + y + ")";
+        return y / 10000.0 + "," + x / 10000.0;
     }
 
 }

@@ -27,8 +27,6 @@ import static index.QuadTree.getWayPointPos;
 
 public class QualityDrive extends PApplet {
     UnfoldingMap map;
-
-
     int wight = 1200, hight = 800;
 
     @Override
@@ -43,9 +41,9 @@ public class QualityDrive extends PApplet {
     TrajectoryMeta[] trajMetaFull;
     TrajectoryMeta[] trajShowMeta;
     int quadQuality = 4;
-    //    String quadFilePath = "data/GPS/QuadTreeIndex/cd/cd_quad_tree_quality" + quadQuality + "_info.txt";
+//    String quadFilePath = "data/GPS/QuadTreeIndex/cd/cd_quad_tree_quality" + quadQuality + "_info.txt";
 //    String quadFilePath = "data/GPS/QuadTreeIndex/sz/sz_quad_tree_quality" + quadQuality + "_info.txt";
-//    String quadFilePath = "data/GPS/QuadTreeIndex/quad_tree_quality" + quadQuality + "_info.txt";
+    String quadFilePath = "data/GPS/QuadTreeIndex/quad_tree_quality" + quadQuality + "_info.txt";
 
     //cd注意zoomlevel12
     String cdPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\cd_new_score.txt";
@@ -53,17 +51,17 @@ public class QualityDrive extends PApplet {
     private String fullFile = "data/GPS/porto_full.txt";
     private String partFilePath = "data/GPS/Porto5w/Porto5w.txt";
 
-    private String filePath = szPath;
+    private String filePath = fullFile;
 
     @Override
     public void setup() {
         map = new UnfoldingMap(this, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
         map.setZoomRange(0, 20);
         map.setBackgroundColor(255);
-        map.zoomAndPanTo(12,
-                new Location(30.658524, 104.065747)); //cd
+        map.zoomAndPanTo(11,
+//                new Location(30.658524, 104.065747)); //cd
 //                new Location(22.629, 114.029)); // sz
-//                new Location(41.150, -8.639)); // porto
+                new Location(41.150, -8.639)); // porto
 
         MapUtils.createDefaultEventDispatcher(this, map);
 
@@ -85,10 +83,10 @@ public class QualityDrive extends PApplet {
 
                     System.out.println("total load done: " + trajMetaFull.length);
 
-//                    QuadTree.loadTreeFromFile(quadFilePath);
-//                    quadRegionRoot = QuadTree.quadRegionRoot;
+                    QuadTree.loadTreeFromFile(quadFilePath);
+                    quadRegionRoot = QuadTree.quadRegionRoot;
 
-//                    System.out.println("index done");
+                    System.out.println("index done");
                     isDataLoadDone = true;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -107,11 +105,11 @@ public class QualityDrive extends PApplet {
 //    int[] qualityList = {70, 90};
     int quality = 9;
     int qualityId = 0;
-    double regionSize = 1.0;
+    double regionSize = 1.0 / 64.0;
 
     @Override
     public void draw() {
-        if (!(zoomCheck == map.getZoomLevel() && centerCheck.equals(map.getCenter()))) {
+        /*if (!(zoomCheck == map.getZoomLevel() && centerCheck.equals(map.getCenter()))) {
             map.draw();
             if (!map.allTilesLoaded()) {
                 if (mapImage == null) {
@@ -127,7 +125,7 @@ public class QualityDrive extends PApplet {
                 map.draw();
                 map.draw();
             }
-        } else {
+        } else*/ {
             if (isDataLoadDone) {
                 System.out.println("calculating......");
 
@@ -153,11 +151,11 @@ public class QualityDrive extends PApplet {
 
                 double qualitySearch = quality / 10.0;
 //                double qualitySearch = qualityList[qualityId] / 100.0;
-//                long t0 = System.currentTimeMillis();
+                long t0 = System.currentTimeMillis();
 
-//                trajShowMeta = SearchRegionPart.searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, qualitySearch);
+                trajShowMeta = SearchRegionPart.searchRegion(minLat, maxLat, minLon, maxLon, quadRegionRoot, qualitySearch);
 
-//                System.out.println(qualitySearch + ", " + regionSize + "," + "search time: " + (System.currentTimeMillis() - t0));
+                System.out.println(qualitySearch + ", " + regionSize + "," + "search time: " + (System.currentTimeMillis() - t0));
 //                System.out.println(trajShowMeta.length);
 //                System.out.println(qualitySearch + ", " + trajShowMeta.length * 1.0 / trajMetaFull.length);
 
@@ -184,17 +182,14 @@ public class QualityDrive extends PApplet {
 //                saveFrame("data/test_" + qualitySearch + "_" + regionSize + ".png");
 //                exit();
 
-                long beginTime = System.currentTimeMillis();
-                TrajectoryMeta[] wayPointTrajMeta = getWayPointPos(trajMetaFull, minLat, maxLat, minLon, maxLon);
-                TrajToSubpart[] trajToSubparts = VfgsForIndexPart.getVfgs(wayPointTrajMeta, 4, qualitySearch);
-
-//                vertexInit(trajMetaFull);
-                vertexInit(trajToSubparts);
-                drawGPU();
-
-                System.out.println(qualitySearch + ", " + regionSize + ", fly time: " + (System.currentTimeMillis() - beginTime) + " ms");
-                saveFrame("data/test1.png");
-                exit();
+//                long beginTime = System.currentTimeMillis();
+//                TrajectoryMeta[] wayPointTrajMeta = getWayPointPos(trajMetaFull, minLat, maxLat, minLon, maxLon);
+//                TrajToSubpart[] trajToSubparts = VfgsForIndexPart.getVfgs(wayPointTrajMeta, 4, qualitySearch);
+////                vertexInit(trajMetaFull);
+//                vertexInit(trajToSubparts);
+//                drawGPU();
+//
+//                System.out.println(qualitySearch + ", " + regionSize + ", fly time: " + (System.currentTimeMillis() - beginTime) + " ms");
                 int[] tmpList = new int[20000000];
                 for (int i = 0; i < tmpList.length; i++) {
                     tmpList[i] = i;

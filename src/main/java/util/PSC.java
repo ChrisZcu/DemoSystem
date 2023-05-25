@@ -1,5 +1,6 @@
 package util;
 
+import de.fhpotsdam.unfolding.geo.Location;
 import model.Colour;
 
 import java.awt.*;
@@ -8,7 +9,21 @@ import java.awt.*;
  * Parameter Setting Class
  */
 public class PSC {
-    public static final String WHITE_MAP_PATH = "https://api.mapbox.com/styles/v1/pacemaker-yc/ck4gqnid305z61cp1dtvmqh5y/tiles/512/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoicGFjZW1ha2VyLXljIiwiYSI6ImNrNGdxazl1aTBsNDAzZW41MDhldmQyancifQ.WPAckWszPCEHWlyNmJfY0A";
+    //    public static final String WHITE_MAP_PATH = "https://api.mapbox.com/styles/v1/pacemaker-yc/ck4gqnid305z61cp1dtvmqh5y/tiles/512/{z}/{x}/{y}@2x?" +
+//            "access_token=pk.eyJ1IjoicGFjZW1ha2VyLXljIiwiYSI6ImNrNGdxazl1aTBsNDAzZW41MDhldmQyancifQ.WPAckWszPCEHWlyNmJfY0A";
+    public static final String WHITE_MAP_PATH = "https://api.mapbox.com/styles/v1/chriszcu/ck8ieh81a0o0i1il0x83wi4at/tiles/512/{z}/{x}/{y}@2x?" +
+            "access_token=pk.eyJ1IjoiY2hyaXN6Y3UiLCJhIjoiY2s3YTgyamh3MTE3dzNmcWtiZ2E5eW16eiJ9.bjxrNwbXNPIz6D_tuUQKMA";
+    public static final String WHITE_MAP_PATH3 = "https://api.mapbox.com/styles/v1/chriszcu/ck8ieh81a0o0i1il0x83wi4at/tiles/256/{z}/{x}/{y}@2x?" +
+            "access_token=pk.eyJ1IjoiY2hyaXN6Y3UiLCJhIjoiY2s3YTgyamh3MTE3dzNmcWtiZ2E5eW16eiJ9.bjxrNwbXNPIz6D_tuUQKMA";
+    public static final String WHITE_MAP_PATH4 = "https://api.mapbox.com/styles/v1/chriszcu/ck8ieh81a0o0i1il0x83wi4at/tiles/256/{z}/{x}/{y}@2x?" +
+            "access_token=pk.eyJ1IjoiY2hyaXN6Y3UiLCJhIjoiY2s3YTgyamh3MTE3dzNmcWtiZ2E5eW16eiJ9.bjxrNwbXNPIz6D_tuUQKMA";
+    public static final String WHITE_MAP_PATH2 = "https://api.mapbox.com/styles/v1/chriszcu/ck8ieh81a0o0i1il0x83wi4at/tiles/512/{z}/{x}/{y}@2x?" +
+            "access_token=pk.eyJ1IjoiY2hyaXN6Y3UiLCJhIjoiY2s3YTgyamh3MTE3dzNmcWtiZ2E5eW16eiJ9.bjxrNwbXNPIz6D_tuUQKMA";
+    public static final String PORTO_DTW_PATH = "E:\\zcz\\dbgroup\\sigir\\dtw\\data\\dtw\\dtw_gpu\\finalRes\\porto.txt";
+    public static final String SZ_DTW_PATH = "E:\\zcz\\dbgroup\\sigir\\dtw\\data\\dtw\\dtw_gpu\\finalRes\\sz.txt";
+    public static final String CD_DTW_PATH = "E:\\zcz\\dbgroup\\sigir\\dtw\\data\\dtw\\dtw_gpu\\finalRes\\cd.txt";
+    public static final String PORTO_REGION = "data/tmp/porto_region_score.txt";
+    public static final String PORTO_KERNEL_REGION = "data/kernelMatrix/porto_test.txt";
 
     // i.e. alpha.
     // These two settings must match the results
@@ -23,6 +38,14 @@ public class PSC {
 
     public static String PATH_PREFIX
             = "data/GPS/porto5w/";
+    public static String cdPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\cd_new_score.txt";
+    public static String szPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\sz_score.txt";
+    public static String portoPath = "data/GPS/porto_full.txt";
+    public static String partFilePath = "data/GPS/Porto5w/Porto5w.txt";
+
+    public static Location cdCenter = new Location(30.658524, 104.065747); //cd
+    public static Location szCenter = new Location(22.629, 114.029); // sz
+    public static Location portoCenter = new Location(41.150, -8.639);
 
     // traj limit for full set. -1 for no limit
     public static final int LIMIT = 5_0000;

@@ -2,6 +2,14 @@ package util;
 
 import model.Trajectory;
 
+import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
@@ -72,5 +80,45 @@ public class Util {
         }
 
         return trajRandList;
+    }
+
+    public static void storeVQGSRes(String filePath, Trajectory[] trajList) {
+        StringBuilder sb = new StringBuilder();
+        for (Trajectory t : trajList) {
+            int tId = t.getTrajId();
+            sb.append(tId).append(",0").append("\n");
+        }
+        try (BufferedOutputStream writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(filePath)))
+        ) {
+            writer.write(sb.toString().getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static void storeSparest(String filePath, ArrayList<int[]>scores) {
+        StringBuilder sb = new StringBuilder();
+        int num = (int)scores.size() / 2;
+        System.out.println(scores.size()+ ", " +  num);
+        for (int[] t : scores) {
+            sb.append(t[1]).append(",").append(t[0]).append("\n");
+            num -= 1;
+            if (num == 0)
+                break;
+        }
+        try (BufferedOutputStream writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(filePath)))
+        ) {
+            writer.write(sb.toString().getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(String[] args) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(1).append(",0").append("\n");
+        sb.append(2).append(",0").append("\n");
+        sb.append(3).append(",0").append("\n");
+        sb.append(4).append(",0").append("\n");
+        System.out.println(sb);
     }
 }

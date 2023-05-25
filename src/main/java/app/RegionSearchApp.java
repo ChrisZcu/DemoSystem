@@ -61,7 +61,6 @@ public class RegionSearchApp extends PApplet {
 //                QuadTree.saveTreeToFile(qtPath);
 //                System.out.println("save finished.");
                 QuadTree.loadTreeFromFile(qtPath);
-                quadRegionRoot = QuadTree.quadRegionRoot;
 //                quadRegionRoot = QuadTree.getQuadIndexPart(filePath, 5, 32);
                 System.out.println("load finished");
 
@@ -96,7 +95,6 @@ public class RegionSearchApp extends PApplet {
             map.draw();
             if (regionDrawing) {
                 rectRegion = getSelectRegion(lastClick);
-
             }
             if (TimeProfileSharedObject.getInstance().calDone) {
                 trajShow = TimeProfileSharedObject.getInstance().trajectoryMetas;

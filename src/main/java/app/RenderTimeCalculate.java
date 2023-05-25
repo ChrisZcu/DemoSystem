@@ -48,7 +48,8 @@ public class RenderTimeCalculate extends PApplet {
         map.setZoomRange(0, 20);
         map.setBackgroundColor(255);
 //        map.zoomAndPanTo(11, new Location(22.717, 114.269));
-        map.zoomAndPanTo(11, new Location(30.658524, 104.065747));
+//        new Location(30.658524, 104.065747)
+        map.zoomAndPanTo(11, PSC.portoCenter);
         MapUtils.createDefaultEventDispatcher(this, map);
 
 
@@ -57,7 +58,7 @@ public class RenderTimeCalculate extends PApplet {
             public void run() {
                 String porto = "data/GPS/porto_full.txt";
                 String cdPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\cd_new_score.txt";
-                loadData(cdPath);
+                loadData(porto);
                 vqgs = loadVqgs("data/GPS/cd/cd_vfgs_0.txt");
                 System.out.println("load done");
                 isTotalLoad = true;

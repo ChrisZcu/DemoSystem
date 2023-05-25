@@ -63,7 +63,7 @@ public class VfgsForIndex {
         return totalScoreSet;
     }
 
-    private static int getTotalScore(TrajectoryMeta[] trajFull) {
+    public static int getTotalScore(TrajectoryMeta[] trajFull) {
 
         HashSet<Position> totalScoreSet = new HashSet<>(trajFull.length);
         for (TrajectoryMeta traj : trajFull) {

@@ -7,8 +7,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
 import java.io.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 public class QuadTree {
@@ -45,32 +48,32 @@ public class QuadTree {
         int i = 0;
         for (String line : trajFullStr) {
             String[] metaData = line.split(";");
-            double score = Double.parseDouble(metaData[0]);
+            double score = 0;
+            if (!metaData[0].isEmpty()) {
+                score = Double.parseDouble(metaData[0]);
+            }
             String[] item = metaData[1].split(",");
             if (item.length % 2 == 1) {
+                System.out.println(1);
                 continue;
             }
             boolean next = false;
-            Position[] positions = new Position[item.length / 2];
-            for (int j = 0; j < item.length - 1; j += 2) {
+            Position[] positions = new Position[item.length / 2 - 1];
+            for (int j = 0; j < item.length - 2; j += 2) {
 //                int srcX = Integer.parseInt(item[j]);
 //                int srcY = Integer.parseInt(item[j + 1]);
                 float lat = Float.parseFloat(item[j + 1]);
                 float lon = Float.parseFloat(item[j]);
-                //debug
-//                if (lat > 42.184 || lat < 39.628 || lon < -9.095 || lon > -6.568) {
-//                if (lat > 41.346 || lat < 40.948 || lon < -8.806 || lon > -8.229) { // debug
-//                if (lat < 38.429 || lon > -6.595) {
-//                    j = item.length;
-//                    next = true;
-//                    continue;
-//                }
-                //debug done
-//                if (i > 10){
-//                    j = item.length;
-//                    next = true;
-//                    continue;
-//                }
+                //***********************Porto**********************
+                if (isPortal) {
+                    if (lat > 42.184 || lat < 39.628 || lon < -9.095 || lon > -6.568) {//porto used
+                        j = item.length;
+                        next = true;
+                        continue;
+                    }
+                }
+                //***********************Porto**********************
+
                 try {
                     positions[j / 2] = new Position((int) (lat * preSion), (int) (lon * preSion));
                 } catch (ArrayIndexOutOfBoundsException e) {
@@ -104,6 +107,92 @@ public class QuadTree {
         latLon[2] = minGLon;
         latLon[3] = maxGLon;
         trajFullStr.clear();
+
+        return trajFull;
+    }
+    public static TrajectoryMeta[] loadData(double[] latLon, String filePath, HashSet<Integer> idxs) {
+        TrajectoryMeta[] trajFull;
+        ArrayList<String> trajFullStr = new ArrayList<>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            String line;
+            int cntTmp = 20;
+            while ((line = reader.readLine()) != null && cntTmp > 0) {
+                trajFullStr.add(line);
+                --cntTmp;
+            }
+            reader.close();
+            System.out.println("Read done");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        trajFull = new TrajectoryMeta[trajFullStr.size()];
+        ArrayList<TrajectoryMeta> res = new ArrayList<>();
+        int i = 0;
+        for (Integer id : idxs){
+            String line = trajFullStr.get(id);
+
+            String[] metaData = line.split(";");
+            int score = 0;
+            if (!metaData[0].isEmpty()) {
+                score = Integer.parseInt(metaData[0]);
+            }
+            String[] item = metaData[1].split(",");
+            if (item.length % 2 == 1) {
+                System.out.println(1);
+                continue;
+            }
+            boolean next = false;
+            Position[] positions = new Position[item.length / 2 - 1];
+            for (int j = 0; j < item.length - 2; j += 2) {
+//                int srcX = Integer.parseInt(item[j]);
+//                int srcY = Integer.parseInt(item[j + 1]);
+                float lat = Float.parseFloat(item[j + 1]);
+                float lon = Float.parseFloat(item[j]);
+                //***********************Porto**********************
+                if (isPortal) {
+                    if (lat > 42.184 || lat < 39.628 || lon < -9.095 || lon > -6.568) {//porto used
+                        j = item.length;
+                        next = true;
+                        continue;
+                    }
+                }
+                //***********************Porto**********************
+
+                try {
+                    positions[j / 2] = new Position((int) (lat * preSion), (int) (lon * preSion));
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println(line);
+                    break;
+                }
+                minGLat = Math.min(lat, minGLat);
+                maxGLat = Math.max(lat, maxGLat);
+                minGLon = Math.min(lon, minGLon);
+                maxGLon = Math.max(lon, maxGLon);
+            }
+//
+            if (next) {
+                continue;
+            }
+            TrajectoryMeta traj = new TrajectoryMeta(i);
+            traj.setScore(score);
+            traj.setPositions(positions);
+
+            traj.setBegin(0);
+            traj.setEnd(positions.length - 1);
+//            trajFull[i] = traj;
+            i++;
+            res.add(traj);
+        }
+        trajFullStr.clear();
+
+        trajFull = res.toArray(new TrajectoryMeta[0]);
+        System.out.println("Transfer done " + trajFull.length);
+        System.out.println(minGLat + ", " + maxGLat + ", " + minGLon + ", " + maxGLon);
+        latLon[0] = minGLat;
+        latLon[1] = maxGLat;
+        latLon[2] = minGLon;
+        latLon[3] = maxGLon;
 
         return trajFull;
     }
@@ -142,11 +231,15 @@ public class QuadTree {
         RectRegion rectRegion = new RectRegion();
         rectRegion.initLoc(new Location(minLat, minLon), new Location(maxLat, maxLon));
         TimeProfileSharedObject.getInstance().addQuadRectRegion(rectRegion);
+        total = Math.max(total, (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024));
+
         QuadRegion quadRegion = new QuadRegion(minLat, maxLat, minLon, maxLon);
 
-        TrajToSubpart[] trajToSubparts = VfgsForIndexPart.getVfgs(trajMetaList, delta);
+        TrajToSubpart[] trajToSubparts = VfgsForIndexPart.getVfgs(trajMetaList, delta, total);
 
         quadRegion.setTrajToSubparts(trajToSubparts);
+        total = Math.max(total, (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024));
+
         if (H > 1) {
             QuadRegion[] quadChildren = new QuadRegion[4];
             double latOff = (maxLat - minLat) / 2;
@@ -158,8 +251,10 @@ public class QuadTree {
                 double tmpLonMin = minLon + lonOff * lonId;
                 TrajectoryMeta[] wayPoint = getWayPointPos(trajMetaList, tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff);
                 quadChildren[i] = createPartlyFromTrajList(tmpLatMin, tmpLatMin + latOff, tmpLonMin, tmpLonMin + lonOff, H - 1, wayPoint, delta);
+                total = Math.max(total, (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024));
             }
             quadRegion.setQuadRegionChildren(quadChildren);
+            total = Math.max(total, (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024));
         }
         return quadRegion;
     }
@@ -168,6 +263,7 @@ public class QuadTree {
     public static TrajectoryMeta[] getWayPointPos(TrajectoryMeta[] trajFull, double minLat, double maxLat, double minLon, double maxLon) {
         ArrayList<TrajectoryMeta> res = new ArrayList<>();
         for (TrajectoryMeta traj : trajFull) {
+            total = Math.max(total, (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024));
             for (Position position : generatePosList(traj)) {
                 if (inCheck(position, minLat, maxLat, minLon, maxLon)) {
                     res.add(traj);
@@ -175,6 +271,7 @@ public class QuadTree {
                 }
             }
         }
+
 //        return res.toArray(new TrajectoryMeta[0]);
         return cutTrajsPos(res.toArray(new TrajectoryMeta[0]), minLat, maxLat, minLon, maxLon);
     }
@@ -187,11 +284,14 @@ public class QuadTree {
     /**
      * Run {@link #getRegionInTrajPos} (which cut the traj into subpart) on all trajs.
      */
+    static boolean debugFirst = true;
+
     private static TrajectoryMeta[] cutTrajsPos(TrajectoryMeta[] trajectories, double minLat, double maxLat, double minLon, double maxLon) {
         ArrayList<TrajectoryMeta> res = new ArrayList<>();
         for (TrajectoryMeta traj : trajectories) {
             res.addAll(getRegionInTrajPos(traj, minLat, maxLat, minLon, maxLon));
         }
+
         return res.toArray(new TrajectoryMeta[0]);
     }
 
@@ -417,34 +517,97 @@ public class QuadTree {
     }
 
     //lat41 lon8
+    private static double total_load = 0;
+    public static double total = 0;
+    private static boolean isPortal = false;
+
     public static void main(String[] args) {
-        String cdPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\cd_new_score.txt";
-        String szPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\sz_score.txt";
-        String partPortoPath = "data/GPS/Porto5w/Porto5w.txt";
+        String cdPath = "E:\\zcz\\dbgroup\\VQGS\\DTW\\data\\sz_cd\\cd_new_score.txt";
+        String szPath = "E:\\zcz\\dbgroup\\VQGS\\DTW\\data\\sz_cd\\sz_score.txt";
+        String partPorto = "data/GPS/porto_full.txt"; //9.5GB, 2.33
 
-        String filePath = cdPath;
-        String storeFilePath = "data/GPS/porto5w/sz_quad_tree_info.txt";
-        int height = 1;
-        int delta = 0;
-        if (args.length > 0) {
-            filePath = args[0];
-            storeFilePath = args[1];
-            height = Integer.parseInt(args[2]);
-            delta = Integer.parseInt(args[3]);
-            preSion = Double.parseDouble(args[4]);
+        String[] pathList = new String[]{partPorto};
+
+        for (String path : pathList) {
+            if (path.contains("porto")) {
+                System.out.println(">>>>>>>>>>>>>>>>>>>porto");
+                isPortal = true;
+            }
+            System.out.println(path);
+            total_load = 0;
+            total = 0;
+            String filePath = path;
+            int height = 1;
+            int delta = 0;
+            TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
+
+            TimeProfileSharedObject.getInstance().trajMetaFull = trajectories;
+
+            trajMetaFull = trajectories;
+            System.gc();
+            total_load = (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024);
+            System.out.println(total_load);
+
+//            for (int i = 1; i < 5; i++) {
+//                height = i;
+//                long t0 = System.currentTimeMillis();
+////                System.gc();
+////                System.out.println(i + " begin index");
+//                total = 0;
+//                total = Math.max(total, (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024));
+//                QuadTree.quadRegionRoot = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories, delta);
+//                total = Math.max(total, (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024));
+//                String info = (total_load + ", " + total + ", " + (total - total_load) + "Mb, " + (total - total_load) / 1024.0 + "Gb");
+////                System.out.println(i + " index time: " + ((System.currentTimeMillis() - t0) / 1000.00) + ", " + info);
+//                System.out.println("*********initialization********");
+//            }
+            for (int i = 1; i < 14; i++) {
+                height = i;
+                long t0 = System.currentTimeMillis();
+                System.gc();
+//                System.out.println(i + " begin index");
+                System.out.println(LocalDateTime.now(ZoneId.of("UTC+8")) + ": ");
+                total = 0;
+                total = Math.max(total, (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024));
+                double cur = (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024);
+                QuadTree.quadRegionRoot = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories, delta);
+                total = Math.max(total, (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024));
+                double maxMem = Runtime.getRuntime().maxMemory() / 1024.0 / 1024;
+                String info = (total_load + ", " + total + ", " + (total - total_load) + "Mb, " + (total - total_load) / 1024.0 + "Gb ") + ", ||"
+                        + maxMem + ", " + cur + ", " + (maxMem - cur) / 1024 + "GB";
+                System.out.println(LocalDateTime.now(ZoneId.of("UTC+8")) + ": ");
+                System.out.println(height + " index time: " + ((System.currentTimeMillis() - t0) / 1000.00) + ", " + info);
+                System.out.println("***********************");
+            }
         }
-        TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
-
-        TimeProfileSharedObject.getInstance().trajMetaFull = trajectories;
-        trajMetaFull = trajectories;
-
-        long t0 = System.currentTimeMillis();
-        System.out.println("begin index");
-        QuadTree.quadRegionRoot = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories, delta);
-        System.out.println("index time: " + (System.currentTimeMillis() - t0));
-
+//        String filePath = cdPath;
+//        String storeFilePath = "data/GPS/porto5w/sz_quad_tree_info.txt";
+//        int height = 1;
+//        int delta = 0;
+//        if (args.length > 0) {
+//            filePath = args[0];
+//            storeFilePath = args[1];
+//            height = Integer.parseInt(args[2]);
+//            delta = Integer.parseInt(args[3]);
+//            preSion = Double.parseDouble(args[4]);
+//        }
+//        TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
+//
+//        TimeProfileSharedObject.getInstance().trajMetaFull = trajectories;
+//
+//        trajMetaFull = trajectories;
+//        for (int i = 1; i < 14; i++) {
+//            height = i;
+//            total_load = (Runtime.getRuntime().totalMemory()) / (1024.0 * 1024);
+//            long t0 = System.currentTimeMillis();
+//            System.out.println(i + " begin index");
+//            QuadTree.quadRegionRoot = createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories, delta);
+//            System.out.println(total_load + ", " + total + ", " + (total - total_load) + "Mb");
+//            System.out.println(i + " index time: " + ((System.currentTimeMillis() - t0) / 1000.00));
+//        }
 //        QuadTree.saveTreeToFile(storeFilePath);
-
-        System.out.println("save done");
+//
+//        System.out.println("save done");
     }
 }
+//6.3g

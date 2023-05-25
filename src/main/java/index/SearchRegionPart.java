@@ -106,7 +106,8 @@ public class SearchRegionPart extends PApplet {
         int trajId = trajToSubpart.getTrajId();
         int begin = trajToSubpart.getBeginPosIdx();
         int end = trajToSubpart.getEndPosIdx();      // notice that the end is included
-
+        if (end + 1 > trajMetaFull[trajId].getPositions().length)
+            return Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, trajMetaFull[trajId].getPositions().length);
         return Arrays.asList(trajMetaFull[trajId].getPositions()).subList(begin, end + 1);
     }
 
