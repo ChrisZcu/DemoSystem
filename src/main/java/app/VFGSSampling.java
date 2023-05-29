@@ -58,7 +58,7 @@ public class VFGSSampling extends PApplet {
                 return -a[0] + b[0];
             }
         });
-        util.Util.storeSparest("data/vfgs/tkde_revision/reviewer1/half_sparest_desc.txt", scores);
+        util.Util.storeSparest("data/vfgs/tkde_revision/reviewer1/half_sparest_0.01.txt", scores, 0.01);
     }
 
     public void vfqsSampling() {

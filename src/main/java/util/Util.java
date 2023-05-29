@@ -95,10 +95,11 @@ public class Util {
             throw new RuntimeException(e);
         }
     }
-    public static void storeSparest(String filePath, ArrayList<int[]>scores) {
+
+    public static void storeSparest(String filePath, ArrayList<int[]> scores, double ratio) {
         StringBuilder sb = new StringBuilder();
-        int num = (int)scores.size() / 2;
-        System.out.println(scores.size()+ ", " +  num);
+        int num = (int) (scores.size() * ratio);
+        System.out.println(scores.size() + ", " + num);
         for (int[] t : scores) {
             sb.append(t[1]).append(",").append(t[0]).append("\n");
             num -= 1;

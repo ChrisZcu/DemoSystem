@@ -57,7 +57,7 @@ public class TrajDistanceCmp extends PApplet {
             try {
 
                 System.out.println("begin cal");
-                HashSet<Integer> idxs = new HashSet<>();
+                ArrayList<Integer> idxs = new ArrayList<>();
                 int cnt = 11;
                 for (int i = 0; i < cnt; ++i) {
                     if (i == 8)
@@ -262,7 +262,7 @@ public class TrajDistanceCmp extends PApplet {
     }
 
     private static void CalDistance() {
-        HashSet<Integer> idxs = new HashSet<>();
+        ArrayList<Integer> idxs = new ArrayList<>();
         int cnt = 11;
         for (int i = 0; i < cnt; ++i) {
             if (i == 8)

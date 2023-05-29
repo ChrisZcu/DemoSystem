@@ -110,16 +110,18 @@ public class QuadTree {
 
         return trajFull;
     }
-    public static TrajectoryMeta[] loadData(double[] latLon, String filePath, HashSet<Integer> idxs) {
+
+    public static TrajectoryMeta[] loadData(double[] latLon, String filePath, ArrayList<Integer> idxs) {
         TrajectoryMeta[] trajFull;
         ArrayList<String> trajFullStr = new ArrayList<>();
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
             String line;
-            int cntTmp = 20;
-            while ((line = reader.readLine()) != null && cntTmp > 0) {
+//            int cntTmp = 20;
+//            while ((line = reader.readLine()) != null && cntTmp > 0) {
+            while ((line = reader.readLine()) != null) {
                 trajFullStr.add(line);
-                --cntTmp;
+//                --cntTmp;
             }
             reader.close();
             System.out.println("Read done");
@@ -129,7 +131,10 @@ public class QuadTree {
 //        trajFull = new TrajectoryMeta[trajFullStr.size()];
         ArrayList<TrajectoryMeta> res = new ArrayList<>();
         int i = 0;
-        for (Integer id : idxs){
+        int total_num = (int)(trajFullStr.size() * 0.005);
+        for (Integer id : idxs) {
+            if (i == total_num)
+                break;
             String line = trajFullStr.get(id);
 
             String[] metaData = line.split(";");

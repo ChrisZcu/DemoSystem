@@ -17,17 +17,18 @@ import util.PSC;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.*;
 
 public class DrawTraj extends PApplet {
 
     private UnfoldingMap map;
     private static TrajectoryMeta[] trajMetaFull;
     private static TrajectoryMeta[] trajShow;
-    private String filePath = PSC.portoPath;
+    private String filePath = PSC.cdPath;
 
     private boolean isDataLoadDone = false;
     private PImage mapImage = null;
@@ -38,14 +39,52 @@ public class DrawTraj extends PApplet {
     public void settings() {
         size(1200, 800, P2D);
     }
+
     String framePath = "";
+
+    private ArrayList<Integer> loadDTWRes(String filePath) {
+        ArrayList<Integer> res = new ArrayList<>();
+        ArrayList<String> metaTmp = new ArrayList<>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                metaTmp.add(line);
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Map<Integer, Double> id2Score = new HashMap<>();
+
+        for (String e : metaTmp) {
+            int id = Integer.parseInt(e.split(",")[0]);
+            double score = Double.parseDouble(e.split(",")[1]);
+            id2Score.put(id, score);
+        }
+
+        Comparator<Map.Entry<Integer, Double>> valueComparator = new Comparator<Map.Entry<Integer, Double>>() {
+            @Override
+            public int compare(Map.Entry<Integer, Double> o1,
+                               Map.Entry<Integer, Double> o2) {
+                return (o1.getValue() - o2.getValue()) > 0 ? -1 : (o1.getValue() - o2.getValue()) == 0 ? 0 : 1;
+            }
+        };
+        List<Map.Entry<Integer, Double>> list = new ArrayList<Map.Entry<Integer, Double>>(id2Score.entrySet());
+        Collections.sort(list, valueComparator);
+        for (Map.Entry<Integer, Double> entry : list) {
+            res.add(entry.getKey());
+        }
+        return res;
+    }
+
     public void setup() {
         map = new UnfoldingMap(this, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
         map.setZoomRange(0, 20);
         map.setBackgroundColor(255);
 //        new Location(41.17129, -8.559485))
-        map.zoomAndPanTo(10, PSC.portoCenter);
-//        map.zoomAndPanTo(11, PSC.szCenter);
+//        map.zoomAndPanTo(10, PSC.portoCenter);
+        map.zoomAndPanTo(11, PSC.cdCenter);
         MapUtils.createDefaultEventDispatcher(this, map);
 
         new Thread(() -> {
@@ -54,14 +93,16 @@ public class DrawTraj extends PApplet {
 //                trajShow = new TrajectoryMeta[number];
 
 
-//                String sPath = "data/vfgs/tkde_revision/reviewer1/half_sparest.txt";
-//                framePath = "data/picture/revision/remove_densitiest.png";
+//                String sPath = "data/vfgs/tkde_revision/reviewer1/half_sparest_0.01.txt";
+//                framePath = "data/picture/revision/longest_0.01.png";
 
 //                String sPathDesc = "data/vfgs/tkde_revision/reviewer1/half_sparest_desc.txt";
 //                framePath = "data/picture/revision/remove_sparest.png";
 
-                String vfgsPath = "data/vfgs/tkde_revision/reviewer1/half_sampling_16.txt";
-                framePath = "data/picture/revision/vqgs_16_half.png";
+//                String vfgsPath = "data/vfgs/tkde_revision/reviewer1/half_sampling_16.txt";
+                String vfgsPath = "data/GPS/vfgs_64.txt";
+
+                framePath = "data/picture/revision/vqgs_64_0.005.png";
 //
 //                framePath = "data/picture/revision/full.png";
 
@@ -74,7 +115,8 @@ public class DrawTraj extends PApplet {
                 }
                 reader.close();
                 System.out.println("begin cal");
-                HashSet<Integer> idxs = new HashSet<>();
+                ArrayList<Integer> idxs = new ArrayList<>();
+//                idxs = loadDTWRes(PSC.PORTO_DTW_PATH);
 //                int cnt = 20;
                 for (String items : nums) {
                     idxs.add(Integer.parseInt(items.split(",")[0]));
@@ -83,8 +125,8 @@ public class DrawTraj extends PApplet {
 //                        break;
                 }
 
-                trajShow = QuadTree.loadData(new double[4], filePath, idxs);
-//                trajShow = QuadTree.loadData(new double[4], filePath);
+//                trajShow = QuadTree.loadData(new double[4], filePath, idxs);
+                trajShow = QuadTree.loadData(new double[4], filePath);
 
                 System.out.println("total load done: " + trajShow.length);
                 isDataLoadDone = true;
@@ -146,7 +188,8 @@ public class DrawTraj extends PApplet {
             }
         }
     }
-//    private float[]vertexInit(ArrayList<String> rawTraj, HashSet<Integer> idxs){
+
+    //    private float[]vertexInit(ArrayList<String> rawTraj, HashSet<Integer> idxs){
 //        int lineCnt = 0;
 //        ArrayList<Float> points = new ArrayList<>();
 //        for (int idx: idxs){

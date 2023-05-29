@@ -33,7 +33,8 @@ public class DrawDtw extends PApplet {
     private static TrajectoryMeta[] trajMetaFull;
     private static TrajectoryMeta[] trajShow;
 
-    private String filePath = PSC.PORTO_KERNEL_REGION;
+//    private String filePath = PSC.PORTO_KERNEL_REGION;
+    private String filePath = PSC.portoPath;
 
     private boolean isDataLoadDone = false;
     private PImage mapImage = null;
@@ -49,8 +50,8 @@ public class DrawDtw extends PApplet {
         map = new UnfoldingMap(this, new MapBox.CustomMapBoxProvider(PSC.WHITE_MAP_PATH));
         map.setZoomRange(0, 20);
         map.setBackgroundColor(255);
-        map.zoomAndPanTo(12, new Location(41.17129, -8.559485));
-//        map.zoomAndPanTo(11, PSC.szCenter);
+//        map.zoomAndPanTo(12, new Location(41.17129, -8.559485));
+        map.zoomAndPanTo(10, PSC.portoCenter);
         MapUtils.createDefaultEventDispatcher(this, map);
 
         new Thread(() -> {
@@ -59,7 +60,7 @@ public class DrawDtw extends PApplet {
 
                 TimeProfileSharedObject.getInstance().trajMetaFull = trajMetaFull;
 
-                int number = (int) (trajMetaFull.length * 0.002);
+                int number = (int) (trajMetaFull.length * 0.01);
                 trajShow = new TrajectoryMeta[number];
                 BufferedReader reader = new BufferedReader(new FileReader("E:\\zcz\\dbgroup\\VQGS\\sigir\\dtw\\data\\dtw\\kernel_matrix\\ordered\\porto.txt"));
 
@@ -70,7 +71,7 @@ public class DrawDtw extends PApplet {
                     line = reader.readLine();
                     trajShow[number] = trajMetaFull[Integer.parseInt(line.split(",")[0])];
                 }
-
+                reader.close();
                 isDataLoadDone = true;
                 System.out.println("total load done: " + trajShow.length);
             } catch (Exception e) {
@@ -115,7 +116,7 @@ public class DrawDtw extends PApplet {
                 float[] vertexData = vertexInit(trajShow);
                 drawGPU(gl3, vertexData);
 
-                saveFrame("data/picture/graduation/dtw/porto.png");
+                saveFrame("data/picture/revision/dtw_0.01.png");
                 noLoop();
             }
         }

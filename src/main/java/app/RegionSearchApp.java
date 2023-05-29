@@ -368,8 +368,6 @@ public class RegionSearchApp extends PApplet {
 
     public static void main(String[] args) {
 
-        System.out.println();
-
         PApplet.main(new String[]{RegionSearchApp.class.getName()});
     }
 }

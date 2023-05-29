@@ -28,7 +28,7 @@ public class UserInterface extends PApplet {
     String partTrajFilePath = "data/GPS/Porto5w/Porto5w.txt";
     String totalFilePath = "data/GPS/porto_full.txt";
 
-    String filePath = totalFilePath;
+    String filePath = partTrajFilePath;
     UnfoldingMap map;
     UnfoldingMap mapClone;
 
@@ -39,7 +39,7 @@ public class UserInterface extends PApplet {
         size(1000, 800, P2D);
     }
 
-    private int ZOOMLEVEL = 14;
+    private int ZOOMLEVEL = 11;
     private Location PRESENT = new Location(41.315205, -8.629877)/*new Location(41.151, -8.634)*//*new Location(41.206, -8.627)*/;
     private boolean loadDone = false;
 

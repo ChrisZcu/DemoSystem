@@ -19,9 +19,9 @@ public class PSC {
             "access_token=pk.eyJ1IjoiY2hyaXN6Y3UiLCJhIjoiY2s3YTgyamh3MTE3dzNmcWtiZ2E5eW16eiJ9.bjxrNwbXNPIz6D_tuUQKMA";
     public static final String WHITE_MAP_PATH2 = "https://api.mapbox.com/styles/v1/chriszcu/ck8ieh81a0o0i1il0x83wi4at/tiles/512/{z}/{x}/{y}@2x?" +
             "access_token=pk.eyJ1IjoiY2hyaXN6Y3UiLCJhIjoiY2s3YTgyamh3MTE3dzNmcWtiZ2E5eW16eiJ9.bjxrNwbXNPIz6D_tuUQKMA";
-    public static final String PORTO_DTW_PATH = "E:\\zcz\\dbgroup\\sigir\\dtw\\data\\dtw\\dtw_gpu\\finalRes\\porto.txt";
-    public static final String SZ_DTW_PATH = "E:\\zcz\\dbgroup\\sigir\\dtw\\data\\dtw\\dtw_gpu\\finalRes\\sz.txt";
-    public static final String CD_DTW_PATH = "E:\\zcz\\dbgroup\\sigir\\dtw\\data\\dtw\\dtw_gpu\\finalRes\\cd.txt";
+    public static final String PORTO_DTW_PATH = "E:\\zcz\\dbgroup\\VQGS\\sigir\\dtw\\data\\dtw\\dtw_gpu\\finalRes\\porto.txt";
+    public static final String SZ_DTW_PATH = "E:\\zcz\\dbgroup\\VQGS\\sigir\\dtw\\data\\dtw\\dtw_gpu\\finalRes\\sz.txt";
+    public static final String CD_DTW_PATH = "E:\\zcz\\dbgroup\\VQGS\\sigir\\dtw\\data\\dtw\\dtw_gpu\\finalRes\\cd.txt";
     public static final String PORTO_REGION = "data/tmp/porto_region_score.txt";
     public static final String PORTO_KERNEL_REGION = "data/kernelMatrix/porto_test.txt";
 
@@ -38,8 +38,8 @@ public class PSC {
 
     public static String PATH_PREFIX
             = "data/GPS/porto5w/";
-    public static String cdPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\cd_new_score.txt";
-    public static String szPath = "E:\\zcz\\dbgroup\\DTW\\data\\sz_cd\\sz_score.txt";
+    public static String cdPath = "E:\\zcz\\dbgroup\\VQGS\\DTW\\data\\sz_cd\\cd_new_score.txt";
+    public static String szPath = "E:\\zcz\\dbgroup\\VQGS\\DTW\\data\\sz_cd\\sz_score.txt";
     public static String portoPath = "data/GPS/porto_full.txt";
     public static String partFilePath = "data/GPS/Porto5w/Porto5w.txt";
 
