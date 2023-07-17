@@ -1,18 +1,14 @@
 package util;
 
+import model.Position;
 import model.Trajectory;
+import model.TrajectoryMeta;
 
-import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Random;
+import java.util.*;
 
 public class Util {
     /**
@@ -82,6 +78,14 @@ public class Util {
         return trajRandList;
     }
 
+    public static int qualityScore(TrajectoryMeta[] trajs) {
+        HashSet<Position> totalScoreSet = new HashSet<>(trajs.length);
+        for (TrajectoryMeta traj : trajs) {
+            totalScoreSet.addAll(Arrays.asList(traj.getPositions()));
+        }
+        return totalScoreSet.size();
+    }
+
     public static void storeVQGSRes(String filePath, Trajectory[] trajList) {
         StringBuilder sb = new StringBuilder();
         for (Trajectory t : trajList) {
@@ -94,6 +98,95 @@ public class Util {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void storeIds(String filePath, int[] indexes) {
+        StringBuilder sb = new StringBuilder();
+        for (int idx : indexes) {
+            sb.append(idx).append(",0").append("\n");
+        }
+        try (BufferedOutputStream writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(filePath)))
+        ) {
+            writer.write(sb.toString().getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void storeInitVAS(String filePath, int[] indexes, double[] scores) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < indexes.length; ++i) {
+            sb.append(indexes[i]).append(",").append(scores[i]).append("\n");
+        }
+        try (BufferedOutputStream writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(filePath)))
+        ) {
+            writer.write(sb.toString().getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void loadInitVAS(String filePath, int[] trajIds, double[] scores) {
+        ArrayList<String> res = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath));) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                res.add(line);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        int i = 0;
+        for (String item : res) {
+            String[] tmp = item.split(",");
+            int idx = Integer.parseInt(tmp[0]);
+            double score = Double.parseDouble(tmp[1]);
+            trajIds[i] = idx;
+            scores[i++] = score;
+        }
+    }
+
+    public static void storeIdxs(String filePath, ArrayList<Integer> idxs) {
+        StringBuilder sb = new StringBuilder();
+        for (Integer id : idxs) {
+            sb.append(id).append(",").append("\n");
+        }
+        try (BufferedOutputStream writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(filePath)))
+        ) {
+            writer.write(sb.toString().getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static void storeIdxWithScore(String filePath, HashMap<Integer, Double> idxToScore){
+        StringBuilder sb = new StringBuilder();
+        idxToScore.forEach((id, dis) ->{
+            sb.append(id).append(",").append(dis).append("\n");
+        });
+        try (BufferedOutputStream writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(filePath)))
+        ) {
+            writer.write(sb.toString().getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static ArrayList<Integer> loadIdxsFromFile(String filePath) {
+        ArrayList<String> res = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                res.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ArrayList<Integer> idxs = new ArrayList<>();
+        for (String item : res) {
+            idxs.add(Integer.parseInt(item.split(",")[0]));
+        }
+        return idxs;
     }
 
     public static void storeSparest(String filePath, ArrayList<int[]> scores, double ratio) {

@@ -196,7 +196,7 @@ public class DistanceFunc {
         return dis;
     }
 
-    private static double PointEuclidean(Position p1, Position p2) {
+    public static double PointEuclidean(Position p1, Position p2) {
 //        System.out.println(p1.x + ", " + p1.y + ", " + p2.x + ", " + p2.y);
         double x1 = p1.x / 10000.0;
         double y1 = p1.y / 10000.0;

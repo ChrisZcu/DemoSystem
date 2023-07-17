@@ -9,10 +9,7 @@ import org.apache.commons.io.LineIterator;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class QuadTree {
     private static double minGLat = Float.MAX_VALUE;
@@ -26,7 +23,7 @@ public class QuadTree {
 
     public QuadTree() {
     }
-
+//
     private static double preSion = 10000.0;
 
     public static TrajectoryMeta[] loadData(double[] latLon, String filePath) {
@@ -40,6 +37,7 @@ public class QuadTree {
             }
             reader.close();
             System.out.println("Read done");
+            System.out.println(trajFullStr.size());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -53,10 +51,10 @@ public class QuadTree {
                 score = Double.parseDouble(metaData[0]);
             }
             String[] item = metaData[1].split(",");
-            if (item.length % 2 == 1) {
-                System.out.println(1);
-                continue;
-            }
+//            if (item.length % 2 == 1) {
+//                System.out.println(1);
+//                continue;
+//            }
             boolean next = false;
             Position[] positions = new Position[item.length / 2 - 1];
             for (int j = 0; j < item.length - 2; j += 2) {
@@ -65,13 +63,13 @@ public class QuadTree {
                 float lat = Float.parseFloat(item[j + 1]);
                 float lon = Float.parseFloat(item[j]);
                 //***********************Porto**********************
-                if (isPortal) {
-                    if (lat > 42.184 || lat < 39.628 || lon < -9.095 || lon > -6.568) {//porto used
-                        j = item.length;
-                        next = true;
-                        continue;
-                    }
-                }
+//                if (filePath.contains("porto")) {
+//                    if (lat > 42.184 || lat < 39.628 || lon < -9.095 || lon > -6.568) {//porto used
+//                        j = item.length;
+//                        next = true;
+//                        continue;
+//                    }
+//                }
                 //***********************Porto**********************
 
                 try {
@@ -128,13 +126,16 @@ public class QuadTree {
         } catch (IOException e) {
             e.printStackTrace();
         }
+//        int maxLen = 0;
+//        for (String item : trajFullStr){
+//            maxLen = Math.max(maxLen, item.split(";")[1].split(",").length);
+//        }
+//        System.out.println(maxLen);
 //        trajFull = new TrajectoryMeta[trajFullStr.size()];
         ArrayList<TrajectoryMeta> res = new ArrayList<>();
         int i = 0;
-        int total_num = (int)(trajFullStr.size() * 0.005);
+        boolean flag = true;
         for (Integer id : idxs) {
-            if (i == total_num)
-                break;
             String line = trajFullStr.get(id);
 
             String[] metaData = line.split(";");
@@ -147,6 +148,14 @@ public class QuadTree {
                 System.out.println(1);
                 continue;
             }
+//            if (flag){
+//                flag = false;
+//                System.out.println(item.length);
+//            }
+//            if (item.length < 5){
+//                continue;
+//            }
+
             boolean next = false;
             Position[] positions = new Position[item.length / 2 - 1];
             for (int j = 0; j < item.length - 2; j += 2) {
@@ -194,6 +203,118 @@ public class QuadTree {
         trajFull = res.toArray(new TrajectoryMeta[0]);
         System.out.println("Transfer done " + trajFull.length);
         System.out.println(minGLat + ", " + maxGLat + ", " + minGLon + ", " + maxGLon);
+        latLon[0] = minGLat;
+        latLon[1] = maxGLat;
+        latLon[2] = minGLon;
+        latLon[3] = maxGLon;
+
+        return trajFull;
+    }
+    public static TrajectoryMeta[] loadData(double[] latLon, String filePath, ArrayList<Integer> idxs, double ratio) {
+        TrajectoryMeta[] trajFull;
+        ArrayList<String> trajFullStr = new ArrayList<>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            String line;
+//            int cntTmp = 20;
+//            while ((line = reader.readLine()) != null && cntTmp > 0) {
+            while ((line = reader.readLine()) != null) {
+                trajFullStr.add(line);
+//                --cntTmp;
+            }
+            reader.close();
+            System.out.println("Read done");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        int maxLen = 0;
+//        for (String item : trajFullStr){
+//            maxLen = Math.max(maxLen, item.split(";")[1].split(",").length);
+//        }
+//        System.out.println(maxLen);
+//        trajFull = new TrajectoryMeta[trajFullStr.size()];
+        ArrayList<TrajectoryMeta> res = new ArrayList<>();
+        int i = 0;
+        int total_num = (int)(trajFullStr.size() * ratio);
+        Random ran = new Random(1);
+        ArrayList<Integer> idxsTmp = new ArrayList<>();
+        HashSet<Integer> initSet = new HashSet<Integer>(total_num);
+        while (initSet.size() != total_num) {
+            initSet.add(ran.nextInt(trajFullStr.size() - 1));
+        }
+        for (int id : initSet)
+            idxsTmp.add(id);
+
+        boolean flag = true;
+        for (Integer id : idxs) {
+            if (i == total_num)
+                break;
+            String line = trajFullStr.get(id);
+
+            String[] metaData = line.split(";");
+            int score = 0;
+            if (!metaData[0].isEmpty()) {
+                score = Integer.parseInt(metaData[0]);
+            }
+            String[] item = metaData[1].split(",");
+            if (item.length % 2 == 1) {
+                System.out.println(1);
+                continue;
+            }
+//            if (flag){
+//                flag = false;
+//                System.out.println(item.length);
+//            }
+//            if (item.length < 5){
+//                continue;
+//            }
+
+            boolean next = false;
+            Position[] positions = new Position[item.length / 2 - 1];
+            for (int j = 0; j < item.length - 2; j += 2) {
+//                int srcX = Integer.parseInt(item[j]);
+//                int srcY = Integer.parseInt(item[j + 1]);
+                float lat = Float.parseFloat(item[j + 1]);
+                float lon = Float.parseFloat(item[j]);
+                //***********************Porto**********************
+                if (isPortal) {
+                    if (lat > 42.184 || lat < 39.628 || lon < -9.095 || lon > -6.568) {//porto used
+                        j = item.length;
+                        next = true;
+                        continue;
+                    }
+                }
+                //***********************Porto**********************
+
+                try {
+                    positions[j / 2] = new Position((int) (lat * preSion), (int) (lon * preSion));
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println(line);
+                    break;
+                }
+                minGLat = Math.min(lat, minGLat);
+                maxGLat = Math.max(lat, maxGLat);
+                minGLon = Math.min(lon, minGLon);
+                maxGLon = Math.max(lon, maxGLon);
+            }
+//
+            if (next) {
+                continue;
+            }
+            TrajectoryMeta traj = new TrajectoryMeta(i);
+            traj.setScore(score);
+            traj.setPositions(positions);
+
+            traj.setBegin(0);
+            traj.setEnd(positions.length - 1);
+//            trajFull[i] = traj;
+            i++;
+            res.add(traj);
+        }
+        trajFullStr.clear();
+
+        trajFull = res.toArray(new TrajectoryMeta[0]);
+        System.out.println("Transfer done " + trajFull.length);
         latLon[0] = minGLat;
         latLon[1] = maxGLat;
         latLon[2] = minGLon;
@@ -348,6 +469,9 @@ public class QuadTree {
 
     public static QuadRegion getQuadIndexPart(String filePath, int height, int delta) {
         TrajectoryMeta[] trajectories = loadData(new double[4], filePath);
+        return createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories, delta);
+    }
+    public static QuadRegion getQuadIndexPart(TrajectoryMeta[] trajectories, int height, int delta) {
         return createPartlyFromTrajList(minGLat, maxGLat, minGLon, maxGLon, height, trajectories, delta);
     }
 

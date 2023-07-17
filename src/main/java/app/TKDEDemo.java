@@ -20,7 +20,7 @@ import java.awt.*;
 import java.util.Scanner;
 
 
-public class RegionSearchApp extends PApplet {
+public class TKDEDemo extends PApplet {
 
     UnfoldingMap map;
     private int ZOOMLEVEL = 12;
@@ -385,6 +385,6 @@ public class RegionSearchApp extends PApplet {
 
     public static void main(String[] args) {
 
-        PApplet.main(new String[]{RegionSearchApp.class.getName()});
+        PApplet.main(new String[]{TKDEDemo.class.getName()});
     }
 }

@@ -13,17 +13,19 @@ import model.TrajectoryMeta;
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.event.MouseEvent;
-import processing.opengl.PJOGL;
+import util.DistanceFunc;
 import util.PSC;
 
 import java.awt.*;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class TrajDistanceCmp extends PApplet {
 
@@ -49,29 +51,29 @@ public class TrajDistanceCmp extends PApplet {
         map.setZoomRange(0, 20);
         map.setBackgroundColor(255);
         Location tmp = new Location(41.149, -8.59);
-        map.zoomAndPanTo(15, PSC.portoCenter);
+        map.zoomAndPanTo(10, PSC.portoCenter);
 //        map.zoomAndPanTo(15, tmp);
         MapUtils.createDefaultEventDispatcher(this, map);
 
-        new Thread(() -> {
-            try {
-
-                System.out.println("begin cal");
-                ArrayList<Integer> idxs = new ArrayList<>();
-                int cnt = 11;
-                for (int i = 0; i < cnt; ++i) {
-                    if (i == 8)
-                        continue;
-                    idxs.add(i);
-                }
-                trajShow = QuadTree.loadData(new double[4], filePath, idxs);
-
-                System.out.println("total load done: " + trajShow.length);
-                isDataLoadDone = true;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
+//        new Thread(() -> {
+//            try {
+//
+//                System.out.println("begin cal");
+//                ArrayList<Integer> idxs = new ArrayList<>();
+////                int cnt = 10000;
+////                for (int i = 0; i < cnt; ++i) {
+//////                    if (i == 8)
+//////                        continue;
+////                    idxs.add(i);
+////                }
+////                trajShow = QuadTree.loadData(new double[4], filePath, idxs);
+//
+//                System.out.println("total load done: " + trajShow.length);
+        isDataLoadDone = true;
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }).start();
     }
 
     @Override
@@ -88,6 +90,11 @@ public class TrajDistanceCmp extends PApplet {
     public void draw() {
         if (!(zoomCheck == map.getZoomLevel() && centerCheck.equals(map.getCenter()))) {
             map.draw();
+            map.draw();
+            map.draw();
+            map.draw();
+            map.draw();
+
             if (!map.allTilesLoaded()) {
                 if (mapImage == null) {
                     mapImage = map.mapDisplay.getInnerPG().get();
@@ -109,11 +116,6 @@ public class TrajDistanceCmp extends PApplet {
                 }
                 image(mapImage, 0, 0);
             } else if (isDataLoadDone) {
-                map.draw();
-                map.draw();
-                map.draw();
-                map.draw();
-
 //                GL3 gl3;
 //                gl3 = ((PJOGL) beginPGL()).gl.getGL3();
 //                endPGL();
@@ -154,27 +156,60 @@ public class TrajDistanceCmp extends PApplet {
         return tmpCertex;
     }
 
+    private static double disBound = 0.0342 * 3;
+
     private void drawCPU() {
         noFill();
-        strokeWeight(2);
+        strokeWeight(1);
         int[] colorList = new int[]{
                 new Color(228, 26, 28, 125).getRGB(),
                 new Color(166, 86, 40, 125).getRGB(),
-                new Color(0,0,0, 125).getRGB(),
+                new Color(0, 0, 0, 125).getRGB(),
                 new Color(152, 78, 163, 125).getRGB(),
                 new Color(77, 175, 74, 125).getRGB(),
-                new Color(254,178,76, 125).getRGB(),
+                new Color(254, 178, 76, 125).getRGB(),
                 new Color(228, 26, 28, 125).getRGB(),
                 new Color(247, 129, 191, 125).getRGB(),
                 new Color(255, 127, 0, 125).getRGB(),
                 new Color(55, 126, 184, 125).getRGB(),
         };
+        System.out.println("total length: " + trajShow.length);
+        stroke(colorList[9]);
+        for (int i = 1; i < trajShow.length; ++i) {
+            TrajectoryMeta traj = trajShow[i];
+            if (id2Score.get(traj.getTrajId()) > disBound) {
+                continue;
+            }
+            beginShape();
+            for (Position p : traj.getPositions()) {
+                Location loc = new Location(p.x / 10000.0, p.y / 10000.0);
+                ScreenPosition src = map.getScreenPosition(loc);
+                vertex(src.x, src.y);
+            }
+            endShape();
+        }
+        stroke(colorList[2]);
+        strokeWeight(2);
+        for (int i = 1; i < trajShow.length; ++i) {
+            TrajectoryMeta traj = trajShow[i];
+            if (id2Score.get(i) < disBound) {
+                continue;
+            }
+            beginShape();
+            for (Position p : traj.getPositions()) {
+                Location loc = new Location(p.x / 10000.0, p.y / 10000.0);
+                ScreenPosition src = map.getScreenPosition(loc);
+                vertex(src.x, src.y);
+            }
+            endShape();
+        }
 
-        for (int i = 0; i < 10; ++i) {
+        strokeWeight(3);
+        for (int i = 0; i < 1; ++i) {
             TrajectoryMeta traj = trajShow[i];
             stroke(colorList[i]);
             beginShape();
-            for (Position p : traj.getPositions()){
+            for (Position p : traj.getPositions()) {
                 Location loc = new Location(p.x / 10000.0, p.y / 10000.0);
                 ScreenPosition src = map.getScreenPosition(loc);
                 vertex(src.x, src.y);
@@ -263,7 +298,7 @@ public class TrajDistanceCmp extends PApplet {
 
     private static void CalDistance() {
         ArrayList<Integer> idxs = new ArrayList<>();
-        int cnt = 11;
+        int cnt = 500;
         for (int i = 0; i < cnt; ++i) {
             if (i == 8)
                 continue;
@@ -363,11 +398,103 @@ public class TrajDistanceCmp extends PApplet {
         }
     }
 
-    public static void main(String[] args) {
-        CalDistance();
+    private static HashMap<Integer, Double> id2Score = new HashMap<>();
+    private static String idScoreFile = "data/baseline/firstDis";
 
-//        PApplet.main(new String[]{
-//                TrajDistanceCmp.class.getName()
-//        });
+    private static void maxDisTance() {
+        boolean flag = true;
+        ArrayList<Integer> idxs = new ArrayList<>();
+        int cnt = 100000;
+        if (flag) {
+            Random ran = new Random(1);
+            HashSet<Integer> initSet = new HashSet<Integer>(cnt);
+            while (initSet.size() != cnt) {
+                initSet.add(ran.nextInt(2389482 - 1));
+            }
+            idxs = new ArrayList<>(initSet);
+        } else {
+            try (BufferedReader reader = new BufferedReader(new FileReader(idScoreFile))) {
+                String line;
+//            int cntTmp = 20;
+//            while ((line = reader.readLine()) != null && cntTmp > 0) {
+                int i = 0;
+                while ((line = reader.readLine()) != null) {
+                    String[] tmp = line.split(",");
+                    id2Score.put(i++, Double.parseDouble(tmp[1]));
+                    idxs.add(Integer.parseInt(tmp[0]));
+                }
+            } catch (IOException e) {
+                System.out.println(e);
+            }
+        }
+        trajShow = QuadTree.loadData(new double[4], filePath, idxs);
+        TrajectoryMeta traj = trajShow[0];
+        System.out.println(idxs.get(0));
+        if (!flag) {
+            int dupCal = 0, legalCal = 0;
+            Position p1 = traj.getPositions()[0];
+            for (int i = 1; i < trajShow.length; ++i) {
+                Position pBegin = trajShow[i].getPositions()[0];
+                Position pEnd = trajShow[i].getPositions()[trajShow[i].getPositions().length - 1];
+
+                double dis = Math.max(DistanceFunc.PointEuclidean(p1, pBegin), DistanceFunc.PointEuclidean(p1, pEnd)) - DistanceFunc.PointEuclidean(pBegin, pEnd);
+                if (dis > id2Score.get(i)) {
+                    System.out.println("FUCKKKKKKKKKKKKK");
+                }
+                if (dis < disBound) {
+                    if (id2Score.get(i) > disBound) {
+                        dupCal += 1;
+                    } else {
+                        legalCal += 1;
+                    }
+                }
+//                if (dis <  disBound) {
+//                    if (id2Score.get(i) > disBound){
+//                        System.out.println("ERROR FUCKKKKKKKKKKK");
+//                        System.out.println(disBound + ", " + id2Score.get(i)  + ", " + dis);
+//                    }
+////                    System.out.println(i + ": " + (id2Score.get(i) > disBound ? 1 : 0) + ", " + (dis > disBound ? 1 : 0));
+//                }
+            }
+            System.out.println(dupCal +", " + legalCal);
+        } else {
+            double maxDis = 0;
+            int maxIdx = -1;
+            StringBuilder sb = new StringBuilder();
+            Position p1 = traj.getPositions()[0];
+            for (int i = 0; i < cnt; ++i) {
+                double dis = util.DistanceFunc.DiscreteFrechetDistance(traj, trajShow[i]);
+                if (dis > maxDis)
+                    maxIdx = i;
+                maxDis = Math.max(dis, maxDis);
+                sb.append(idxs.get(i)).append(",").append(dis).append("\n");
+                id2Score.put(i, dis);
+                Position pBegin = trajShow[i].getPositions()[0];
+                Position pEnd = trajShow[i].getPositions()[trajShow[i].getPositions().length - 1];
+
+                double dis2 = Math.max(DistanceFunc.PointEuclidean(p1, pBegin), DistanceFunc.PointEuclidean(p1, pEnd)) - DistanceFunc.PointEuclidean(pBegin, pEnd);
+                if (dis2 > dis) {
+                    System.out.println("FUCKKKKKKKKKKKKK");
+                }
+//            System.out.println(i + ", " + id2Score.get(i));
+            }
+            try (BufferedOutputStream writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(idScoreFile)))
+            ) {
+                writer.write(sb.toString().getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println(maxDis + ", " + maxIdx);
+        }
+
+    }
+
+    public static void main(String[] args) {
+//        CalDistance();
+        maxDisTance();
+
+        PApplet.main(new String[]{
+                TrajDistanceCmp.class.getName()
+        });
     }
 }
